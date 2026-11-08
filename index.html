@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="de" data-theme="nacht">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="description" content="Schmetterlingsfutter: Beziehungspflege für Paare. Tägliche Liebesbotschaften, Gänseblümchen-Orakel, Jahrestage und Liebes-Gutscheine halten Liebe, Leidenschaft und Spaß lebendig. Offline, ohne Datenerhebung.">
+<meta name="theme-color" content="#1a0a1e">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Schmetterlingsfutter">
+<title>Schmetterlingsfutter ❤</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div id="app">
+  <div class="stars" id="stars" aria-hidden="true"></div>
+  <div class="floating-hearts" id="fh" aria-hidden="true"></div>
+
+  <header class="header">
+    <span class="name-pill" id="pillSender">🐰 Hase</span>
+    <span class="name-sep" aria-hidden="true">❤</span>
+    <span class="name-pill" id="pillReceiver">🌸 Darling</span>
+  </header>
+  <button class="occasion-chip hidden" id="occasionChip" type="button"></button>
+
+  <main>
+    <!-- ===== Botschaften ===== -->
+    <section class="view active" id="view-home" aria-labelledby="nav-home">
+      <div class="heart-wrap" id="heartWrap" role="button" tabindex="0" aria-label="Neue Botschaft anzeigen">
+        <div class="pulse-ring"></div>
+        <svg class="big-heart" viewBox="0 -4 100 94" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <defs>
+            <radialGradient id="hg" cx="38%" cy="32%" r="62%">
+              <stop offset="0%" stop-color="var(--accent-2)"/>
+              <stop offset="58%" stop-color="var(--accent-deep)"/>
+              <stop offset="100%" stop-color="var(--accent-dark)"/>
+            </radialGradient>
+          </defs>
+          <path fill="url(#hg)" d="M50 82 C50 82 5 52 5 28 C5 14 17 5 30 5 C38 5 45 9 50 15 C55 9 62 5 70 5 C83 5 95 14 95 28 C95 52 50 82 50 82Z"/>
+          <path fill="rgba(255,255,255,0.16)" d="M24 17 C21 22 20 30 22 37 C22 37 19 26 27 18Z"/>
+          <path fill="var(--accent-dark)" d="M14 14 C8 8 6 1 9 -2 C13 2 17 6 21 9 Z"/>
+          <path fill="var(--accent-dark)" d="M86 14 C92 8 94 1 91 -2 C87 2 83 6 79 9 Z"/>
+          <text x="50" y="52" text-anchor="middle" font-size="24" id="heartEmoji">🐰</text>
+        </svg>
+      </div>
+      <div class="counter-chip" id="tapCounter"></div>
+
+      <div class="card msg-card">
+        <div class="msg-label" id="msgLabel">Heute für dich</div>
+        <div class="msg-text" id="msgText" aria-live="polite">…</div>
+        <div class="msg-sig" id="msgSig">— Hase</div>
+        <div class="msg-actions">
+          <button class="icon-btn" id="btnFav" aria-label="Als Favorit speichern" aria-pressed="false">🤍</button>
+          <button class="icon-btn" id="btnShare" aria-label="Botschaft teilen">↗</button>
+          <button class="icon-btn" id="btnPersonal" aria-label="Persönlich machen und senden">✎</button>
+          <button class="icon-btn" id="btnCopy" aria-label="Botschaft kopieren">⧉</button>
+        </div>
+      </div>
+
+      <div class="card piek-card" id="piekCard">
+        <div class="row between"><div class="eyebrow" style="margin:0">🔱 Piek des Tages</div><span class="tag" id="piekCat"></span></div>
+        <div class="piek-text" id="piekText">…</div>
+        <div class="row wrap" style="margin-top:12px;justify-content:flex-start">
+          <button class="pill-btn small primary" id="btnPiekDone">Erledigt ✓</button>
+          <button class="pill-btn small ghost" id="btnPiekOther">Anderer Piek</button>
+          <span class="hint" style="margin:0 0 0 auto" id="piekStreak"></span>
+        </div>
+      </div>
+      <div class="card soft" id="thanksCard">
+        <div class="eyebrow">🙏 Dankbarkeits-Notiz</div>
+        <div class="field" style="margin-bottom:8px"><label for="thanksInput" id="thanksLabel">Was hat Darling heute gut gemacht?</label><input id="thanksInput" maxlength="120" placeholder="z. B. trotz Stress mit mir gelacht" autocomplete="off"></div>
+        <div class="row wrap" style="justify-content:flex-start">
+          <button class="pill-btn small" id="btnThanksSave">Notieren</button>
+          <button class="pill-btn small primary" id="btnThanksSend">Als Danke senden ↗</button>
+          <span class="hint" style="margin:0 0 0 auto" id="thanksCount"></span>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn" id="btnReasons"><span class="btn-icon">🌹</span><span>Warum ich<br>dich liebe</span></button>
+        <button class="btn" id="btnNext"><span class="btn-icon">💌</span><span>Neue<br>Botschaft</span></button>
+        <button class="btn" id="btnKiss"><span class="btn-icon">💋</span><span>Ein Kuss<br>für dich</span></button>
+        <button class="btn" id="btnHug"><span class="btn-icon">🤗</span><span>Kuscheln</span></button>
+      </div>
+      <div class="btn-row">
+        <button class="btn" id="btnGen"><span class="btn-icon">😈</span><span>Spruch<br>zaubern</span></button>
+        <button class="btn" id="btnWrite"><span class="btn-icon">✍️</span><span>Selbst<br>schreiben</span></button>
+      </div>
+      <div class="btn-row">
+        <button class="btn" id="btnMorning"><span class="btn-icon">☀️</span><span>Guten Morgen</span></button>
+        <button class="btn" id="btnNight"><span class="btn-icon">🌙</span><span>Gute Nacht</span></button>
+      </div>
+
+      <div class="card soft hidden" id="reasonPanel">
+        <div class="row between"><div class="eyebrow" style="margin:0">Warum ich dich liebe</div><button class="pill-btn small ghost" id="btnAddReason">+ Grund</button></div>
+        <div class="reason-list" id="reasonList" style="margin-top:12px"></div>
+      </div>
+
+      <div class="card soft" id="favPanel">
+        <div class="row between"><div class="eyebrow" style="margin:0">Favoriten</div><span class="tag" id="favCount">0</span></div>
+        <div id="favList" style="margin-top:10px"></div>
+      </div>
+      <div class="hint">Tippe auf das Herz für eine neue Botschaft</div>
+    </section>
+
+    <!-- ===== Orakel ===== -->
+    <section class="view" id="view-play" aria-labelledby="nav-play">
+      <div class="seg" role="tablist" data-seg="play">
+        <button role="tab" data-sub="oracle" class="active" aria-selected="true">🌼 Orakel</button>
+        <button role="tab" data-sub="music" aria-selected="false">🎵 Liebeslied</button>
+      </div>
+      <div class="sub active" id="sub-oracle">
+      <div class="view-title">Gänseblümchen-Orakel</div>
+      <div class="view-sub">Tippe auf ein Blütenblatt</div>
+      <div class="daisy-wrap" id="daisyWrap">
+        <svg id="daisySvg" viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Gänseblümchen"></svg>
+      </div>
+      <div class="oracle-status" id="oracleStatus">
+        <div class="oracle-phrase" id="oraclePhrase">Liebt mich …</div>
+        <div class="oracle-count" id="oracleCount">11 Blütenblätter</div>
+      </div>
+      <div class="oracle-result" id="oracleResult">
+        <div class="oracle-result-emoji" id="oracleEmoji">🌼💕</div>
+        <div class="oracle-result-text" id="oracleResultText">Ja! Liebt mich!</div>
+        <div class="oracle-result-sub" id="oracleResultSub">Das Orakel hat gesprochen ✨</div>
+        <button class="pill-btn primary" id="btnDaisyReset">Nochmal fragen 🌼</button>
+      </div>
+      <div class="oracle-stats" id="oracleStats"></div>
+      <div class="hint" id="daisyHint">Tippe auf ein Blütenblatt, um es abzuzupfen</div>
+      </div>
+      <div class="sub" id="sub-music">
+        <div class="view-title">Liebeslied-Pad</div>
+        <div class="view-sub">Tippe Töne, nimm auf, schenk ein Lied</div>
+        <div class="pad" id="pad"></div>
+        <div class="row" style="margin:14px 0 6px">
+          <button class="pill-btn" id="btnRec">● Aufnehmen</button>
+          <button class="pill-btn" id="btnPlayRec" disabled>▶ Abspielen</button>
+          <button class="pill-btn ghost" id="btnSaveSong" disabled>💾 Speichern</button>
+        </div>
+        <div class="hint" id="recHint">Alle Töne passen zusammen – es kann nichts schief klingen.</div>
+        <div class="card soft" style="margin-top:16px">
+          <div class="row between"><div class="eyebrow" style="margin:0">Eure Lieder</div><span class="tag" id="songCount">0</span></div>
+          <div id="songList" style="margin-top:10px"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Unsere Zeit ===== -->
+    <section class="view" id="view-time" aria-labelledby="nav-time">
+      <div class="seg" role="tablist" data-seg="time">
+        <button role="tab" data-sub="days" class="active" aria-selected="true">📅 Unsere Zeit</button>
+        <button role="tab" data-sub="occasions" aria-selected="false">💘 Anlässe</button>
+      </div>
+      <div class="sub active" id="sub-days">
+      <div class="view-title">Unsere Zeit</div>
+      <div class="view-sub" id="timeSub">Seit dem ersten Tag</div>
+      <div id="timeEmpty" class="card" style="text-align:center">
+        <p class="about" style="margin-bottom:14px">Trag euren Jahrestag ein – dann zählt die App jeden gemeinsamen Tag und erinnert an Meilensteine.</p>
+        <button class="pill-btn primary" id="btnSetDate">Datum eintragen</button>
+      </div>
+      <div id="timeContent" class="hidden" style="width:100%">
+        <div class="card" style="text-align:center">
+          <div class="big-number" id="daysTogether">0<small>Tage zusammen</small></div>
+        </div>
+        <div class="time-grid" id="timeGrid"></div>
+        <div class="card">
+          <div class="eyebrow">Nächster Jahrestag</div>
+          <div class="row between"><span id="nextAnnivText" style="font-size:15px"></span><b id="nextAnnivDays" style="font-family:var(--serif);font-size:24px;font-weight:400;color:var(--accent-2)"></b></div>
+          <div class="progress"><i id="annivProgress" style="width:0%"></i></div>
+          <div class="hint" style="text-align:left;margin:0" id="annivDate"></div>
+        </div>
+        <div class="card">
+          <div class="eyebrow">Meilensteine</div>
+          <div id="milestoneList"></div>
+        </div>
+        <div class="row"><button class="pill-btn small ghost" id="btnChangeDate">Datum ändern</button></div>
+      </div>
+      </div>
+      <div class="sub" id="sub-occasions">
+        <div class="view-title">Anlässe &amp; Erinnerungen</div>
+        <div class="view-sub">Damit das Teufelchen rechtzeitig piekst</div>
+        <div id="occasionList" style="width:100%"></div>
+        <div class="row wrap" style="margin-top:6px">
+          <button class="pill-btn small" id="btnAddOccasion">+ Eigener Anlass</button>
+          <button class="pill-btn small ghost" id="btnBirthday">🎂 Geburtstag eintragen</button>
+        </div>
+        <div class="hint" style="margin-top:14px">„In Kalender“ legt den Termin jährlich an – dann erinnert dich dein Handy von selbst.</div>
+      </div>
+    </section>
+
+    <!-- ===== Gutscheine ===== -->
+    <section class="view" id="view-wishes" aria-labelledby="nav-wishes">
+      <div class="seg" role="tablist" data-seg="wishes">
+        <button role="tab" data-sub="wishlist" class="active" aria-selected="true">🗺️ Love Map</button>
+        <button role="tab" data-sub="thanks" aria-selected="false">🙏 Danke</button>
+        <button role="tab" data-sub="coupons" aria-selected="false">🎟️ Gutscheine</button>
+      </div>
+      <div class="sub active" id="sub-wishlist">
+        <div class="view-title">Love Map</div>
+        <div class="view-sub" id="wishSub">Alles, was du über deinen Schatz wissen solltest</div>
+        <div class="card soft" style="padding:14px 18px">
+          <p class="about" style="font-size:13px">Wünsche, Lieblingsdinge, Größen, Sorgen, Träume, wichtige Menschen – sofort notieren, wenn du es aufschnappst. Das Teufelchen vergisst nichts.</p>
+        </div>
+        <div class="row" style="margin-bottom:12px"><button class="pill-btn primary" id="btnAddWish">+ Notieren</button></div>
+        <div class="chips" id="wishChips"></div>
+        <div id="wishList" style="width:100%"></div>
+        <div class="row" style="margin-top:8px"><button class="pill-btn small ghost" id="btnToggleDoneWishes">Erfüllte anzeigen</button></div>
+      </div>
+      <div class="sub" id="sub-thanks">
+        <div class="view-title">Dankbarkeits-Notizen</div>
+        <div class="view-sub" id="thanksSub">Konkret benannt wirkt am stärksten</div>
+        <div id="thanksList" style="width:100%"></div>
+      </div>
+      <div class="sub" id="sub-coupons">
+      <div class="view-title">Liebes-Gutscheine</div>
+      <div class="view-sub" id="couponSub">Zum Einlösen antippen</div>
+      <div id="couponList" style="width:100%"></div>
+      <div class="row wrap" style="margin-top:6px">
+        <button class="pill-btn small" id="btnAddCoupon">+ Eigener Gutschein</button>
+        <button class="pill-btn small ghost" id="btnResetCoupons">Alle zurücksetzen</button>
+      </div>
+      </div>
+    </section>
+
+    <!-- ===== Einstellungen ===== -->
+    <section class="view settings-list" id="view-settings" aria-labelledby="nav-settings">
+      <div class="seg" role="tablist" data-seg="settings">
+        <button role="tab" data-sub="prefs" class="active" aria-selected="true">⚙️ Einstellungen</button>
+        <button role="tab" data-sub="intim" aria-selected="false" id="segIntim">🔥 Zweisamkeit</button>
+      </div>
+      <div class="sub active" id="sub-prefs">
+      <div class="view-title">Einstellungen</div>
+      <div class="view-sub">Alles bleibt auf diesem Gerät</div>
+
+      <div class="card" style="padding:18px 20px">
+        <div class="eyebrow">Namen</div>
+        <div class="field"><label for="setSender">Absender (wer liebt?)</label><input id="setSender" maxlength="18" placeholder="z. B. Hase"></div>
+        <div class="field"><label for="setReceiver">Empfänger (wer wird geliebt?)</label><input id="setReceiver" maxlength="18" placeholder="z. B. Darling"></div>
+        <div class="field"><label>Symbol Absender</label><div class="emoji-grid" id="emojiSender"></div></div>
+        <div class="field" style="margin-bottom:4px"><label>Symbol Empfänger</label><div class="emoji-grid" id="emojiReceiver"></div></div>
+      </div>
+
+      <div class="card" style="padding:18px 20px">
+        <div class="eyebrow">Farbwelt</div>
+        <div class="theme-grid" id="themeGrid"></div>
+      </div>
+
+      <div class="card">
+        <div class="switch"><div>Orakel sagt immer Ja<small>Aus = das Orakel entscheidet zufällig</small></div><button class="toggle" id="togAlwaysYes" role="switch" aria-checked="true" aria-label="Orakel sagt immer Ja"></button></div>
+        <div class="switch"><div>Animationen<small>Herzen, Sterne, Pulsieren</small></div><button class="toggle" id="togMotion" role="switch" aria-checked="true" aria-label="Animationen"></button></div>
+        <div class="switch"><div>Vibration<small>Kurzes Feedback beim Zupfen</small></div><button class="toggle" id="togHaptic" role="switch" aria-checked="true" aria-label="Vibration"></button></div>
+        <div class="switch"><div>Bereich „Zweisamkeit“<small>Flirt, Fragen für zwei, Wünsche – nur für Erwachsene</small></div><button class="toggle" id="togIntim" role="switch" aria-checked="false" aria-label="Bereich Zweisamkeit anzeigen"></button></div>
+      </div>
+
+      <div class="card" style="padding:18px 20px">
+        <div class="eyebrow">Geschenkvorschläge</div>
+        <div class="field" style="margin-bottom:6px"><label for="setAmazonTag">Amazon-Partner-Kennung (optional)</label><input id="setAmazonTag" maxlength="40" placeholder="z. B. meinshop-21" autocomplete="off"></div>
+        <p class="about" style="font-size:12px;color:var(--text-muted)">Wird an Amazon-Suchlinks bei den Anlässen angehängt. Leer lassen = normale Suche ohne Kennung.</p>
+      </div>
+
+      <div class="card" style="padding:18px 20px">
+        <div class="eyebrow">Eigene Botschaften</div>
+        <div id="ownMsgList"></div>
+        <div class="row" style="margin-top:10px"><button class="pill-btn small" id="btnWrite2">+ Botschaft schreiben</button></div>
+      </div>
+
+      <div class="card" style="padding:18px 20px">
+        <div class="eyebrow">Als Überraschung übergeben</div>
+        <p class="about" style="margin-bottom:12px">Versiegelt die App. Beim nächsten Öffnen erscheint ein Briefumschlag für deinen Schatz. Eigene Botschaften und Gutscheine vorher eintragen – zum Jahrestag, Valentinstag oder einfach so.</p>
+        <div class="row"><button class="pill-btn primary" id="btnSeal">💌 Jetzt versiegeln</button></div>
+      </div>
+
+      <div class="card" style="padding:18px 20px">
+        <div class="eyebrow">Daten</div>
+        <div class="row wrap">
+          <button class="pill-btn small" id="btnExport">Sichern (Export)</button>
+          <button class="pill-btn small" id="btnImport">Wiederherstellen</button>
+          <input type="file" id="fileImport" accept="application/json,.json" class="hidden">
+        </div>
+        <div class="row" style="margin-top:10px"><button class="pill-btn small ghost danger" id="btnReset">Alles löschen</button></div>
+      </div>
+
+      <div class="card about">
+        <div class="eyebrow">Über Schmetterlingsfutter</div>
+        <p style="margin-bottom:8px">Das kleine Liebesteufelchen hält Liebe, Leidenschaft und Spaß in eurer Beziehung lebendig – Futter für die Schmetterlinge im Bauch. Am besten installiert ihr Schmetterlingsfutter beide und tragt euch gegenseitig als Absender ein.</p>
+        <p>Version <span id="aboutVersion"></span>. Diese App speichert alle Eingaben ausschließlich lokal auf deinem Gerät. Es werden keine Daten übertragen, keine Konten angelegt und keine Werbung angezeigt.</p>
+        <p style="margin-top:8px"><a href="privacy.html">Datenschutz &amp; Impressum</a> · <a href="#" id="btnOnboardingAgain">Einrichtung erneut starten</a></p>
+        <p style="margin-top:8px;font-size:11px;color:var(--text-muted)">Schriften: Playfair Display und Lato (SIL Open Font License).</p>
+      </div>
+      </div>
+      <div class="sub" id="sub-intim">
+        <div class="view-title">Zweisamkeit</div>
+        <div class="view-sub">Nähe, Flirt und Leidenschaft – nur für euch</div>
+        <div id="intimLocked" class="card" style="text-align:center">
+          <p class="about" style="margin-bottom:14px">Dieser Bereich ist für Erwachsene. Schalte ihn unter Einstellungen ein und bestätige, dass ihr beide volljährig seid.</p>
+          <button class="pill-btn primary" id="btnIntimEnable">Einschalten (18+)</button>
+        </div>
+        <div id="intimContent" class="hidden" style="width:100%">
+          <div class="card msg-card" style="min-height:120px">
+            <div class="msg-label">Das Teufelchen flüstert</div>
+            <div class="msg-text" id="intimText">Tippe unten, was du brauchst.</div>
+          </div>
+          <div class="btn-row">
+            <button class="btn" id="btnFlirt"><span class="btn-icon">😏</span><span>Flirt-<br>Nachricht</span></button>
+            <button class="btn" id="btnDeepQ"><span class="btn-icon">💬</span><span>Frage<br>für zwei</span></button>
+            <button class="btn" id="btnDateIdea"><span class="btn-icon">🕯️</span><span>Date-<br>Idee</span></button>
+            <button class="btn" id="btnIntimShare"><span class="btn-icon">↗</span><span>Teilen</span></button>
+          </div>
+          <div class="card soft">
+            <div class="row between"><div class="eyebrow" style="margin:0">Unser Wunschzettel für zwei</div><button class="pill-btn small ghost" id="btnAddIntimWish">+ Wunsch</button></div>
+            <p class="about" style="font-size:12px;margin:8px 0 6px;color:var(--text-muted)">Was ihr gern einmal zusammen erleben wollt. Bleibt nur auf diesem Gerät.</p>
+            <div id="intimWishList"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="nav" role="tablist" aria-label="Hauptnavigation">
+    <button role="tab" id="nav-home" data-view="home" class="active" aria-selected="true"><span class="ico">💌</span>Botschaften</button>
+    <button role="tab" id="nav-play" data-view="play" aria-selected="false"><span class="ico">🌼</span>Spielen</button>
+    <button role="tab" id="nav-time" data-view="time" aria-selected="false"><span class="ico">📅</span>Unsere Zeit</button>
+    <button role="tab" id="nav-wishes" data-view="wishes" aria-selected="false"><span class="ico">⭐</span>Wünsche</button>
+    <button role="tab" id="nav-settings" data-view="settings" aria-selected="false"><span class="ico">⚙️</span>Mehr</button>
+  </nav>
+</div>
+
+<!-- ===== Onboarding ===== -->
+<div class="overlay hidden" id="onboarding" role="dialog" aria-modal="true" aria-label="Einrichtung">
+  <div class="inner">
+    <div class="logo"><em>Schmetterlingsfutter</em> 🦋❤</div>
+    <div class="view-sub" style="margin-bottom:14px">Beziehungspflege für Paare</div>
+    <p class="lead">Futter für die Schmetterlinge im Bauch – jeden Tag. In einer Minute eingerichtet, für euch zwei.</p>
+    <div class="step-dots" id="obDots"><i class="on"></i><i></i><i></i><i></i></div>
+
+    <div class="ob-step active" data-step="0">
+      <div class="field"><label for="obSender">Wie nennst du dich? (Absender)</label><input id="obSender" maxlength="18" placeholder="z. B. Hase" autocomplete="off"></div>
+      <div class="field"><label>Dein Symbol</label><div class="emoji-grid" id="obEmojiSender"></div></div>
+      <div class="ob-nav"><button class="pill-btn primary" data-next>Weiter</button></div>
+    </div>
+    <div class="ob-step" data-step="1">
+      <div class="field"><label for="obReceiver">Wen liebst du? (Empfänger)</label><input id="obReceiver" maxlength="18" placeholder="z. B. Darling" autocomplete="off"></div>
+      <div class="field"><label>Symbol</label><div class="emoji-grid" id="obEmojiReceiver"></div></div>
+      <div class="ob-nav"><button class="pill-btn ghost" data-prev>Zurück</button><button class="pill-btn primary" data-next>Weiter</button></div>
+    </div>
+    <div class="ob-step" data-step="2">
+      <div class="field"><label for="obDate">Euer Jahrestag (optional)</label><input id="obDate" type="date"></div>
+      <p class="about" style="margin-bottom:14px">Damit zählt die App eure gemeinsamen Tage und erinnert an Meilensteine. Kannst du später ändern.</p>
+      <div class="ob-nav"><button class="pill-btn ghost" data-prev>Zurück</button><button class="pill-btn primary" data-next>Weiter</button></div>
+    </div>
+    <div class="ob-step" data-step="3">
+      <div class="field"><label>Farbwelt</label><div class="theme-grid" id="obThemeGrid"></div></div>
+      <p class="about" style="margin:6px 0 16px">Alles bleibt auf diesem Gerät. Keine Anmeldung, keine Werbung, keine Datenübertragung.</p>
+      <div class="ob-nav"><button class="pill-btn ghost" data-prev>Zurück</button><button class="pill-btn primary" id="obFinish">Los geht's ❤</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Geschenk-Umschlag ===== -->
+<div class="overlay hidden" id="giftScreen" role="dialog" aria-modal="true" aria-label="Geschenk öffnen">
+  <div class="inner envelope-scene">
+    <div class="logo" style="margin-bottom:30px">Für <em id="giftName">dich</em></div>
+    <div class="envelope" id="envelope" role="button" tabindex="0" aria-label="Umschlag öffnen">
+      <div class="env-letter" id="envLetter">Ich habe dir etwas geschrieben …</div>
+      <div class="env-flap"></div>
+      <div class="env-body"></div>
+      <div class="env-seal">❤</div>
+    </div>
+    <div class="env-hint" id="envHint">Tippe auf den Umschlag</div>
+    <button class="pill-btn primary hidden" id="btnGiftEnter" style="margin-top:30px">App öffnen ❤</button>
+  </div>
+</div>
+
+<!-- ===== Bottom sheet ===== -->
+<div class="modal" id="modal" role="dialog" aria-modal="true">
+  <div class="sheet" id="sheet"></div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script src="js/features.js"></script>
+</body>
+</html>
