@@ -21,17 +21,17 @@
   <main>
     <p><a href="index.html">← Zurück zur App</a></p>
     <h1>Datenschutz</h1>
-    <p>Stand: <span id="stand">8. November 2026</span></p>
+    <p>Stand: <span id="stand">9. November 2026</span></p>
 
     <h2>Kurz gesagt</h2>
-    <p>Schmetterlingsfutter erhebt, speichert und überträgt keine personenbezogenen Daten an uns oder Dritte. Es gibt keine Konten, keine Analyse-Tools, keine Werbung und keine Server, mit denen die App spricht.</p>
+    <p>Schmetterlingsfutter speichert deine Eingaben auf deinem Gerät. Es gibt keine Konten, keine Analyse-Werkzeuge und keine Werbeanzeigen. Nur wenn ihr eure beiden Apps freiwillig verbindet („Partner-Verbindung“), läuft ein Teil der Daten verschlüsselt über einen Vermittlungsdienst – was genau, steht unten.</p>
 
     <h2>Welche Daten die App verarbeitet</h2>
     <ul>
       <li>Die von dir eingegebenen Kosenamen, Symbole, das Jahrestagsdatum, eigene Botschaften, Gründe, Favoriten und Gutscheine.</li>
       <li>Einfache Zähler (z. B. wie oft das Orakel befragt wurde) und deine Einstellungen (Farbwelt, Animationen, Vibration).</li>
     </ul>
-    <p>Diese Daten liegen ausschließlich im lokalen Speicher deines Geräts (Browser-Speicher „localStorage“). Sie verlassen das Gerät nur, wenn du selbst die Funktion „Sichern (Export)“ nutzt oder eine Botschaft über die Teilen-Funktion deines Geräts weitergibst. Mit „Alles löschen“ werden sie vollständig entfernt.</p>
+    <p>Diese Daten liegen ausschließlich im lokalen Speicher deines Geräts (Browser-Speicher „localStorage“). Sie verlassen das Gerät nur, wenn du selbst die Funktion „Sichern (Export)“ nutzt, eine Botschaft über die Teilen-Funktion deines Geräts weitergibst oder die Partner-Verbindung nutzt (siehe unten). Mit „Alles löschen“ werden sie vollständig entfernt.</p>
 
     <h2>Berechtigungen</h2>
     <p>Die App fragt keine Standort-, Kamera-, Kontakt- oder Mikrofonberechtigung ab. Die optionale Vibration nutzt die Standard-Schnittstelle deines Geräts und überträgt nichts.</p>
@@ -43,10 +43,21 @@
     <p>Die Schriften Playfair Display und Lato werden lokal mitgeliefert und stehen unter der SIL Open Font License 1.1. Es werden keine Schriften von Google-Servern nachgeladen.</p>
 
     <h2>Deine Rechte</h2>
-    <p>Da wir keine Daten von dir besitzen, können wir auch keine herausgeben, berichtigen oder löschen – das kannst du jederzeit selbst in der App unter „Mehr → Daten“. Bei Fragen erreichst du uns über die Kontaktdaten im Impressum.</p>
+    <p>Ohne Partner-Verbindung besitzen wir keine Daten von dir; alles löschst du selbst in der App unter „Mehr → Daten“. Mit Partner-Verbindung liegen beim Vermittlungsdienst nur pseudonyme Kennungen, Prüfsummen und verschlüsselte Nachrichten, die du mit „Verbindung trennen“ sofort löschst. Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung, Datenübertragbarkeit, Widerspruch und Beschwerde bei einer Aufsichtsbehörde (Art. 15–21, 77 DSGVO). Bei Fragen erreichst du uns über die Kontaktdaten im Impressum.</p>
+
+    <h2>Partner-Verbindung (freiwillig)</h2>
+    <p>Mit der Partner-Verbindung koppelst du deine App mit der App deines Partners oder deiner Partnerin. Dafür betreibt der Anbieter einen kleinen Vermittlungsdienst („Relay“) auf der Plattform Cloudflare Workers mit einer Datenbank (Cloudflare D1, Speicherort Westeuropa). Anbieter dieser Plattform ist Cloudflare, Inc., 101 Townsend St, San Francisco, CA 94107, USA; die Verarbeitung erfolgt in unserem Auftrag auf Grundlage der EU-Standardvertragsklauseln und des EU-US-Datenschutzrahmens. Rechtsgrundlage ist deine Einwilligung durch das Einrichten der Verbindung (Art. 6 Abs. 1 lit. a DSGVO); du kannst sie jederzeit durch „Verbindung trennen“ widerrufen.</p>
+    <ul>
+      <li><strong>Was übertragen wird:</strong> eine zufällige Paar-Kennung, eine zufällige Geräte-Kennung und ein Zugriffs-Schlüssel; Botschaften, Gutscheine und Einladungen Ende-zu-Ende verschlüsselt (AES-GCM); bei den Gleichklang-Spielen nur Prüfsummen (HMAC) deiner Ja-Antworten. Der Schlüssel dafür steckt im Paar-Code und wird nie an den Dienst gesendet. Der Dienst kann daher weder Nachrichten lesen noch erkennen, welche Antworten hinter den Prüfsummen stehen. Er vergleicht nur, welche Prüfsummen von beiden Geräten stammen.</li>
+      <li><strong>Was nicht übertragen wird:</strong> Namen, Kosenamen, Jahrestag, Notizen, Love Map, Favoriten oder andere Inhalte deiner App – außer du schickst sie bewusst als Botschaft (dann verschlüsselt).</li>
+      <li><strong>Technische Daten:</strong> Beim Aufruf des Dienstes verarbeitet Cloudflare technisch bedingt deine IP-Adresse und Verbindungsdaten in Server-Protokollen, die kurzfristig gespeichert werden.</li>
+      <li><strong>Speicherdauer:</strong> Zugestellte Nachrichten werden nach dem Abholen gelöscht, spätestens nach 30 Tagen. Spiel-Prüfsummen werden bei der nächsten Runde ersetzt. Nicht fertig gekoppelte Verbindungen werden nach 48 Stunden, unbenutzte Verbindungen nach 180 Tagen gelöscht. „Verbindung trennen“ oder „Alles löschen“ in der App löscht alle Daten der Verbindung sofort.</li>
+      <li><strong>Besondere Kategorien:</strong> Der Bereich „Zweisamkeit“ kann Angaben zum Intimleben betreffen (Art. 9 DSGVO). Diese Angaben verlassen dein Gerät ausschließlich als Prüfsummen bzw. verschlüsselt und nur mit deiner ausdrücklichen Einwilligung durch das Spielen einer Runde mit aktiver Verbindung. Ohne Verbindung bleibt alles auf dem Gerät.</li>
+    </ul>
+    <p>Die Partner-Verbindung ist optional. Alle Funktionen der App stehen auch ohne sie zur Verfügung (Spiele dann im Modus „Handy weitergeben“).</p>
 
     <h2>Werbelinks (Amazon-Partnerprogramm)</h2>
-    <p>Bei den Geschenkvorschlägen kann Schmetterlingsfutter Links zur Amazon-Suche anzeigen. Diese Links sind als Werbelinks gekennzeichnet. Kaufst du über einen solchen Link ein, erhält der Anbieter dieser App eine Provision von Amazon; für dich ändert sich der Preis nicht. Die Links öffnen sich außerhalb der App im Browser oder in der Amazon-App. Erst dort gelten die Datenschutzbestimmungen von Amazon; Schmetterlingsfutter selbst überträgt beim Antippen keine Daten und setzt keine Cookies. Der Anbieter dieser App ist Teilnehmer des Partnerprogramms von Amazon EU, das zur Bereitstellung eines Mediums für Websites und Apps konzipiert wurde, mittels dessen durch die Platzierung von Werbeanzeigen und Links zu Amazon.de Werbekostenerstattung verdient werden kann.</p>
+    <p>Zu vielen Funktionen („Passend dazu“, Geschenk-Radar, Treffer bei den Gleichklang-Spielen) zeigt Schmetterlingsfutter Produkt-Vorschläge als Links zur Amazon-Suche an. Diese Links sind als Werbelinks gekennzeichnet. Kaufst du über einen solchen Link ein, erhält der Anbieter dieser App eine Provision von Amazon; für dich ändert sich der Preis nicht. Die Links öffnen sich außerhalb der App im Browser oder in der Amazon-App. Erst dort gelten die Datenschutzbestimmungen von Amazon; Schmetterlingsfutter selbst überträgt beim Antippen keine Daten und setzt keine Cookies. Der Anbieter dieser App ist Teilnehmer des Partnerprogramms von Amazon EU, das zur Bereitstellung eines Mediums für Websites und Apps konzipiert wurde, mittels dessen durch die Platzierung von Werbeanzeigen und Links zu Amazon.de Werbekostenerstattung verdient werden kann. Als Amazon-Partner verdient der Anbieter an qualifizierten Verkäufen.</p>
 
     <h2>Kalender-Funktion</h2>
     <p>Wenn du einen Anlass in den Kalender überträgst, öffnet die App entweder deine Kalender-App mit einer Kalenderdatei oder die Webseite von Google Kalender mit einem vorausgefüllten Termin. Beides geschieht erst nach deinem Antippen; die App selbst hat keinen Zugriff auf deinen Kalender.</p>

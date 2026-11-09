@@ -3,7 +3,14 @@
    Alle Botschaften sind in der Ich-Form geschrieben, damit sie für jede Namens- und
    Geschlechterkombination passen. */
 window.LUZIFER_DATA = {
-  version: '2.1.0',
+  version: '3.0.0',
+
+  /* ---- Partner-Verbindung: Adresse des Relay-Dienstes (relay/README.md). Leer = Funktion aus.
+     Bei lokalem Start (localhost/127.0.0.1) nimmt die App automatisch http://localhost:8787. ---- */
+  relayUrl: '',
+
+  /* ---- Amazon-Partnerkennung von MoJamba (PartnerNet → Tracking-ID). Leer = Suchlinks ohne Kennung. ---- */
+  affiliateTag: '',
 
   messages: [
     "{r}, du bist das Schönste, das mir je passiert ist.",
@@ -323,5 +330,134 @@ window.LUZIFER_DATA = {
     { id: "sonne", name: "Sonnenaufgang" }
   ],
 
-  emojis: ["🐰","🌸","🦊","🐻","🐱","🐶","🦋","🌙","⭐","🌻","🍀","🐧","🦄","🐼","🌹","🔥"]
+  emojis: ["🐰","🌸","🦊","🐻","🐱","🐶","🦋","🌙","⭐","🌻","🍀","🐧","🦄","🐼","🌹","🔥"],
+
+  /* ---- Gleichklang: Match-Spiele. Beide antworten getrennt, sichtbar wird nur, was BEIDE wollen.
+     opts: 2 = Ja/Nein, 3 = Ja/Vielleicht/Nein. tip = Suchbegriff für einen passenden Amazon-Vorschlag (Werbelink). ---- */
+  decks: [
+    { id: "bock", icon: "🎯", title: "Worauf habt ihr heute Bock?", sub: "Für heute. Jeder tippt, was er mag – angezeigt wird nur, was beide wollen.", daily: true, opts: 2, items: [
+      { id: "spazieren", t: "Spaziergang", e: "🚶", tip: "Thermosbecher to go" },
+      { id: "kochen", t: "Zusammen kochen", e: "🍳", tip: "Kochbuch für zwei" },
+      { id: "serie", t: "Serienabend auf dem Sofa", e: "📺", tip: "Kuscheldecke XXL" },
+      { id: "spiele", t: "Spieleabend", e: "🎲", tip: "Spiel für 2 Personen" },
+      { id: "sport", t: "Bewegung: Sport, Rad, Joggen", e: "🏃", tip: "Fahrradtasche Picknick" },
+      { id: "essen", t: "Essen gehen", e: "🍽️", tip: "" },
+      { id: "freunde", t: "Freunde treffen", e: "👯", tip: "Partyspiel Erwachsene" },
+      { id: "kuscheln", t: "Nichts tun & kuscheln", e: "🛋️", tip: "Kuschelkissen groß" },
+      { id: "bummeln", t: "Bummeln & Shoppen", e: "🛍️", tip: "" },
+      { id: "natur", t: "Ausflug ins Grüne", e: "🌳", tip: "Picknickdecke wasserdicht" },
+      { id: "kino", t: "Kino", e: "🎬", tip: "Kinogutschein" },
+      { id: "wellness", t: "Wellness & Badewanne", e: "🛁", tip: "Badezusatz Set Entspannung" },
+      { id: "musik", t: "Konzert oder Live-Musik", e: "🎶", tip: "Konzertkarten Geschenk" },
+      { id: "bar", t: "Cocktail- oder Weinabend", e: "🍸", tip: "Cocktail Set Zuhause" },
+      { id: "kreativ", t: "Etwas Kreatives: malen, basteln, bauen", e: "🎨", tip: "Malen nach Zahlen Paar" },
+      { id: "fruehstueck", t: "Ausgiebig frühstücken", e: "🥐", tip: "Frühstückstablett Bett" },
+      { id: "lesen", t: "Nebeneinander lesen", e: "📚", tip: "Leselampe Buch" },
+      { id: "massage", t: "Massage", e: "💆", tip: "Massageöl Paar" },
+      { id: "tanzen", t: "Tanzen (auch in der Küche)", e: "💃", tip: "Bluetooth Lautsprecher klein" },
+      { id: "puzzle", t: "Puzzle oder Rätsel", e: "🧩", tip: "Puzzle 1000 Teile Erwachsene" },
+      { id: "flohmarkt", t: "Flohmarkt oder Markt", e: "🧺", tip: "" },
+      { id: "sauna", t: "Sauna oder Therme", e: "🧖", tip: "Saunatuch Set" },
+      { id: "museum", t: "Museum oder Ausstellung", e: "🖼️", tip: "" },
+      { id: "grillen", t: "Grillen oder Lagerfeuer", e: "🔥", tip: "Tischgrill Balkon" },
+      { id: "backen", t: "Backen", e: "🧁", tip: "Backbuch Paare" },
+      { id: "fotos", t: "Fotos anschauen & Erinnerungen", e: "📸", tip: "Fotoalbum zum Selbstgestalten" },
+      { id: "ausschlafen", t: "Ausschlafen & gar nichts planen", e: "😴", tip: "Schlafmaske Seide" },
+      { id: "fruehsex", t: "Zeit nur für uns zwei im Schlafzimmer", e: "🔥", tip: "Massagekerze" }
+    ] },
+    { id: "dates", icon: "🕯️", title: "Date-Ideen für die nächsten Wochen", sub: "Größere Dinge. Was bei beiden Ja bekommt, wird geplant.", opts: 3, items: [
+      { id: "kurztrip", t: "Kurztrip übers Wochenende", e: "🧳", tip: "Kurzurlaub Gutschein Paar" },
+      { id: "kochkurs", t: "Kochkurs zu zweit", e: "👩‍🍳", tip: "Kochkurs Gutschein" },
+      { id: "escape", t: "Escape Room", e: "🔐", tip: "Escape Room Spiel Zuhause" },
+      { id: "klettern", t: "Kletterhalle oder Hochseilgarten", e: "🧗", tip: "" },
+      { id: "tanzkurs", t: "Tanzkurs", e: "🕺", tip: "" },
+      { id: "sterne", t: "Sterne gucken, Decke, Thermoskanne", e: "🌌", tip: "Sternenkarte drehbar" },
+      { id: "therme", t: "Thermentag", e: "♨️", tip: "Bademantel Paar Set" },
+      { id: "wein", t: "Weinprobe oder Brauereiführung", e: "🍷", tip: "Weinprobe Set Zuhause" },
+      { id: "shooting", t: "Fotoshooting zu zweit", e: "📷", tip: "Fotoshooting Gutschein Paar" },
+      { id: "wandern", t: "Wandertag mit Einkehr", e: "🥾", tip: "Wanderrucksack 20 Liter" },
+      { id: "zoo", t: "Zoo oder Tierpark", e: "🦒", tip: "" },
+      { id: "theater", t: "Theater, Musical, Comedy", e: "🎭", tip: "Musical Gutschein" },
+      { id: "camping", t: "Eine Nacht im Zelt", e: "⛺", tip: "Zelt 2 Personen" },
+      { id: "rallye", t: "Stadt-Rallye in der eigenen Stadt", e: "🗺️", tip: "Stadtrallye Box" },
+      { id: "kanu", t: "Kanu, SUP oder Tretboot", e: "🛶", tip: "Dry Bag wasserdicht" },
+      { id: "toepfern", t: "Töpfer- oder Malkurs", e: "🏺", tip: "Töpferset Anfänger" },
+      { id: "marathon", t: "Film-Marathon zu Hause mit allem Drum und Dran", e: "🍿", tip: "Popcornmaschine" },
+      { id: "brunch", t: "Langer Sonntagsbrunch auswärts", e: "🥂", tip: "" },
+      { id: "hotel", t: "Eine Nacht im Hotel in der eigenen Stadt", e: "🏨", tip: "Hotelgutschein" },
+      { id: "picknick", t: "Picknick mit allem, was dazugehört", e: "🧺", tip: "Picknickkorb für 2" },
+      { id: "konzert", t: "Konzert einer Band, die einer von uns liebt", e: "🎤", tip: "Konzertkarten Geschenk" },
+      { id: "kochen_land", t: "Ein Land kochen, in dem wir noch nie waren", e: "🌍", tip: "Kochbuch Weltküche" }
+    ] },
+    { id: "vorlieben", icon: "🔥", title: "Vorlieben – nur für euch", sub: "Jeder antwortet für sich. Ihr seht nur, was ihr beide wollt. Alles andere bleibt geheim – auch voreinander.", adult: true, opts: 3, items: [
+      { id: "massage", t: "Ausgiebige Massage mit Öl", e: "💆", tip: "Massageöl erotisch Paar" },
+      { id: "bad", t: "Gemeinsam baden bei Kerzenlicht", e: "🛁", tip: "Badezusatz Rosen Kerzen Set" },
+      { id: "augenbinde", t: "Augenbinde – einer sieht nichts", e: "🕶️", tip: "Augenbinde Satin" },
+      { id: "nachrichten", t: "Tagsüber anzügliche Nachrichten schicken", e: "📱", tip: "" },
+      { id: "waesche", t: "Neue Wäsche oder Dessous füreinander", e: "👙", tip: "Dessous Set" },
+      { id: "rollenspiel", t: "Rollenspiel: Fremde in einer Bar", e: "🎭", tip: "" },
+      { id: "spiel", t: "Erotisches Spiel mit Aufgaben", e: "🎲", tip: "Erotik Spiel für Paare" },
+      { id: "gleitgel", t: "Mehr Gleitgel ausprobieren", e: "💧", tip: "Gleitgel wasserbasiert" },
+      { id: "toy", t: "Ein Toy zu zweit benutzen", e: "✨", tip: "Paar Vibrator" },
+      { id: "federn", t: "Langsam: Federn, Fingerspitzen, Zeit", e: "🪶", tip: "Federkitzler Massage" },
+      { id: "kerze", t: "Massagekerze mit warmem Öl", e: "🕯️", tip: "Massagekerze" },
+      { id: "fesseln", t: "Sanftes Fesseln mit Seidentuch", e: "🎀", tip: "Bondage Set Anfänger Seide" },
+      { id: "ort", t: "Ein anderer Ort als das Schlafzimmer", e: "🏠", tip: "" },
+      { id: "hotel", t: "Eine Hotelnacht nur dafür", e: "🏨", tip: "Hotelgutschein" },
+      { id: "langsam", t: "Ganz langsam, ohne Ziel – Tantra-Abend", e: "🧘", tip: "Tantra Massage Buch Paare" },
+      { id: "strip", t: "Strip oder Tanz füreinander", e: "💃", tip: "" },
+      { id: "dusche", t: "Zusammen duschen", e: "🚿", tip: "" },
+      { id: "morgens", t: "Morgens statt abends", e: "🌅", tip: "" },
+      { id: "vorlesen", t: "Erotische Geschichte vorlesen", e: "📖", tip: "Erotische Geschichten Buch Paare" },
+      { id: "spiegel", t: "Vor dem Spiegel", e: "🪞", tip: "" },
+      { id: "wuerfel", t: "Erotik-Würfel entscheiden lassen", e: "🎲", tip: "Erotik Würfel Paare" },
+      { id: "temperatur", t: "Heiß und kalt: Eiswürfel, warmes Öl", e: "🧊", tip: "Massageöl wärmend" },
+      { id: "wuensche", t: "Wünsche aufschreiben und ziehen", e: "📝", tip: "Wunschgläschen Paar" },
+      { id: "talk", t: "Sagen, was gefällt – während es passiert", e: "💬", tip: "" },
+      { id: "anal", t: "Analspiel – vorsichtig, mit viel Gleitgel", e: "🍑", tip: "Anal Gleitgel Einsteiger" },
+      { id: "kurs", t: "Zusammen etwas Neues lernen (Buch, Kurs)", e: "🎓", tip: "Kamasutra Buch Paare" },
+      { id: "fotos", t: "Fotos nur für uns (sicher aufbewahrt)", e: "📸", tip: "" },
+      { id: "quickie", t: "Spontan, wenn es passt – ohne Plan", e: "⚡", tip: "" }
+    ] }
+  ],
+
+  /* ---- Passend dazu: Produkt-Vorschläge je Funktion (Suchbegriffe für die Amazon-Suche, Werbelinks). ---- */
+  tips: {
+    kiss: [ { icon: "💄", title: "Lippenpflege-Set", q: "Lippenpflege Set Geschenk" }, { icon: "🍫", title: "Schokoküsse", q: "Schokolade Herz Geschenk" } ],
+    hug: [ { icon: "🧸", title: "Kuscheldecke für zwei", q: "Kuscheldecke XXL Paar" }, { icon: "🕯️", title: "Duftkerze", q: "Duftkerze Geschenk" } ],
+    morning: [ { icon: "☕", title: "Partner-Tassen", q: "Tassen Set Paar" }, { icon: "🥐", title: "Frühstück ans Bett", q: "Frühstückstablett Bett" } ],
+    night: [ { icon: "🌙", title: "Sternenprojektor", q: "Sternenhimmel Projektor Schlafzimmer" }, { icon: "😴", title: "Schlafmaske aus Seide", q: "Schlafmaske Seide" } ],
+    message: [ { icon: "💌", title: "Liebesbriefe-Set", q: "Liebesbriefe Set Geschenk Partner" }, { icon: "📔", title: "Paar-Tagebuch", q: "Paar Tagebuch Fragen" } ],
+    reasons: [ { icon: "🫙", title: "Glas voller Gründe", q: "Gründe warum ich dich liebe Glas" }, { icon: "🎁", title: "Liebesgründe-Buch", q: "Was ich an dir liebe Buch zum Ausfüllen" } ],
+    gen: [ { icon: "😈", title: "Freche Partnerkarten", q: "Gutscheinbuch für Paare" }, { icon: "🧩", title: "Paar-Spiel", q: "Spiel für Paare Fragen" } ],
+    oracle: [ { icon: "💐", title: "Blumen, die länger halten", q: "Infinity Rose Geschenk" }, { icon: "🌼", title: "Gänseblümchen-Schmuck", q: "Gänseblümchen Kette" } ],
+    song: [ { icon: "🔊", title: "Kleine Box für eure Küche", q: "Bluetooth Lautsprecher klein" }, { icon: "🎵", title: "Spieluhr mit eurem Lied", q: "Spieluhr personalisiert" } ],
+    time: [ { icon: "🖼️", title: "Sternenhimmel eures ersten Tages", q: "Sternenhimmel Poster personalisiert Datum" }, { icon: "📖", title: "Fotobuch eurer Zeit", q: "Fotobuch Gutschein" } ],
+    milestone: [ { icon: "🥂", title: "Anstoßen", q: "Sektgläser Gravur Paar" }, { icon: "💍", title: "Schmuck mit Datum", q: "Schmuck Gravur Datum Partner" } ],
+    thanks: [ { icon: "🍫", title: "Kleines Danke", q: "Danke Geschenk klein Schokolade" }, { icon: "🌷", title: "Blumen ohne Anlass", q: "Blumenstrauß Geschenk" } ],
+    piek_aufmerksamkeit: [ { icon: "📝", title: "Zettel für Liebesnotizen", q: "Haftnotizen Herz Liebesbotschaft" }, { icon: "☕", title: "Lieblingsgetränk-Thermo", q: "Thermobecher Gravur" } ],
+    piek_unaufgefordert: [ { icon: "🧺", title: "Etwas, das Haushalt leichter macht", q: "Haushaltshelfer Geschenk" }, { icon: "🍝", title: "Kochbuch für den Abend", q: "Kochbuch schnelle Gerichte für zwei" } ],
+    piek_dankbar: [ { icon: "🙏", title: "Dankbarkeits-Tagebuch für Paare", q: "Dankbarkeitstagebuch Paare" }, { icon: "🍫", title: "Kleines Danke", q: "Danke Geschenk klein Schokolade" } ],
+    piek_frage: [ { icon: "🃏", title: "Fragekarten für Paare", q: "Fragekarten Paare Gespräch" }, { icon: "📔", title: "Paar-Tagebuch", q: "Paar Tagebuch Fragen" } ],
+    piek_neu: [ { icon: "🎟️", title: "Erlebnisbox für zwei", q: "Erlebnisbox für zwei" }, { icon: "🗺️", title: "Rubbelkarte für Ausflüge", q: "Rubbel Landkarte Deutschland Ausflüge" } ],
+    wish: [ { icon: "⭐", title: "Direkt suchen", q: "" } ],
+    lovemap: [ { icon: "📔", title: "Fragen-Buch über den Partner", q: "Fragen an meinen Partner Buch" }, { icon: "🃏", title: "Love-Map-Karten", q: "Paar Spiel Kennenlernen Fragen" } ],
+    coupon: [ { icon: "🎟️", title: "Gutscheinheft für Paare", q: "Gutscheinbuch für Paare" }, { icon: "💆", title: "Massageöl", q: "Massageöl Paar" } ],
+    coupon_massage: [ { icon: "💆", title: "Massageöl", q: "Massageöl Paar" }, { icon: "🕯️", title: "Massagekerze", q: "Massagekerze" } ],
+    coupon_fruehstueck: [ { icon: "🥐", title: "Frühstückstablett", q: "Frühstückstablett Bett" }, { icon: "☕", title: "Partner-Tassen", q: "Tassen Set Paar" } ],
+    coupon_film: [ { icon: "🍿", title: "Popcornmaschine", q: "Popcornmaschine" }, { icon: "🧣", title: "Kuscheldecke", q: "Kuscheldecke XXL Paar" } ],
+    coupon_essen: [ { icon: "🕯️", title: "Kerzen für den Tisch", q: "Stabkerzen Set Kerzenhalter" }, { icon: "📖", title: "Kochbuch für zwei", q: "Kochbuch für zwei" } ],
+    coupon_wellness: [ { icon: "🛁", title: "Badezusatz-Set", q: "Badezusatz Set Entspannung" }, { icon: "🧖", title: "Bademantel-Paar", q: "Bademantel Paar Set" } ],
+    coupon_spaziergang: [ { icon: "☕", title: "Thermosbecher", q: "Thermosbecher to go" } ],
+    coupon_tag: [ { icon: "🎟️", title: "Erlebnisgutschein", q: "Erlebnisgutschein für zwei" } ],
+    coupon_ausschlafen: [ { icon: "😴", title: "Schlafmaske", q: "Schlafmaske Seide" } ],
+    intim_flirt: [ { icon: "👙", title: "Etwas Neues zum Anziehen", q: "Dessous Set" }, { icon: "🕯️", title: "Massagekerze", q: "Massagekerze" } ],
+    intim_question: [ { icon: "🃏", title: "Fragekarten für intime Gespräche", q: "Fragekarten Paare Intimität" }, { icon: "📖", title: "Buch über Lust in Beziehungen", q: "Buch Sexualität Paare Langzeitbeziehung" } ],
+    intim_date: [ { icon: "💆", title: "Massageöl", q: "Massageöl erotisch Paar" }, { icon: "🎲", title: "Erotik-Spiel", q: "Erotik Spiel für Paare" } ],
+    intim_wish: [ { icon: "📝", title: "Wunschgläschen", q: "Wunschgläschen Paar" }, { icon: "🎲", title: "Erotik-Würfel", q: "Erotik Würfel Paare" } ],
+    match_bock: [ { icon: "🧺", title: "Picknickdecke", q: "Picknickdecke wasserdicht" }, { icon: "🎲", title: "Spiel für zwei", q: "Spiel für 2 Personen" } ],
+    match_dates: [ { icon: "🎟️", title: "Erlebnisgutschein", q: "Erlebnisgutschein für zwei" }, { icon: "🧳", title: "Kurztrip-Gutschein", q: "Kurzurlaub Gutschein Paar" } ],
+    match_vorlieben: [ { icon: "💧", title: "Gleitgel", q: "Gleitgel wasserbasiert" }, { icon: "💆", title: "Massageöl", q: "Massageöl erotisch Paar" } ],
+    partner: [ { icon: "📱", title: "Ladekabel-Set für zwei", q: "Ladekabel Set 2er" }, { icon: "📔", title: "Paar-Tagebuch", q: "Paar Tagebuch Fragen" } ]
+  }
 };

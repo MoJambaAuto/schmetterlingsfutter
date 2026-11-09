@@ -366,3 +366,61 @@ main { z-index:1; flex:1; padding:8px 24px calc(var(--nav-h) + 24px + env(safe-a
 .thank .t-text { font-family:var(--serif); font-style:italic; font-size:15px; }
 .thank .t-meta { font-size:11px; color:var(--text-muted); margin-top:3px; }
 .ad-note { font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--text-muted); }
+
+/* ---------- Passend dazu (Werbelinks) ---------- */
+.tips-slot { width:100%; }
+.tips { display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-top:12px; width:100%; }
+.tips-label { width:100%; font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--text-muted); display:flex; justify-content:space-between; align-items:center; }
+.tips-label .ad-note { font-size:9px; border:.5px solid var(--line-soft); border-radius:8px; padding:1px 6px; font-style:normal; }
+.tip { border:.5px solid var(--line-soft); background:var(--glass-2); color:var(--text-soft); border-radius:14px; padding:6px 11px; font-size:12px; letter-spacing:.2px; text-align:left; transition:all .2s; }
+.tip span { color:var(--accent-2); }
+.tip:active { background:var(--glass); border-color:var(--accent-2); }
+.tip.inline { border:0; background:transparent; padding:0; font-size:11px; color:var(--accent-2); }
+.msg-card .tips { justify-content:center; }
+.msg-card .tips-label { justify-content:center; gap:8px; }
+
+/* ---------- Partner-Verbindung ---------- */
+.partner-card { border-color:var(--accent-2); }
+.badge { display:inline-flex; min-width:18px; height:18px; padding:0 5px; border-radius:9px; background:#fff; color:var(--accent-deep); font-size:11px; font-weight:700; align-items:center; justify-content:center; margin-left:4px; }
+.nav .ico { position:relative; display:inline-block; }
+.nav-badge { position:absolute; top:-2px; right:-8px; width:9px; height:9px; border-radius:50%; background:var(--accent-deep); border:1.5px solid var(--bg1); box-shadow:0 0 8px var(--glow); }
+.paircode { font-family:var(--serif); font-size:22px; letter-spacing:3px; text-align:center; padding:14px; border:.5px dashed var(--accent-2); border-radius:var(--radius-s); margin:10px 0 14px; user-select:all; -webkit-user-select:all; }
+.inbox-item { display:flex; gap:10px; align-items:flex-start; padding:10px 0; border-bottom:.5px solid var(--line-soft); cursor:pointer; }
+.inbox-item:last-of-type { border-bottom:0; }
+.inbox-item.new .ii-t { color:var(--text); }
+.inbox-item.new .ii-e::after { content:''; display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--accent-deep); margin-left:2px; vertical-align:top; }
+.inbox-item .ii-e { font-size:20px; }
+.inbox-item .ii-b { flex:1; min-width:0; }
+.inbox-item .ii-t { font-family:var(--serif); font-style:italic; font-size:14px; color:var(--text-soft); }
+.inbox-item .ii-m { font-size:11px; color:var(--text-muted); margin-top:2px; }
+
+/* ---------- Gleichklang ---------- */
+.deck { width:100%; display:flex; gap:12px; align-items:center; padding:14px; margin-bottom:10px; background:var(--glass); border:.5px solid var(--line); border-radius:var(--radius-s); text-align:left; color:var(--text); }
+.deck.adult { border-color:var(--accent-2); }
+.deck .d-ico { font-size:30px; flex-shrink:0; }
+.deck .d-body { flex:1; min-width:0; }
+.deck .d-title { font-family:var(--serif); font-size:16px; }
+.deck .d-sub { font-size:12px; color:var(--text-muted); margin-top:2px; }
+.deck .d-go { font-size:22px; color:var(--accent-2); }
+.overlay.match { align-items:flex-start; overflow-y:auto; }
+.overlay.match .inner { max-width:430px; width:100%; padding:calc(16px + env(safe-area-inset-top)) 22px calc(30px + env(safe-area-inset-bottom)); text-align:left; }
+.match-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:16px; min-height:40px; }
+.match-head .eyebrow { text-align:center; flex:1; }
+.match-head > span:empty { width:40px; }
+.match-intro { text-align:center; padding:10px 0 20px; }
+.match-intro h2 { font-family:var(--serif); font-weight:400; font-size:24px; margin:6px 0 10px; }
+.match-intro .about { font-size:14px; }
+.match-emoji { font-size:54px; line-height:1; margin-bottom:10px; }
+.match-card { background:var(--glass); border:.5px solid var(--line); border-radius:var(--radius); padding:34px 22px; text-align:center; min-height:220px; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:14px; animation:fadeUp .3s ease both; }
+.match-q { font-family:var(--serif); font-size:22px; line-height:1.35; }
+.match-opts { display:flex; gap:8px; margin-top:18px; }
+.match-opts .pill-btn { flex:1; padding:14px 6px; font-size:14px; letter-spacing:.3px; }
+.match-list { width:100%; }
+.match-item { display:flex; gap:12px; align-items:flex-start; padding:12px 14px; margin-bottom:8px; background:var(--glass); border:.5px solid var(--line-soft); border-radius:var(--radius-s); animation:fadeUp .35s ease both; }
+.match-item .mi-e { font-size:24px; }
+.match-item .mi-b { flex:1; min-width:0; }
+.match-item .mi-t { font-size:15px; }
+.match-item .mi-s { font-size:11px; color:var(--text-muted); margin-top:2px; }
+.overlay.match .inner > * { width:100%; }
+.partner-card .pill-btn { white-space:nowrap; }
+.partner-card .eyebrow { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }

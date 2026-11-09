@@ -58,8 +58,11 @@
           <button class="icon-btn" id="btnShare" aria-label="Botschaft teilen">↗</button>
           <button class="icon-btn" id="btnPersonal" aria-label="Persönlich machen und senden">✎</button>
           <button class="icon-btn" id="btnCopy" aria-label="Botschaft kopieren">⧉</button>
+          <button class="icon-btn hidden" id="btnSendPartner" aria-label="In die App des Partners schicken">💌</button>
         </div>
+        <div class="tips-slot" id="msgTips"></div>
       </div>
+      <div class="card soft partner-card hidden" id="partnerCard"></div>
 
       <div class="card piek-card" id="piekCard">
         <div class="row between"><div class="eyebrow" style="margin:0">🔱 Piek des Tages</div><span class="tag" id="piekCat"></span></div>
@@ -69,6 +72,7 @@
           <button class="pill-btn small ghost" id="btnPiekOther">Anderer Piek</button>
           <span class="hint" style="margin:0 0 0 auto" id="piekStreak"></span>
         </div>
+        <div class="tips-slot" id="piekTips"></div>
       </div>
       <div class="card soft" id="thanksCard">
         <div class="eyebrow">🙏 Dankbarkeits-Notiz</div>
@@ -78,7 +82,9 @@
           <button class="pill-btn small primary" id="btnThanksSend">Als Danke senden ↗</button>
           <span class="hint" style="margin:0 0 0 auto" id="thanksCount"></span>
         </div>
+        <div class="tips-slot" id="thanksTips"></div>
       </div>
+      <div class="card soft hidden" id="giftRadar"></div>
       <div class="btn-row">
         <button class="btn" id="btnReasons"><span class="btn-icon">🌹</span><span>Warum ich<br>dich liebe</span></button>
         <button class="btn" id="btnNext"><span class="btn-icon">💌</span><span>Neue<br>Botschaft</span></button>
@@ -97,6 +103,7 @@
       <div class="card soft hidden" id="reasonPanel">
         <div class="row between"><div class="eyebrow" style="margin:0">Warum ich dich liebe</div><button class="pill-btn small ghost" id="btnAddReason">+ Grund</button></div>
         <div class="reason-list" id="reasonList" style="margin-top:12px"></div>
+        <div class="tips-slot" id="reasonTips"></div>
       </div>
 
       <div class="card soft" id="favPanel">
@@ -111,6 +118,13 @@
       <div class="seg" role="tablist" data-seg="play">
         <button role="tab" data-sub="oracle" class="active" aria-selected="true">🌼 Orakel</button>
         <button role="tab" data-sub="music" aria-selected="false">🎵 Liebeslied</button>
+        <button role="tab" data-sub="match" aria-selected="false">🎯 Gleichklang</button>
+      </div>
+      <div class="sub" id="sub-match">
+        <div class="view-title">Gleichklang</div>
+        <div class="view-sub">Jeder antwortet für sich – sichtbar wird nur, was beide wollen</div>
+        <div id="deckList" style="width:100%"></div>
+        <div class="hint" id="deckHint" style="margin-top:6px"></div>
       </div>
       <div class="sub active" id="sub-oracle">
       <div class="view-title">Gänseblümchen-Orakel</div>
@@ -127,6 +141,7 @@
         <div class="oracle-result-text" id="oracleResultText">Ja! Liebt mich!</div>
         <div class="oracle-result-sub" id="oracleResultSub">Das Orakel hat gesprochen ✨</div>
         <button class="pill-btn primary" id="btnDaisyReset">Nochmal fragen 🌼</button>
+        <div class="tips-slot" id="oracleTips" style="margin-top:14px"></div>
       </div>
       <div class="oracle-stats" id="oracleStats"></div>
       <div class="hint" id="daisyHint">Tippe auf ein Blütenblatt, um es abzuzupfen</div>
@@ -144,6 +159,7 @@
         <div class="card soft" style="margin-top:16px">
           <div class="row between"><div class="eyebrow" style="margin:0">Eure Lieder</div><span class="tag" id="songCount">0</span></div>
           <div id="songList" style="margin-top:10px"></div>
+          <div class="tips-slot" id="songTips"></div>
         </div>
       </div>
     </section>
@@ -175,6 +191,7 @@
         <div class="card">
           <div class="eyebrow">Meilensteine</div>
           <div id="milestoneList"></div>
+          <div class="tips-slot" id="timeTips"></div>
         </div>
         <div class="row"><button class="pill-btn small ghost" id="btnChangeDate">Datum ändern</button></div>
       </div>
@@ -208,6 +225,7 @@
         <div class="chips" id="wishChips"></div>
         <div id="wishList" style="width:100%"></div>
         <div class="row" style="margin-top:8px"><button class="pill-btn small ghost" id="btnToggleDoneWishes">Erfüllte anzeigen</button></div>
+        <div class="card soft" style="margin-top:14px;padding:12px 16px"><div class="tips-slot" id="wishTips" style="margin:0"></div></div>
       </div>
       <div class="sub" id="sub-thanks">
         <div class="view-title">Dankbarkeits-Notizen</div>
@@ -222,6 +240,7 @@
         <button class="pill-btn small" id="btnAddCoupon">+ Eigener Gutschein</button>
         <button class="pill-btn small ghost" id="btnResetCoupons">Alle zurücksetzen</button>
       </div>
+      <div class="card soft" style="margin-top:14px;padding:12px 16px"><div class="tips-slot" id="couponTips" style="margin:0"></div></div>
       </div>
     </section>
 
@@ -233,7 +252,9 @@
       </div>
       <div class="sub active" id="sub-prefs">
       <div class="view-title">Einstellungen</div>
-      <div class="view-sub">Alles bleibt auf diesem Gerät</div>
+      <div class="view-sub">Deine Daten bleiben auf diesem Gerät</div>
+
+      <div class="card" style="padding:18px 20px" id="partnerSettings"></div>
 
       <div class="card" style="padding:18px 20px">
         <div class="eyebrow">Namen</div>
@@ -256,9 +277,8 @@
       </div>
 
       <div class="card" style="padding:18px 20px">
-        <div class="eyebrow">Geschenkvorschläge</div>
-        <div class="field" style="margin-bottom:6px"><label for="setAmazonTag">Amazon-Partner-Kennung (optional)</label><input id="setAmazonTag" maxlength="40" placeholder="z. B. meinshop-21" autocomplete="off"></div>
-        <p class="about" style="font-size:12px;color:var(--text-muted)">Wird an Amazon-Suchlinks bei den Anlässen angehängt. Leer lassen = normale Suche ohne Kennung.</p>
+        <div class="eyebrow">Passend dazu – Werbelinks</div>
+        <p class="about" style="font-size:12px;color:var(--text-muted)">Zu vielen Funktionen zeigt die App Produkt-Vorschläge als Links zur Amazon-Suche. Das sind Werbelinks: Kaufst du darüber etwas, bekommt der Anbieter dieser App eine kleine Provision von Amazon. Für dich ändert sich nichts am Preis. Die Links öffnen sich außerhalb der App. Als Amazon-Partner verdient der Anbieter an qualifizierten Verkäufen.</p>
       </div>
 
       <div class="card" style="padding:18px 20px">
@@ -286,7 +306,7 @@
       <div class="card about">
         <div class="eyebrow">Über Schmetterlingsfutter</div>
         <p style="margin-bottom:8px">Das kleine Liebesteufelchen hält Liebe, Leidenschaft und Spaß in eurer Beziehung lebendig – Futter für die Schmetterlinge im Bauch. Am besten installiert ihr Schmetterlingsfutter beide und tragt euch gegenseitig als Absender ein.</p>
-        <p>Version <span id="aboutVersion"></span>. Diese App speichert alle Eingaben ausschließlich lokal auf deinem Gerät. Es werden keine Daten übertragen, keine Konten angelegt und keine Werbung angezeigt.</p>
+        <p>Version <span id="aboutVersion"></span>. Diese App speichert alle Eingaben lokal auf deinem Gerät. Es werden keine Konten angelegt und keine Werbeanzeigen eingeblendet. Nur wenn ihr eure Apps freiwillig verbindet, laufen Botschaften verschlüsselt und Spiel-Antworten als Prüfsummen über einen Vermittlungsdienst – mehr dazu im Datenschutz.</p>
         <p style="margin-top:8px"><a href="privacy.html">Datenschutz &amp; Impressum</a> · <a href="#" id="btnOnboardingAgain">Einrichtung erneut starten</a></p>
         <p style="margin-top:8px;font-size:11px;color:var(--text-muted)">Schriften: Playfair Display und Lato (SIL Open Font License).</p>
       </div>
@@ -307,12 +327,19 @@
             <button class="btn" id="btnFlirt"><span class="btn-icon">😏</span><span>Flirt-<br>Nachricht</span></button>
             <button class="btn" id="btnDeepQ"><span class="btn-icon">💬</span><span>Frage<br>für zwei</span></button>
             <button class="btn" id="btnDateIdea"><span class="btn-icon">🕯️</span><span>Date-<br>Idee</span></button>
-            <button class="btn" id="btnIntimShare"><span class="btn-icon">↗</span><span>Teilen</span></button>
+            <button class="btn" id="btnIntimShare"><span class="btn-icon">↗</span><span>Senden</span></button>
+          </div>
+          <div class="tips-slot" id="intimTips" style="margin:-6px 0 14px"></div>
+          <div class="card" style="border-color:var(--accent-2)">
+            <div class="row between"><div class="eyebrow" style="margin:0">🎯 Vorlieben abgleichen</div><span class="tag">Geheim</span></div>
+            <p class="about" style="font-size:13px;margin:8px 0 12px">Jeder beantwortet für sich, worauf er Lust hätte. Ihr seht nur, was ihr beide wollt – alles andere bleibt geheim, auch voreinander. Mit passenden Vorschlägen zu jedem Treffer.</p>
+            <div class="row" style="justify-content:flex-start"><button class="pill-btn small primary" id="btnVorlieben">Jetzt abgleichen</button></div>
           </div>
           <div class="card soft">
             <div class="row between"><div class="eyebrow" style="margin:0">Unser Wunschzettel für zwei</div><button class="pill-btn small ghost" id="btnAddIntimWish">+ Wunsch</button></div>
             <p class="about" style="font-size:12px;margin:8px 0 6px;color:var(--text-muted)">Was ihr gern einmal zusammen erleben wollt. Bleibt nur auf diesem Gerät.</p>
             <div id="intimWishList"></div>
+            <div class="tips-slot" id="intimWishTips"></div>
           </div>
         </div>
       </div>
@@ -320,7 +347,7 @@
   </main>
 
   <nav class="nav" role="tablist" aria-label="Hauptnavigation">
-    <button role="tab" id="nav-home" data-view="home" class="active" aria-selected="true"><span class="ico">💌</span>Botschaften</button>
+    <button role="tab" id="nav-home" data-view="home" class="active" aria-selected="true"><span class="ico">💌<i class="nav-badge hidden" id="navBadge"></i></span>Botschaften</button>
     <button role="tab" id="nav-play" data-view="play" aria-selected="false"><span class="ico">🌼</span>Spielen</button>
     <button role="tab" id="nav-time" data-view="time" aria-selected="false"><span class="ico">📅</span>Unsere Zeit</button>
     <button role="tab" id="nav-wishes" data-view="wishes" aria-selected="false"><span class="ico">⭐</span>Wünsche</button>
@@ -353,7 +380,7 @@
     </div>
     <div class="ob-step" data-step="3">
       <div class="field"><label>Farbwelt</label><div class="theme-grid" id="obThemeGrid"></div></div>
-      <p class="about" style="margin:6px 0 16px">Alles bleibt auf diesem Gerät. Keine Anmeldung, keine Werbung, keine Datenübertragung.</p>
+      <p class="about" style="margin:6px 0 16px">Alles bleibt auf diesem Gerät. Keine Anmeldung, keine Werbeanzeigen. Eure Apps verbinden könnt ihr später freiwillig – verschlüsselt.</p>
       <div class="ob-nav"><button class="pill-btn ghost" data-prev>Zurück</button><button class="pill-btn primary" id="obFinish">Los geht's ❤</button></div>
     </div>
   </div>
@@ -374,6 +401,11 @@
   </div>
 </div>
 
+<!-- ===== Gleichklang (Match-Spiel) ===== -->
+<div class="overlay match hidden" id="matchScreen" role="dialog" aria-modal="true" aria-label="Gleichklang">
+  <div class="inner"></div>
+</div>
+
 <!-- ===== Bottom sheet ===== -->
 <div class="modal" id="modal" role="dialog" aria-modal="true">
   <div class="sheet" id="sheet"></div>
@@ -384,5 +416,6 @@
 <script src="js/data.js"></script>
 <script src="js/app.js"></script>
 <script src="js/features.js"></script>
+<script src="js/partner.js"></script>
 </body>
 </html>

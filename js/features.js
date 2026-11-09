@@ -61,6 +61,7 @@
       l.appendChild(d);
     });
     renderOccasionChip();
+    if (window.LZP) window.LZP.renderGiftRadar();
   }
   const pad2 = (n) => String(n).padStart(2, '0');
   const ymd = (d) => d.getFullYear() + pad2(d.getMonth() + 1) + pad2(d.getDate());
@@ -92,7 +93,8 @@
     });
   }
   function amazonUrl(q) {
-    const tag = (S().amazonTag || '').trim();
+    if (window.LZP) return window.LZP.amazonUrl(q);
+    const tag = (D.affiliateTag || '').trim();
     return 'https://www.amazon.de/s?k=' + encodeURIComponent(q) + (tag ? '&tag=' + encodeURIComponent(tag) : '');
   }
   function giftSheet(o) {
@@ -111,7 +113,7 @@
     html += '<div class="eyebrow" style="margin-top:14px">Erlebnis statt Ding (nichts zu kaufen)</div>';
     [L.pick(D.experiences), L.pick(D.experiences)].filter((v, i, a) => a.indexOf(v) === i).forEach((e) => { html += '<div class="gift-item" style="cursor:default"><span class="g-ico">' + e.icon + '</span><span class="g-t">' + L.esc(e.title) + '</span></div>'; });
     html += '<div class="row" style="margin-top:14px"><button class="pill-btn ghost" data-cancel>Schließen</button></div>';
-    html += '<p class="about" style="font-size:11px;color:var(--text-muted);margin-top:10px">' + (S().amazonTag ? '<span class="ad-note">Werbelinks</span> – Der Anbieter erhält bei einem Kauf eine Provision. ' : '') + 'Links öffnen die Amazon-Suche im Browser, nie in der App.</p>';
+    html += '<p class="about" style="font-size:11px;color:var(--text-muted);margin-top:10px"><span class="ad-note">Werbelinks</span> – Der Anbieter erhält bei einem Kauf eine Provision von Amazon. Links öffnen die Amazon-Suche im Browser, nie in der App.</p>';
     L.openSheet(html, (sh) => {
       sh.querySelector('[data-cancel]').onclick = L.closeSheet;
       sh.querySelectorAll('[data-q]').forEach((b) => b.onclick = () => window.open(amazonUrl(b.dataset.q), '_blank', 'noopener'));
@@ -158,6 +160,7 @@
       d.onclick = () => wishSheet(w);
       l.appendChild(d);
     });
+    if (window.LZP) window.LZP.mountTips($('wishTips'), 'lovemap', 'Die Love Map füllen');
   }
   function wishSheet(w) {
     L.openSheet('<h3>⭐ ' + L.esc(w.text) + '</h3>' + (w.note ? '<p class="about" style="margin-bottom:12px">' + L.esc(w.note) + '</p>' : '') +
@@ -245,6 +248,7 @@
       btns[2].onclick = () => L.confirmSheet('Lied löschen?', sg.name, 'Löschen', () => { S().songs = S().songs.filter((x) => x.id !== sg.id); L.save(); renderSongs(); }, true);
       l.appendChild(d);
     });
+    if (window.LZP) window.LZP.mountTips($('songTips'), 'song', 'Euer Lied hörbar machen');
   }
 
   /* ---------- 5. Zweisamkeit ---------- */
@@ -263,26 +267,23 @@
       b[1].onclick = () => { S().intimWishes.splice(i, 1); L.save(); renderIntim(); };
       l.appendChild(d);
     });
+    if (window.LZP) { window.LZP.mountTips($('intimWishTips'), 'intim_wish', 'Für den Wunschzettel'); window.LZP.renderDecks(); }
   }
   function enableIntim() {
     L.confirmSheet('Bereich „Zweisamkeit“ einschalten', 'Dieser Bereich enthält Flirt-Nachrichten und Fragen zu Nähe und Intimität. Mit „Ja, wir sind 18+“ bestätigst du, dass ihr beide volljährig seid. Inhalte bleiben auf diesem Gerät.', 'Ja, wir sind 18+', () => { S().intim = true; L.save(); renderIntim(); L.showSub('settings', 'intim'); L.spawnHearts(8, $('intimContent')); });
   }
   $('btnIntimEnable').onclick = enableIntim;
   $('togIntim').onclick = () => { if (S().intim) { S().intim = false; L.save(); renderIntim(); } else enableIntim(); };
-  function setIntim(t) { intimCurrent = L.fmt(t); const el = $('intimText'); el.style.opacity = 0; setTimeout(() => { el.textContent = intimCurrent; el.style.opacity = 1; }, 250); }
-  $('btnFlirt').onclick = () => { L.spawnHearts(5, $('intimText')); setIntim(L.pick(D.intim.flirt)); };
-  $('btnDeepQ').onclick = () => setIntim(L.pick(D.intim.questions));
-  $('btnDateIdea').onclick = () => setIntim(L.pick(D.intim.dates));
-  $('btnIntimShare').onclick = () => { if (intimCurrent) L.shareText(intimCurrent + '\n— ' + S().sender + ' ❤'); else L.toast('Erst etwas auswählen'); };
+  function setIntim(t, kind) { intimCurrent = L.fmt(t); const el = $('intimText'); el.style.opacity = 0; setTimeout(() => { el.textContent = intimCurrent; el.style.opacity = 1; }, 250); if (window.LZP && kind) window.LZP.mountTips($('intimTips'), 'intim_' + kind, 'Passend dazu'); }
+  $('btnFlirt').onclick = () => { L.spawnHearts(5, $('intimText')); setIntim(L.pick(D.intim.flirt), 'flirt'); };
+  $('btnDeepQ').onclick = () => setIntim(L.pick(D.intim.questions), 'question');
+  $('btnDateIdea').onclick = () => setIntim(L.pick(D.intim.dates), 'date');
+  $('btnIntimShare').onclick = () => { if (!intimCurrent) return L.toast('Erst etwas auswählen'); if (window.LZP) window.LZP.sendOrShare(intimCurrent, 'Nur für dich 🔥'); else L.shareText(intimCurrent + '\n— ' + S().sender + ' ❤'); };
   $('btnAddIntimWish').onclick = () => L.promptSheet('Wunsch für zwei', [{ key: 't', label: 'Was wollt ihr zusammen erleben?', placeholder: 'z. B. ein Wochenende ohne Pläne', max: 120 }], 'Hinzufügen', (v) => {
     if (!v.t) return false; S().intimWishes.push({ text: v.t, done: false }); L.save(); renderIntim();
   });
 
-  /* ---------- Einstellungen: Amazon-Kennung ---------- */
-  const tagInput = $('setAmazonTag');
-  tagInput.addEventListener('change', () => { S().amazonTag = tagInput.value.trim().replace(/[^A-Za-z0-9\-_]/g, ''); tagInput.value = S().amazonTag; L.save(); L.toast(S().amazonTag ? 'Partner-Kennung gespeichert' : 'Partner-Kennung entfernt'); });
-  const _origRender = () => { tagInput.value = S().amazonTag || ''; };
-  document.getElementById('nav-settings').addEventListener('click', _origRender);
+  const _origRender = () => {};
 
   /* ---------- Start ---------- */
   /* ---------- 6. Piek des Tages ---------- */
@@ -300,6 +301,7 @@
     $('piekStreak').textContent = s.piekCount ? s.piekCount + (s.piekCount === 1 ? ' Piek' : ' Pieks') + ' erledigt' : '';
     $('thanksLabel').textContent = 'Was hat ' + s.receiver + ' heute gut gemacht?';
     $('thanksCount').textContent = s.thanks.length ? s.thanks.length + ' notiert' : '';
+    if (window.LZP) { window.LZP.mountTips($('piekTips'), 'piek_' + p.c, 'Hilft beim Piek'); window.LZP.mountTips($('thanksTips'), 'thanks', 'Danke mit etwas Kleinem'); }
   }
   $('btnPiekDone').onclick = () => {
     const s = S(); const key = L.todayKey(); if (s.piekDone[key]) return;
@@ -323,7 +325,8 @@
   $('btnThanksSend').onclick = () => {
     const d = thanksText(); if (!d) return;
     const msg = L.fmt(L.pick(D.thanks)).replace('{d}', d);
-    saveThanks(d); L.showMessage({ text: msg, own: true }, 'Dein Danke'); L.shareText(msg + '\n— ' + S().sender + ' ❤');
+    saveThanks(d); L.showMessage({ text: msg, own: true }, 'Dein Danke');
+    if (window.LZP) window.LZP.sendOrShare(msg, 'Ein Danke'); else L.shareText(msg + '\n— ' + S().sender + ' ❤');
   };
   function renderThanks() {
     const l = $('thanksList'); l.innerHTML = ''; const s = S();
@@ -333,7 +336,7 @@
       const d = document.createElement('div'); d.className = 'thank';
       d.innerHTML = '<span>🙏</span><div class="t-body"><div class="t-text">' + L.esc(t.text) + '</div><div class="t-meta">' + L.fmtDate(new Date(t.date)) + '</div></div><button class="icon-btn" aria-label="Als Danke senden">↗</button><button class="reason-del" aria-label="Löschen">✕</button>';
       const b = d.querySelectorAll('button');
-      b[0].onclick = () => L.shareText(L.fmt(L.pick(D.thanks)).replace('{d}', t.text) + '\n— ' + s.sender + ' ❤');
+      b[0].onclick = () => { const m = L.fmt(L.pick(D.thanks)).replace('{d}', t.text); if (window.LZP) window.LZP.sendOrShare(m, 'Ein Danke'); else L.shareText(m + '\n— ' + s.sender + ' ❤'); };
       b[1].onclick = () => { s.thanks = s.thanks.filter((x) => x.id !== t.id); L.save(); renderThanks(); renderPiek(); };
       l.appendChild(d);
     });
@@ -349,12 +352,12 @@
       sh.querySelector('[data-ok]').onclick = () => {
         const t = sh.querySelector('#pf-p').value.trim(); if (!t) return;
         if (t === base) { L.toast('Zu Standard. Nenn was Konkretes. 😈'); return; }
-        L.closeSheet(); L.shareText(t + '\n— ' + S().sender + ' ❤');
+        L.closeSheet(); if (window.LZP) window.LZP.sendOrShare(t, 'Persönlich für dich'); else L.shareText(t + '\n— ' + S().sender + ' ❤');
       };
     });
   };
 
-  window.LZF = { renderOccasions, renderWishes, renderSongs, renderIntim, renderOccasionChip, renderPiek, renderThanks };
+  window.LZF = { renderOccasions, renderWishes, renderSongs, renderIntim, renderOccasionChip, renderPiek, renderThanks, occasionsAll, giftSheet, amazonUrl };
   renderOccasionChip(); _origRender(); renderPiek();
   document.querySelector('.seg[data-seg="wishes"] [data-sub="thanks"]').addEventListener('click', renderThanks);
   $('nav-wishes').addEventListener('click', renderThanks);

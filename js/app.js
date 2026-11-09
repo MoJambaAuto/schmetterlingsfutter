@@ -33,7 +33,8 @@
     piekDone: {}, piekCount: 0, piekOverride: null,
     thanks: [],
     hiddenOccasions: [],
-    wishFilter: 'alle'
+    wishFilter: 'alle',
+    partner: null, inbox: [], matches: {}, deviceId: null, pendingPair: null
   });
   let S = load();
 
@@ -187,6 +188,7 @@
     const el = $('msgText'); el.style.opacity = 0;
     setTimeout(() => { fn(); el.style.opacity = 1; }, 300);
   }
+  const tipKeyFor = (label) => ({ 'Ein Kuss': 'kiss', 'Eine Umarmung': 'hug', 'Guten Morgen': 'morning', 'Gute Nacht': 'night', 'Frisch gezaubert 😈': 'gen', 'Dein Danke': 'thanks' })[label] || 'message';
   function showMessage(item, label) {
     current = item;
     fade(() => {
@@ -194,6 +196,7 @@
       $('msgLabel').textContent = label || (item.own ? 'Persönlich für dich' : '');
       $('reasonPanel').classList.add('hidden');
       updateFavBtn();
+      if (window.LZP) window.LZP.mountTips($('msgTips'), tipKeyFor(label), 'Passend dazu');
     });
   }
   function nextMessage() {
@@ -228,6 +231,8 @@
     });
   }
   async function shareCurrent() {
+    if (!current.text) return;
+    if (window.LZP) return window.LZP.sendOrShare(fmt(current.text), $('msgLabel').textContent);
     const text = fmt(current.text) + '\n— ' + S.sender + ' ❤';
     if (navigator.share) { try { await navigator.share({ text }); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
     copyCurrent();
@@ -267,7 +272,7 @@
   $('btnMorning').onclick = () => { spawnHearts(5); showMessage({ text: pick(D.goodmorning), own: false }, 'Guten Morgen'); };
   $('btnNight').onclick = () => { spawnHearts(5); showMessage({ text: pick(D.goodnight), own: false }, 'Gute Nacht'); };
   $('btnWrite').onclick = () => writeOwn((t) => showMessage({ text: t, own: true }, 'Persönlich für dich'));
-  $('btnReasons').onclick = () => { const p = $('reasonPanel'); const open = p.classList.toggle('hidden'); if (!open) { renderReasons(); p.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } };
+  $('btnReasons').onclick = () => { const p = $('reasonPanel'); const open = p.classList.toggle('hidden'); if (!open) { renderReasons(); if (window.LZP) window.LZP.mountTips($('reasonTips'), 'reasons', 'Gründe schenken'); p.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } };
   $('btnAddReason').onclick = () => promptSheet('Neuer Grund', [{ key: 'r', label: 'Warum ich dich liebe …', placeholder: 'z. B. Wie du morgens singst', max: 120 }], 'Hinzufügen', (v) => {
     if (!v.r) return false; S.reasons.push(v.r); save(); renderReasons();
   });
@@ -336,6 +341,7 @@
           $('oracleResultText').textContent = saidLoves ? 'Ja! ' + S.sender + ' liebt mich!' : 'Hm … das Orakel zögert.';
           $('oracleResultSub').textContent = saidLoves ? 'Das Orakel hat gesprochen, ' + S.receiver + ' ✨' : 'Blumen irren sich. Frag nochmal, ' + S.receiver + '.';
           $('oracleResult').classList.add('visible');
+          if (window.LZP) window.LZP.mountTips($('oracleTips'), 'oracle', saidLoves ? 'Zur Feier des Tages' : 'Nachhelfen');
           if (saidLoves) spawnHearts(14, $('daisyWrap'));
           renderOracleStats();
         }, 350);
@@ -389,6 +395,7 @@
     $('annivProgress').style.width = Math.round(((365 - until) / 365) * 100) + '%';
     $('annivDate').textContent = 'am ' + fmtDate(next);
     if (until === 0) spawnHearts(12, $('daysTogether'));
+    if (window.LZP) window.LZP.mountTips($('timeTips'), until <= 30 ? 'milestone' : 'time', until <= 30 ? 'Zum Jahrestag in ' + until + ' Tagen' : 'Eure Zeit festhalten');
     // Meilensteine
     const l = $('milestoneList'); l.innerHTML = ''; let nextMarked = false;
     const items = D.milestones.map((m) => {
@@ -430,18 +437,24 @@
       const b = document.createElement('button'); b.className = 'coupon' + (c.used ? ' used' : ''); b.type = 'button';
       b.innerHTML = '<span class="c-ico">' + esc(c.icon) + '</span><span class="c-body"><span class="c-title">' + esc(c.title) + '</span>' +
         (c.desc ? '<span class="c-desc" style="display:block">' + esc(c.desc) + '</span>' : '') +
-        '<span class="c-state" style="display:block">' + (c.used ? 'Eingelöst am ' + fmtDate(new Date(c.used)) : 'Einlösbar') + '</span></span>';
+        '<span class="c-state" style="display:block">' + (c.from ? '💌 von ' + esc(c.from) + ' · ' : '') + (c.used ? 'Eingelöst am ' + fmtDate(new Date(c.used)) : 'Einlösbar') + '</span></span>';
       b.onclick = () => couponSheet(c);
       l.appendChild(b);
     });
+    if (window.LZP) window.LZP.mountTips($('couponTips'), 'coupon', 'Gutscheine einlösen leicht gemacht');
   }
+  const couponTipKey = (c) => { const t = (c.title || '').toLowerCase(); return t.includes('massage') ? 'coupon_massage' : t.includes('frühstück') ? 'coupon_fruehstueck' : t.includes('film') ? 'coupon_film' : t.includes('essen') ? 'coupon_essen' : t.includes('wellness') ? 'coupon_wellness' : t.includes('spaziergang') ? 'coupon_spaziergang' : t.includes('tag') ? 'coupon_tag' : t.includes('ausschlafen') ? 'coupon_ausschlafen' : 'coupon'; };
   function couponSheet(c) {
-    const used = !!c.used;
-    openSheet('<h3>' + esc(c.icon) + ' ' + esc(c.title) + '</h3><p class="about" style="margin-bottom:18px">' + esc(c.desc || '') + (used ? '<br><br>Eingelöst am ' + fmtDate(new Date(c.used)) + '.' : '') + '</p>' +
-      '<div class="row wrap">' +
+    const used = !!c.used; const canSend = window.LZP && window.LZP.joined();
+    openSheet('<h3>' + esc(c.icon) + ' ' + esc(c.title) + '</h3><p class="about" style="margin-bottom:14px">' + esc(c.desc || '') + (c.from ? '<br><br>💌 Geschenkt von ' + esc(c.from) + '.' : '') + (used ? '<br><br>Eingelöst am ' + fmtDate(new Date(c.used)) + '.' : '') + '</p>' +
+      (window.LZP ? window.LZP.tipsHtml(window.LZP.tips(couponTipKey(c), 2), 'Dazu passt') : '') +
+      '<div class="row wrap" style="margin-top:14px">' +
       (used ? '<button class="pill-btn" data-reopen>Wieder aktivieren</button>' : '<button class="pill-btn primary" data-use>Jetzt einlösen 🎉</button>') +
+      (canSend && !c.from ? '<button class="pill-btn" data-send>💌 An ' + esc(window.LZP.partnerName()) + ' schicken</button>' : '') +
       '<button class="pill-btn ghost danger" data-del>Löschen</button><button class="pill-btn ghost" data-cancel>Schließen</button></div>', (sh) => {
       sh.querySelector('[data-cancel]').onclick = closeSheet;
+      if (window.LZP) window.LZP.bindTips(sh);
+      const sd = sh.querySelector('[data-send]'); if (sd) sd.onclick = () => { closeSheet(); window.LZP.sendCoupon(c); };
       const u = sh.querySelector('[data-use]'); if (u) u.onclick = () => { c.used = new Date().toISOString(); save(); closeSheet(); renderCoupons(); spawnHearts(12, $('couponList')); toast('Eingelöst! Viel Freude 🎉'); haptic(20); };
       const r = sh.querySelector('[data-reopen]'); if (r) r.onclick = () => { c.used = null; save(); closeSheet(); renderCoupons(); };
       sh.querySelector('[data-del]').onclick = () => { closeSheet(); confirmSheet('Gutschein löschen?', c.title, 'Löschen', () => { S.coupons = S.coupons.filter((x) => x.id !== c.id); save(); renderCoupons(); }, true); };
@@ -502,7 +515,8 @@
   $('btnWrite2').onclick = () => writeOwn(() => renderSettings());
   $('btnSeal').onclick = () => confirmSheet('App versiegeln?', 'Beim nächsten Öffnen erscheint der Briefumschlag für ' + S.receiver + '. Du kannst ihn selbst öffnen, um die Ansicht zu prüfen.', 'Versiegeln 💌', () => { S.giftSealed = true; save(); showGift(); });
   $('btnExport').onclick = () => {
-    const blob = new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' });
+    const copy = Object.assign({}, S); delete copy.partner; delete copy.deviceId; delete copy.pendingPair; // Verbindung ist gerätegebunden
+    const blob = new Blob([JSON.stringify(copy, null, 2)], { type: 'application/json' });
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'schmetterlingsfutter-sicherung-' + todayKey() + '.json';
     document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); toast('Sicherung erstellt');
   };
@@ -514,12 +528,13 @@
       try {
         const data = JSON.parse(rd.result);
         if (!data || typeof data !== 'object' || !data.sender || !Array.isArray(data.coupons)) throw new Error('format');
-        confirmSheet('Sicherung einspielen?', 'Die aktuellen Daten auf diesem Gerät werden ersetzt.', 'Einspielen', () => { S = Object.assign(defaults(), data); S.onboarded = true; save(); location.reload(); });
+        delete data.partner; delete data.deviceId; delete data.pendingPair;
+        confirmSheet('Sicherung einspielen?', 'Die aktuellen Daten auf diesem Gerät werden ersetzt. Eine bestehende Partner-Verbindung bleibt.', 'Einspielen', () => { const keep = { partner: S.partner, deviceId: S.deviceId }; S = Object.assign(defaults(), data, keep); S.onboarded = true; save(); location.reload(); });
       } catch (err) { toast('Datei nicht lesbar – ist es eine Schmetterlingsfutter-Sicherung?'); }
     };
     rd.readAsText(f); e.target.value = '';
   });
-  $('btnReset').onclick = () => confirmSheet('Wirklich alles löschen?', 'Namen, Favoriten, eigene Botschaften, Gutscheine und Jahrestag werden von diesem Gerät entfernt. Das lässt sich nicht rückgängig machen.', 'Alles löschen', () => { try { localStorage.removeItem(STORE_KEY); } catch (e) {} location.reload(); }, true);
+  $('btnReset').onclick = () => confirmSheet('Wirklich alles löschen?', 'Namen, Favoriten, eigene Botschaften, Gutscheine, Jahrestag und eine Partner-Verbindung werden entfernt. Das lässt sich nicht rückgängig machen.', 'Alles löschen', async () => { if (window.LZP) { try { await window.LZP.leavePair(true); } catch (e) {} } try { localStorage.removeItem(STORE_KEY); } catch (e) {} location.reload(); }, true);
   $('btnOnboardingAgain').onclick = (e) => { e.preventDefault(); startOnboarding(); };
 
   /* ---------- Onboarding ---------- */
