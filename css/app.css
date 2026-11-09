@@ -423,4 +423,3 @@ main { z-index:1; flex:1; padding:8px 24px calc(var(--nav-h) + 24px + env(safe-a
 .match-item .mi-s { font-size:11px; color:var(--text-muted); margin-top:2px; }
 .overlay.match .inner > * { width:100%; }
 .partner-card .pill-btn { white-space:nowrap; }
-.partner-card .eyebrow { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
