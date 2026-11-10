@@ -278,7 +278,7 @@
   function nahSheet() {
     L.openSheet('<h3>📡 Nah dran</h3><p class="about" style="font-size:17px;margin-bottom:12px">Für die Momente, in denen ihr nebeneinander sitzt – oder euch etwas zum Finden hinterlasst.</p>' +
       (P.RELAY && !P.joined() ? '<button type="button" class="deck" data-pair><span class="d-ico">💞</span><div class="d-body"><div class="d-title">Apps per QR-Code verbinden</div><div class="d-sub">Code zeigen, mit der Handy-Kamera scannen, fertig.</div></div><span class="d-go">›</span></button>' : '') +
-      '<button type="button" class="deck" data-kritzel><span class="d-ico">🎨</span><div class="d-body"><div class="d-title">Bild in der Nähe teilen</div><div class="d-sub">Kritzel-Gruß über Quick Share (Android) oder AirDrop (iPhone).</div></div><span class="d-go">›</span></button>' +
+      '<button type="button" class="deck" data-kritzel><span class="d-ico">🎨</span><div class="d-body"><div class="d-title">Bild in der Nähe teilen</div><div class="d-sub">Kritzel-Gruß über das Teilen-Menü deines Handys.</div></div><span class="d-go">›</span></button>' +
       '<button type="button" class="deck" data-greet><span class="d-ico">🏷️</span><div class="d-body"><div class="d-title">Liebes-QR &amp; NFC-Sticker</div><div class="d-sub">Botschaft verstecken – zum Scannen oder Antippen.</div></div><span class="d-go">›</span></button>' +
       '<div class="row" style="margin-top:8px"><button class="pill-btn ghost" data-cancel>Schließen</button></div>', (sh) => {
       sh.querySelector('[data-cancel]').onclick = L.closeSheet;

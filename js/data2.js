@@ -3,7 +3,7 @@
 (function () {
   'use strict';
   const D = window.LUZIFER_DATA;
-  D.version = '3.6.1';
+  D.version = '3.7.0';
 
   /* Ideen-Briefkasten: eingeschaltet seit 10.11.2026 (Vermittlungsdienst kennt die Adresse /idea) */
   D.ideaBox = true;
@@ -228,6 +228,40 @@
     ["s-streit-2","streit","Weiße Fahne","Weiße Fahne, Schatz! Vertragen wir uns?",5.3],
     ["s-streit-3","streit","In den Arm","Streit vorbei? Ich nehm dich in den Arm.",7.5]
   ].reverse().forEach((x) => D.jingles.unshift({ id: x[0], cat: x[1], title: x[2], text: x[3], sec: x[4], file: 'audio/jingles/' + x[0] + '.mp3', sung: true, pd: 'Aufnahme: Suno' }));
+
+  /* ---- Gesungene Jingles (Suno, Runde 2, Downloads von Mo freigegeben am 11.11.2026). Stehen je Anlass vor den Aufnahmen aus Runde 1. ---- */
+  [
+    ["s-vermissen-1","vermissen","Du fehlst mir","Du fehlst mir heute, mehr als sonst.",3.8],
+    ["s-vermissen-2","vermissen","Komm bald heim","Komm bald heim, mein Platz ist leer.",3.2],
+    ["s-vermissen-3","vermissen","Stunden zählen","Ich zähl die Stunden bis zu dir.",4.3],
+    ["s-stolz-1","stolz","Du schaffst das","Du schaffst das, ich glaub an dich!",4.3],
+    ["s-stolz-2","stolz","Kopf hoch","Kopf hoch, ich steh hinter dir.",4.7],
+    ["s-stolz-3","stolz","So stolz","Ich bin so stolz auf dich, na klar!",5.9],
+    ["s-streit2-1","streit","Nicht fair von mir","Es tut mir leid. Das war nicht fair von mir.",4.7],
+    ["s-streit2-2","streit","Du bist mir wichtig","Ich will nicht streiten. Du bist mir wichtig.",3.9],
+    ["s-streit2-3","streit","Ich hör dir zu","Lass uns reden. Ich hör dir zu.",5],
+    ["s-vgeburtstag-1","vergessen_geburtstag","Nachträglich","Nachträglich alles Liebe, ich war zu spät!",5],
+    ["s-vgeburtstag-2","vergessen_geburtstag","Durchgerutscht","Dein Geburtstag ging mir durch, verzeih!",4.5],
+    ["s-vgeburtstag-3","vergessen_geburtstag","Mit Kuchen","Zu spät gratuliert, dafür mit Kuchen!",6.8],
+    ["s-vfeiertag-1","vergessen_feiertag","Ich hol ihn nach","Der Tag flog vorbei, ich hol ihn nach!",3.4],
+    ["s-vfeiertag-2","vergessen_feiertag","Mit Liebe eingepackt","Verspätet, doch mit Liebe eingepackt.",3.6],
+    ["s-vfeiertag-3","vergessen_feiertag","Nicht vergessen","Verpasst, verpennt, doch nicht vergessen: dich!",6.8],
+    ["s-jahrestag-1","jahrestag","Noch ein Jahr","Noch ein Jahr mit dir, bitte noch viele.",4.9],
+    ["s-jahrestag-2","jahrestag","Jedes Mal","Ich würd dich wieder wählen, jedes Mal.",4.9],
+    ["s-jahrestag-3","jahrestag","Auf uns zwei","Unser Tag, mein Herz, auf uns zwei!",5.5],
+    ["s-geburtstag-1","geburtstag","Nur um dich","Heute dreht sich alles nur um dich!",4.1],
+    ["s-geburtstag-2","geburtstag","Kerzen an","Kerzen an, mein Schatz, es ist dein Tag!",3.9],
+    ["s-geburtstag-3","geburtstag","Immer schöner","Ein Jahr mehr, und du wirst immer schöner.",6.3],
+    ["s-valentin-1","valentin","Valentinsschatz","Sei mein Valentinsschatz, heute und überhaupt.",7.1],
+    ["s-valentin-2","valentin","Amor hat getroffen","Amor hat getroffen, mitten ins Herz.",4],
+    ["s-valentin-3","valentin","Ein Strauß, ein Kuss","Ein Strauß, ein Kuss, mein Herz gehört dir.",6.7],
+    ["s-weihnachten-1","weihnachten","Unterm Baum","Unterm Baum ist Platz für uns zwei, mein Schatz. Mein liebstes Päckchen, das bist du.",8],
+    ["s-weihnachten-2","weihnachten","Plätzchenduft","Plätzchenduft und du daneben, so mag ich den Advent.",8.1],
+    ["s-lust-1","lust","Handy aus","Heute Abend nur wir zwei, Handy aus.",5],
+    ["s-lust-2","lust","Komm näher","Komm näher, ich hab Lust auf dich.",4.3],
+    ["s-lust-3","lust","Du und ich","Kerzen an, Tür zu, du und ich.",5.9]
+  ].reverse().forEach((x) => D.jingles.unshift({ id: x[0], cat: x[1], title: x[2], text: x[3], sec: x[4], file: 'audio/jingles/' + x[0] + '.mp3', sung: true, pd: 'Aufnahme: Suno' }));
+  /* ---- Ende Runde 2 ---- */
 
   /* ---- Inhalte-Paket 2026-11 (Inhalte-Werkstatt): 40 neue Botschaften für „Heute für dich“ ---- */
   D.messages.push(
