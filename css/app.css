@@ -523,3 +523,6 @@ input, textarea, select { font-size:19px; }
 #jingleChips { flex-wrap:wrap; overflow:hidden; max-height:104px; margin-right:0; padding-right:0; }
 #jingleChips.open { max-height:none; }
 #jingleChips button.on { order:-1; }
+
+/* Gesungene Jingles */
+.j-sung { font-size:17px; }

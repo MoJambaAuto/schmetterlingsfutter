@@ -182,8 +182,11 @@
     for (let i = queue.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [queue[i], queue[j]] = [queue[j], queue[i]]; }
   }
   function dailyMessage() {
-    const p = pool(); const idx = hash(todayKey() + '|' + S.sender + '|' + S.receiver) % p.length;
-    return p[idx];
+    /* Jeden Tag eine andere Botschaft: feste, je Paar gemischte Reihenfolge – Wiederholung erst, wenn alle dran waren */
+    const p = pool(); const order = p.map((_, i) => i); let seed = hash(S.sender + '|' + S.receiver + '|' + p.length) || 1;
+    for (let i = order.length - 1; i > 0; i--) { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; const j = seed % (i + 1); const t = order[i]; order[i] = order[j]; order[j] = t; }
+    const day = Math.floor(Date.parse(todayKey() + 'T00:00:00Z') / 864e5);
+    return p[order[((day % p.length) + p.length) % p.length]];
   }
   function fade(fn) {
     const el = $('msgText'); el.style.opacity = 0;

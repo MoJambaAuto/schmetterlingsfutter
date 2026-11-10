@@ -56,7 +56,7 @@
     j.notes.split(',').forEach((tok) => { const p = tok.trim().split(/\s+/); const d = (parseFloat(p[1]) || 1) * beat; if (p[0] !== '-') out.push({ n: p[0].split('+'), t, d }); t += d; });
     return { events: out, total: t };
   }
-  const jingleSeconds = (j) => Math.round((parseNotes(j).total + 0.6) * 10) / 10;
+  const jingleSeconds = (j) => j.sec || Math.round((parseNotes(j).total + 0.6) * 10) / 10;
   let fileAudio = null;
   function playJingle(j, onEnd) {
     if (j.file) { // fertige Aufnahme (später aus der Jingle-Datenbank)
@@ -82,7 +82,7 @@
     box.innerHTML = '<div class="row between"><div class="eyebrow" style="margin:0">🎶 Jingle-Box</div><span class="tag">' + D.jingles.filter((j) => cats.find((c) => c.id === j.cat)).length + ' Jingles</span></div>' +
       '<p class="about" style="font-size:17px;margin:8px 0 10px">Kleine musikalische Liebeserklärungen, drei bis fünf Sekunden. ' + (joined ? 'Ein Tipp und sie klingen in der App von ' + esc(you()) + '.' : 'Mit verbundenen Apps klingen sie direkt beim anderen.') + '</p>' +
       '<div class="chips' + (window.__sfJingleOpen ? ' open' : '') + '" id="jingleChips">' + cats.map((c) => '<button type="button" class="' + (c.id === s.jingleCat ? 'on' : '') + '" data-cat="' + c.id + '">' + c.e + ' ' + esc(c.t) + '</button>').join('') + '</div><button type="button" class="pill-btn ghost small" id="jingleMore" style="margin-bottom:12px">' + (window.__sfJingleOpen ? 'Weniger Anlässe' : 'Alle Anlässe') + '</button>' +
-      '<div id="jingleList">' + list.map((j) => '<div class="jingle" data-id="' + j.id + '"><button class="icon-btn" data-play aria-label="Abspielen">▶</button><div class="j-b"><div class="j-t">' + esc(j.title) + ' <small>' + jingleSeconds(j) + ' s</small></div><div class="j-x">' + esc(L.fmt(j.text)) + '</div></div><button class="icon-btn" data-send aria-label="' + (joined ? 'An ' + esc(you()) + ' schicken' : 'Teilen') + '">' + (joined ? '💌' : '↗') + '</button></div>').join('') + '</div>' +
+      '<div id="jingleList">' + list.map((j) => '<div class="jingle" data-id="' + j.id + '"><button class="icon-btn" data-play aria-label="Abspielen">▶</button><div class="j-b"><div class="j-t">' + esc(j.title) + (j.sung ? ' <span class="j-sung" aria-label="gesungen">🎤</span>' : '') + ' <small>' + String(jingleSeconds(j)).replace('.', ',') + ' s</small></div><div class="j-x">' + esc(L.fmt(j.text)) + '</div></div><button class="icon-btn" data-send aria-label="' + (joined ? 'An ' + esc(you()) + ' schicken' : 'Teilen') + '">' + (joined ? '💌' : '↗') + '</button></div>').join('') + '</div>' +
       '<div class="tips-slot" id="jingleTips"></div>';
     box.querySelectorAll('[data-cat]').forEach((b) => b.onclick = () => { s.jingleCat = b.dataset.cat; L.save(); renderJingles(); });
     box.querySelectorAll('.jingle').forEach((row) => {

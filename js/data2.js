@@ -3,7 +3,7 @@
 (function () {
   'use strict';
   const D = window.LUZIFER_DATA;
-  D.version = '3.3.0';
+  D.version = '3.4.0';
 
   /* Geschlecht: wählt jede Person selbst, die verbundene App übernimmt es. Angesprochen wird immer mit dem Namen;
      die Angabe sorgt nur dafür, dass Fürwörter stimmen (pro = Fürwort, leer = Name wird wiederholt). */
@@ -203,4 +203,70 @@
     kritzel: [ { icon: '🖨️', title: 'Mini-Fotodrucker fürs Handy', q: 'Mini Fotodrucker Smartphone' }, { icon: '🖼️', title: 'Herz-Bilderrahmen', q: 'Bilderrahmen Herz Collage' } ],
     nfc: [ { icon: '🏷️', title: 'NFC-Sticker (NTAG215)', q: 'NFC Sticker NTAG215' }, { icon: '🔑', title: 'NFC-Schlüsselanhänger', q: 'NFC Schlüsselanhänger NTAG215' } ]
   });
+
+  /* ---- Gesungene Jingles (Suno, Runde 1, von Mo freigegeben am 10.11.2026). Aufnahmen liegen in audio/jingles/. ---- */
+  [
+    ["s-einfachso-1","einfachso","Nur mal so","Nur mal so zwischendurch: Ich lieb dich!",4.8],
+    ["s-einfachso-2","einfachso","Mittendrin","Mittendrin am Tag ein Gruß von mir.",3.8],
+    ["s-einfachso-3","einfachso","Kleiner Gruß","Kleiner Gruß, großes Herz, für dich!",6],
+    ["s-morgen-1","morgen","Sonnenschein","Guten Morgen, mein Sonnenschein!",4.4],
+    ["s-morgen-2","morgen","Aufgewacht","Aufgewacht, mein Lieblingsmensch!",4],
+    ["s-morgen-3","morgen","Kaffee und Kuss","Kaffee, Kuss und los. Ich lieb dich!",4.5],
+    ["s-nacht-1","nacht","Schlaf gut","Schlaf gut, mein Herz.",4.5],
+    ["s-nacht-2","nacht","Träum schön","Träum was Schönes, ich bin da.",4.8],
+    ["s-nacht-3","nacht","Gute Nacht","Gute Nacht, ich lieb dich sehr.",7.3],
+    ["s-danke-1","danke","Tausend Dank","Tausend Dank, mein Schatz, für heut!",4.3],
+    ["s-danke-2","danke","Gesehen","Ich hab’s gesehen und sag: Dankeschön!",4.8],
+    ["s-danke-3","danke","Gold wert","Du bist Gold wert. Danke dir!",5],
+    ["s-vergessen-1","vergessen_jahrestag","Ups","Ups, vergessen! Doch ich lieb dich jeden Tag.",5.5],
+    ["s-vergessen-2","vergessen_jahrestag","Der Kalender lügt","Der Kalender lügt, mein Herz vergisst dich nie.",4.6],
+    ["s-vergessen-3","vergessen_jahrestag","Zu spät","Zu spät, ich weiß. Ich mach es wieder gut!",6.3],
+    ["s-streit-1","streit","Es tut mir leid","Es tut mir leid, ich hab dich lieb.",5.3],
+    ["s-streit-2","streit","Weiße Fahne","Weiße Fahne, Schatz! Vertragen wir uns?",5.3],
+    ["s-streit-3","streit","In den Arm","Streit vorbei? Ich nehm dich in den Arm.",7.5]
+  ].reverse().forEach((x) => D.jingles.unshift({ id: x[0], cat: x[1], title: x[2], text: x[3], sec: x[4], file: 'audio/jingles/' + x[0] + '.mp3', sung: true, pd: 'Aufnahme: Suno' }));
+
+  /* ---- Inhalte-Paket 2026-11 (Inhalte-Werkstatt): 40 neue Botschaften für „Heute für dich“ ---- */
+  D.messages.push(
+    "Ich mag, wie du lachst, wenn du eigentlich ernst bleiben willst.",
+    "{r}, mit dir wird sogar ein Dienstag zu etwas Besonderem.",
+    "Du bist mein Lieblingsgedanke zwischen zwei Terminen.",
+    "Wenn es heute anstrengend wird: Ich bin in deinem Team.",
+    "Ich habe dich heute schon dreimal vermisst. Es ist noch nicht mal Mittag.",
+    "Danke, dass du meine Macken kennst und trotzdem bleibst.",
+    "Dein Platz neben mir ist der schönste Ort, den ich kenne.",
+    "Ich freue mich jetzt schon auf den Moment, in dem die Tür aufgeht.",
+    "{r}, du machst aus meinem Chaos ein Zuhause.",
+    "Mit dir schweigen ist schöner als mit anderen reden.",
+    "Ich würde dich jeden Tag wieder ansprechen.",
+    "Du bist der Grund, warum ich heute grundlos grinse.",
+    "Egal, was heute schiefgeht: Wir zwei gehen nicht schief.",
+    "Ich mag dich auch dann, wenn du Hunger hast. Das will was heißen.",
+    "Du bist mein Lieblingsmensch. Mit Abstand. Ohne Abstand noch lieber.",
+    "{r}, ich bin stolz auf dich. Einfach so, ohne Anlass.",
+    "Wenn ich an Glück denke, hat es dein Gesicht.",
+    "Dein Kopf auf meiner Schulter löst mehr Probleme als jeder Plan.",
+    "Ich liebe die Art, wie du dich über Kleinigkeiten freust.",
+    "Heute Abend gehört dir meine ganze Aufmerksamkeit.",
+    "Du fehlst mir schon, wenn du nur im Nebenzimmer bist.",
+    "Mit dir alt werden klingt nach dem besten Plan, den ich habe.",
+    "{r}, du bist mein Lieblingsgeräusch am Morgen.",
+    "Ich hätte Lust, dich heute einfach mal lange zu umarmen.",
+    "Du bringst mich zum Lachen, selbst wenn ich es gar nicht will.",
+    "Danke für die tausend kleinen Dinge, die du nebenbei machst.",
+    "Bei dir darf ich so sein, wie ich bin. Das ist das größte Geschenk.",
+    "Ich denke an dich. Mehr wollte ich gar nicht sagen.",
+    "{r}, mein Herz macht immer noch einen Hüpfer, wenn dein Name aufleuchtet.",
+    "Wir zwei gegen den Rest der Woche.",
+    "Du bist die beste Entscheidung, die mir je passiert ist.",
+    "Ich mag unser Wir.",
+    "Wenn du heute zweifelst: Ich glaube an dich, für uns beide.",
+    "Mit dir schmeckt sogar Tiefkühlpizza nach Festessen.",
+    "Du hast heute einen Kuss gut. Mindestens.",
+    "{r}, du bist mein sicherer Hafen und mein liebstes Abenteuer.",
+    "Ich höre dir gern zu. Auch beim dritten Mal derselben Geschichte.",
+    "Heute schon gesagt? Du siehst gut aus. Wirklich.",
+    "Was immer der Tag bringt: Am Ende lande ich am liebsten bei dir.",
+    "Ich hab dich lieb. Von hier bis zum Kühlschrank und zurück, und das mehrmals."
+  );
 })();
