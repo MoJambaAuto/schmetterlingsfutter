@@ -81,7 +81,7 @@
     const r = await post('/pair/join', { pair: c.pair, dev: devId() }, true);
     P().partner = { pair: c.pair, token: r.token, secret: c.secret, role: 'b', joined: true, name: '', since: new Date().toISOString() };
     L.save(); keys = null;
-    await send({ t: 'hello', name: S().sender });
+    await send({ t: 'hello', name: S().sender, pron: S().pron || '' });
     return P().partner;
   }
   async function leavePair(silent) {
@@ -124,8 +124,9 @@
     if (obj.t === 'hello') {
       const first = !p.name;
       if (name) p.name = name;
-      if (name && first && (S().receiver === 'Darling' || !S().receiver)) { S().receiver = name; L.renderHeader(); }
-      if (first) { try { await send({ t: 'hello', name: S().sender, reply: true }); } catch (e) {} L.toast('💞 Verbunden mit ' + (name || 'deinem Schatz')); L.spawnHearts(14); }
+      if (typeof obj.pron === 'string') p.pron = obj.pron.slice(0, 20);
+      if (name && S().receiver !== name) { S().receiver = name; L.renderHeader(); }
+      if (first) { try { await send({ t: 'hello', name: S().sender, pron: S().pron || '', reply: true }); } catch (e) {} L.toast('💞 Verbunden mit ' + (name || 'deinem Schatz')); L.spawnHearts(14); }
       return true;
     }
     if (obj.t === 'msg') {
@@ -140,6 +141,7 @@
     }
     if (obj.t === 'match') {
       const deck = D.decks.find((d) => d.id === obj.deck); if (!deck) return false;
+      if (typeof obj.sd === 'string' && /^[a-z]+_\d{8}$/.test(obj.sd) && obj.sd.indexOf(deck.id + '_') === 0) { s.invites = s.invites || {}; s.invites[deck.id] = { sd: obj.sd, at: created || Date.now() }; }
       s.inbox = s.inbox.filter((m) => !(m.t === 'match' && m.deck === deck.id));
       s.inbox.push({ id: uid('m'), t: 'match', deck: deck.id, text: deck.icon + ' ' + deck.title, at: created || Date.now(), read: false });
       L.toast('🎯 ' + partnerName() + ' hat „' + deck.title + '“ gespielt – spiel mit!'); return true;
@@ -204,7 +206,32 @@
 
   /* ---------- Gleichklang (Match-Spiele) ---------- */
   const deckById = (id) => D.decks.find((d) => d.id === id);
-  const serverDeck = (deck) => deck.daily ? deck.id + '_' + L.todayKey().replace(/-/g, '') : deck.id;
+  /* Kurze Runden: jede Runde zeigt nur einen Teil der Karten. Der Rundenschlüssel (Tag bzw. Woche + eigener Vorlauf)
+     bestimmt die Auswahl, damit beide Handys dieselben Fragen bekommen. Erst wenn alle Karten dran waren, wiederholt sich etwas. */
+  const weekNum = () => Math.floor((Date.now() / 864e5 + 3) / 7);
+  const serverDeck = (deck) => deck.daily ? deck.id + '_' + L.todayKey().replace(/-/g, '') : deck.id + '_9' + String(weekNum() + ((P().roundShift || {})[deck.id] || 0)).padStart(7, '0');
+  function roundIdx(sd) { const m = /_(\d{8})$/.exec(sd || ''); if (!m) return 0; const d = m[1]; return d[0] === '9' ? parseInt(d.slice(1), 10) : Math.floor(Date.parse(d.slice(0, 4) + '-' + d.slice(4, 6) + '-' + d.slice(6) + 'T00:00:00Z') / 864e5); }
+  const roundSize = (deck) => deck.round || (deck.talk ? 7 : 8);
+  function roundItems(deck, sd) {
+    const n = roundSize(deck), all = deck.items; if (all.length <= n) return all.slice();
+    let seed = 7; for (const ch of deck.id) seed = (seed * 31 + ch.charCodeAt(0)) >>> 0;
+    const idx = all.map((_, i) => i);
+    for (let i = idx.length - 1; i > 0; i--) { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; const j = seed % (i + 1); const t = idx[i]; idx[i] = idx[j]; idx[j] = t; }
+    const start = (roundIdx(sd) * n) % all.length; const out = [];
+    for (let k = 0; k < n; k++) out.push(all[idx[(start + k) % all.length]]);
+    return out;
+  }
+  /* Hat der Schatz zu einer bestimmten Runde eingeladen, spielen wir genau diese Runde mit. */
+  function gameSd(deck, mode) {
+    if (mode === 'relay') {
+      const iv = (P().invites || {})[deck.id], rec = P().matches[deck.id];
+      if (iv && iv.sd && Date.now() - iv.at < 12 * 864e5 && !(rec && rec.sd === iv.sd) && (!deck.daily || iv.sd === serverDeck(deck))) {
+        if (!deck.daily) { P().roundShift = P().roundShift || {}; P().roundShift[deck.id] = roundIdx(iv.sd) - weekNum(); L.save(); }
+        return iv.sd;
+      }
+    }
+    return serverDeck(deck);
+  }
   let game = null;
   function openMatch(html, onMount) { const sc = $('matchScreen'); sc.querySelector('.inner').innerHTML = html; sc.classList.remove('hidden'); if (onMount) onMount(sc); }
   function closeMatch() { $('matchScreen').classList.add('hidden'); game = null; }
@@ -213,36 +240,40 @@
   function playDeck(deckId, forcePass) {
     const deck = deckById(deckId); if (!deck) return;
     if (deck.adult && !S().intim) { L.toast('Erst den Bereich „Zweisamkeit“ unter Mehr einschalten (18+)'); return; }
-    const mode = (!forcePass && paired() && joined() && RELAY) ? 'relay' : 'pass';
+    const canRelay = !!(paired() && joined() && RELAY);
+    const mode = (!forcePass && canRelay) ? 'relay' : 'pass';
     const prev = P().matches[deck.id];
-    game = { deck, mode, step: 0, who: 'me', mine: {}, theirs: {}, prev };
+    const sd = gameSd(deck, mode);
+    game = { deck, mode, step: 0, who: 'me', mine: {}, theirs: {}, prev, sd, items: roundItems(deck, sd) };
     let html = '<div class="match-head"><button class="icon-btn" data-close aria-label="Schließen">✕</button><div class="eyebrow" style="margin:0">Gleichklang</div><span></span></div>' +
       '<div class="match-intro"><div class="match-emoji">' + deck.icon + '</div><h2>' + L.esc(deck.title) + '</h2><p class="about">' + L.esc(deck.sub) + '</p>';
-    if (mode === 'relay') html += '<p class="about" style="font-size:13px;color:var(--text-muted)">Du antwortest hier, ' + L.esc(partnerName()) + ' in der eigenen App. Es werden nur verschlüsselte Prüfsummen übertragen – Treffer sieht man erst, wenn beide fertig sind.</p>';
-    else html += '<p class="about" style="font-size:13px;color:var(--text-muted)">Ohne Verbindung: Erst antwortest du, dann gibst du das Handy an ' + L.esc(partnerName()) + '. Die Antworten des anderen bleiben unsichtbar – angezeigt wird nur, was beide wollen.</p>';
+    if (canRelay) html += '<div class="seg-mode" role="group" aria-label="Spielweise"><button type="button" data-mode="relay"' + (mode === 'relay' ? ' class="on" aria-pressed="true"' : '') + '>📱📱 Zwei Handys</button><button type="button" data-mode="pass"' + (mode === 'pass' ? ' class="on" aria-pressed="true"' : '') + '>📱 Ein Handy</button></div>';
+    html += '<p class="about mode-line">' + (mode === 'relay' ? 'Jeder antwortet in seiner App.' : 'Erst du, dann ' + L.esc(partnerName()) + '.') + ' ' + game.items.length + ' Fragen.</p>';
     html += '<div class="row wrap" style="margin-top:18px"><button class="pill-btn primary" data-start>' + (deck.daily ? 'Heute antworten' : 'Los geht’s') + '</button>' +
       (prev && prev.matches ? '<button class="pill-btn" data-prev>Letztes Ergebnis</button>' : '') +
-      (mode === 'relay' ? '<button class="pill-btn ghost small" data-pass>Lieber Handy weitergeben</button>' : (paired() ? '' : '<button class="pill-btn ghost small" data-connect>Apps verbinden</button>')) + '</div></div>';
+      (paired() ? '' : '<button class="pill-btn ghost small" data-connect>Apps verbinden</button>') + '</div></div>';
     openMatch(html, (sc) => {
       sc.querySelector('[data-close]').onclick = closeMatch;
       sc.querySelector('[data-start]').onclick = () => askNext();
       const pv = sc.querySelector('[data-prev]'); if (pv) pv.onclick = () => showResults(deck, prev);
-      const ps = sc.querySelector('[data-pass]'); if (ps) ps.onclick = () => playDeck(deckId, true);
+      sc.querySelectorAll('[data-mode]').forEach((b) => b.onclick = () => { if (b.dataset.mode !== mode) playDeck(deckId, b.dataset.mode === 'pass'); });
       const cn = sc.querySelector('[data-connect]'); if (cn) cn.onclick = () => { closeMatch(); pairSheet(); };
     });
   }
   function askNext() {
-    const g = game; const items = g.deck.items; const i = g.step;
+    const g = game; const items = g.items || g.deck.items; const i = g.step;
     if (i >= items.length) return finishAnswers();
     const it = items[i]; const who = g.who === 'me' ? S().sender : partnerName();
     const answers = g.who === 'me' ? g.mine : g.theirs;
     const opts = g.deck.opts === 3 ? ['nein', 'vielleicht', 'ja'] : ['nein', 'ja'];
     openMatch('<div class="match-head"><button class="icon-btn" data-close aria-label="Abbrechen">✕</button><div class="eyebrow" style="margin:0">' + L.esc(who) + ' antwortet</div><span class="tag">' + (i + 1) + ' / ' + items.length + '</span></div>' +
       '<div class="progress" style="margin:0 0 20px"><i style="width:' + Math.round(i / items.length * 100) + '%"></i></div>' +
+      (g.deck.prompt ? '<div class="match-prompt">' + L.esc(g.deck.prompt) + '</div>' : '') +
       '<div class="match-card"><div class="match-emoji">' + it.e + '</div><div class="match-q">' + L.esc(it.t) + '</div></div>' +
       '<div class="match-opts' + (g.deck.labels ? ' stack' : '') + '">' + opts.map((o) => '<button class="pill-btn ' + (o === 'ja' ? 'primary' : '') + '" data-a="' + o + '">' + (g.deck.labels || optLabels)[o] + '</button>').join('') + '</div>' +
-      '<div class="row" style="margin-top:14px">' + (i > 0 ? '<button class="pill-btn ghost small" data-back>Zurück</button>' : '') + '</div>', (sc) => {
-      sc.querySelector('[data-close]').onclick = () => L.confirmSheet('Abbrechen?', 'Die bisherigen Antworten gehen verloren.', 'Abbrechen', closeMatch, true);
+      '<div class="row wrap" style="margin-top:14px">' + (i > 0 ? '<button class="pill-btn ghost small" data-back>Zurück</button><button class="pill-btn ghost small" data-done>Das reicht für heute</button>' : '') + '</div>', (sc) => {
+      sc.querySelector('[data-close]').onclick = () => L.confirmSheet('Spiel beenden?', 'Deine Antworten gehen verloren.', 'Beenden', closeMatch, true, 'Weiterspielen');
+      const dn = sc.querySelector('[data-done]'); if (dn) dn.onclick = () => { g.step = items.length; finishAnswers(); };
       sc.querySelectorAll('[data-a]').forEach((b) => b.onclick = () => { answers[it.id] = b.dataset.a; L.haptic(6); g.step++; askNext(); });
       const bk = sc.querySelector('[data-back]'); if (bk) bk.onclick = () => { g.step--; askNext(); };
     });
@@ -255,7 +286,7 @@
         openMatch('<div class="match-head"><button class="icon-btn" data-close aria-label="Abbrechen">✕</button><div class="eyebrow" style="margin:0">Handy weitergeben</div><span></span></div>' +
           '<div class="match-intro"><div class="match-emoji">📲</div><h2>Jetzt ' + L.esc(partnerName()) + '</h2><p class="about">' + L.esc(S().sender) + ', gib das Handy weiter und schau nicht hin. ' + L.esc(partnerName()) + ' antwortet für sich – sichtbar wird nachher nur, was ihr beide wollt.</p>' +
           '<div class="row" style="margin-top:18px"><button class="pill-btn primary" data-start>Ich bin ' + L.esc(partnerName()) + ' – los</button></div></div>', (sc) => {
-          sc.querySelector('[data-close]').onclick = () => L.confirmSheet('Abbrechen?', 'Die bisherigen Antworten gehen verloren.', 'Abbrechen', closeMatch, true);
+          sc.querySelector('[data-close]').onclick = () => L.confirmSheet('Spiel beenden?', 'Die Antworten gehen verloren.', 'Beenden', closeMatch, true, 'Weiterspielen');
           sc.querySelector('[data-start]').onclick = () => askNext();
         });
         return;
@@ -271,12 +302,12 @@
     /* Relay-Modus: Hashes hochladen, Schnittmenge holen */
     openMatch('<div class="match-head"><span></span><div class="eyebrow" style="margin:0">Übertrage …</div><span></span></div><div class="match-intro"><div class="match-emoji">🔒</div><p class="about">Deine Antworten werden verschlüsselt verglichen.</p></div>');
     try {
-      const sd = serverDeck(deck);
+      const sd = g.sd || serverDeck(deck);
       const hashes = await hashesFor(deck, sd, g.mine);
       await post('/match/put', { deck: sd, hashes });
       const rec = { date: new Date().toISOString(), mode: 'relay', mine: yesList(g.mine), open: [], matches: null, partnerDone: false, sd };
       P().matches[deck.id] = rec; L.save();
-      try { await send({ t: 'match', deck: deck.id }); } catch (e) {}
+      try { await send({ t: 'match', deck: deck.id, sd }); } catch (e) {}
       await refreshMatches(deck, rec, true);
     } catch (e) {
       openMatch('<div class="match-head"><button class="icon-btn" data-close aria-label="Schließen">✕</button><div class="eyebrow" style="margin:0">Fehler</div><span></span></div><div class="match-intro"><div class="match-emoji">📡</div><h2>Keine Verbindung</h2><p class="about">' + L.esc(e.message || 'Der Relay-Dienst antwortet nicht.') + ' Deine Antworten sind nicht verloren gegangen – versuch es gleich nochmal oder spielt mit „Handy weitergeben“.</p><div class="row wrap" style="margin-top:18px"><button class="pill-btn primary" data-retry>Nochmal senden</button><button class="pill-btn ghost" data-close2>Schließen</button></div></div>', (sc) => {
@@ -339,7 +370,7 @@
         if (hidden.length) html += '<div class="card soft" style="margin-top:14px;padding:14px 16px"><div class="eyebrow" style="margin:0 0 6px">🔒 Nur für dich</div><p class="about" style="font-size:13px">' + (hidden.length === 1 ? 'Ein Thema ist dir wichtig, das noch kein Treffer ist.' : hidden.length + ' Themen sind dir wichtig, die noch kein Treffer sind.') + ' ' + name + ' sieht das nicht. Unausgesprochenes wächst – das Teufelchen hilft dir, eines davon sanft selbst anzusprechen.</p><div class="row" style="justify-content:flex-start;margin-top:10px"><button class="pill-btn small" data-hidden>Anzeigen</button></div><div class="match-list hidden" data-hidden-list style="margin-top:10px">' + hidden.map((it) => matchItem(it, 'Nur dir wichtig')).join('') + '</div></div>';
       }
       if (!yes.length || deck.talk) html += tipsHtml(tips('match_' + deck.id, 2), deck.talk ? 'Hilft beim Reden' : 'Für den nächsten Versuch');
-      html += '<div class="row wrap" style="margin-top:18px">' + (yes.length ? '<button class="pill-btn primary" data-share-res>Plan teilen ↗</button>' : '') + '<button class="pill-btn" data-again>Nochmal spielen</button>' + (rec.mode === 'relay' ? '<button class="pill-btn ghost small" data-refresh>Aktualisieren</button>' : '') + '</div>' +
+      html += '<div class="row wrap" style="margin-top:18px">' + (yes.length ? '<button class="pill-btn primary" data-share-res>Plan teilen ↗</button>' : '') + (!deck.daily && deck.items.length > roundSize(deck) ? '<button class="pill-btn" data-next>Neue Fragen</button>' : '<button class="pill-btn" data-again>Nochmal spielen</button>') + (rec.mode === 'relay' ? '<button class="pill-btn ghost small" data-refresh>Aktualisieren</button>' : '') + '</div>' +
         '<p class="about" style="font-size:11px;color:var(--text-muted);margin-top:12px">Stand ' + L.fmtDate(new Date(rec.date)) + (rec.mode === 'relay' ? ' · über die Partner-Verbindung, nur Prüfsummen verglichen' : ' · Handy-weitergeben-Modus') + '. Produktvorschläge sind Werbelinks zur Amazon-Suche.</p>';
     }
     openMatch(html, (sc) => {
@@ -347,6 +378,7 @@
       const hb = sc.querySelector('[data-hidden]'); if (hb) hb.onclick = () => { sc.querySelector('[data-hidden-list]').classList.toggle('hidden'); hb.textContent = hb.textContent === 'Anzeigen' ? 'Verbergen' : 'Anzeigen'; };
       sc.querySelectorAll('[data-soft]').forEach((b) => b.onclick = () => { if (window.LZN) window.LZN.softStart(b.dataset.soft); });
       const ag = sc.querySelector('[data-again]'); if (ag) ag.onclick = () => playDeck(deck.id, rec.mode === 'pass');
+      const nx = sc.querySelector('[data-next]'); if (nx) nx.onclick = () => { P().roundShift = P().roundShift || {}; P().roundShift[deck.id] = (P().roundShift[deck.id] || 0) + 1; if (P().invites) delete P().invites[deck.id]; L.save(); playDeck(deck.id, rec.mode === 'pass'); };
       const rf = sc.querySelector('[data-refresh]'); if (rf) rf.onclick = async () => { rf.disabled = true; rf.textContent = '…'; try { await refreshMatches(deck, rec, true); } catch (e) { L.toast('Keine Verbindung'); rf.disabled = false; rf.textContent = 'Aktualisieren'; } };
       const si = sc.querySelector('[data-share-inv]'); if (si) si.onclick = () => L.shareText('🎯 Ich habe in Schmetterlingsfutter „' + deck.title + '“ beantwortet. Spiel mit – ich bin gespannt, wo wir übereinstimmen! 😈 — ' + S().sender);
       const sr = sc.querySelector('[data-share-res]'); if (sr) sr.onclick = () => {
@@ -380,7 +412,7 @@
       };
       l.appendChild(d);
     });
-    const hint = $('deckHint'); if (hint) hint.textContent = paired() && joined() ? 'Verbunden mit ' + partnerName() + ' – jeder antwortet in seiner App.' : 'Ohne Verbindung spielt ihr an einem Handy („Handy weitergeben“). Verbunden geht es getrennt und geheim.';
+    const hint = $('deckHint'); if (hint) hint.textContent = paired() && joined() ? 'Verbunden mit ' + partnerName() + ' – jeder antwortet in seiner App.' : 'Ohne Verbindung spielt ihr an einem Handy. Verbunden antwortet jeder für sich.';
   }
 
   /* ---------- Koppel-Oberfläche ---------- */
@@ -458,7 +490,7 @@
         const m = s.inbox.find((x) => x.id === el.dataset.id); if (!m) return; m.read = true; L.save(); L.closeSheet();
         if (m.t === 'msg') { L.showView('home'); L.showMessage({ text: m.text, own: true, incoming: true }, 'Von ' + partnerName() + ' für dich'); L.spawnHearts(10); }
         else if (m.t === 'coupon') { L.showView('wishes'); L.showSub('wishes', 'coupons'); }
-        else if (m.t === 'match') { const deck = deckById(m.deck); if (deck) { const rec = s.matches[deck.id]; if (rec && rec.mode === 'relay' && (!deck.daily || rec.date.slice(0, 10) === L.todayKey())) { showResults(deck, rec); refreshMatches(deck, rec, true).catch(() => {}); } else playDeck(deck.id); } }
+        else if (m.t === 'match') { const deck = deckById(m.deck); if (deck) { const rec = s.matches[deck.id]; const iv = (s.invites || {})[deck.id]; if (rec && rec.mode === 'relay' && (!iv || !iv.sd || iv.sd === rec.sd) && (!deck.daily || rec.date.slice(0, 10) === L.todayKey())) { showResults(deck, rec); refreshMatches(deck, rec, true).catch(() => {}); } else playDeck(deck.id); } }
         else if (inboxTypes[m.t] && inboxTypes[m.t].open) inboxTypes[m.t].open(m);
         renderAll();
       });
@@ -534,7 +566,7 @@
   setInterval(() => { if (document.visibilityState === 'visible') pull(); }, 45000);
   $('obFinish').addEventListener('click', () => setTimeout(() => { renderAll(); offerPendingPair(); }, 80));
 
-  window.LZP = { P, paired, joined, partnerName, sendOrShare, sendCoupon, send, pull, pairSheet, inboxSheet, playDeck, renderDecks, renderAll, renderGiftRadar, amazonUrl, tips, tipsHtml, bindTips, mountTips, leavePair, unread, RELAY, on, inboxType, openMatch, closeMatch, online, pairLink };
+  window.LZP = { P, paired, joined, partnerName, sendOrShare, sendCoupon, send, pull, pairSheet, inboxSheet, playDeck, renderDecks, renderAll, renderGiftRadar, amazonUrl, tips, tipsHtml, bindTips, mountTips, leavePair, unread, RELAY, on, inboxType, openMatch, closeMatch, online, pairLink, partnerPron: () => (P().partner && P().partner.pron) || '', announce: () => { if (paired() && joined()) send({ t: 'hello', name: S().sender, pron: S().pron || '' }).catch(() => {}); } };
   renderAll(); handlePairParam();
   if (window.LZF) { window.LZF.renderPiek(); window.LZF.renderGiftRadar && window.LZF.renderGiftRadar(); }
   /* Erst abholen, wenn alle Skripte geladen sind (naehe.js meldet eigene Nachrichtenarten an) */

@@ -14,7 +14,7 @@
     sender: 'Hase', receiver: 'Darling', emojiS: '🐰', emojiR: '🌸',
     anniversary: null,
     theme: 'nacht',
-    alwaysYes: true, motion: true, haptic: true,
+    alwaysYes: true, motion: true, haptic: true, pron: '', rpron: '',
     favorites: [],
     ownMessages: [],
     reasons: D.reasons.slice(),
@@ -79,10 +79,10 @@
   $('modal').addEventListener('click', (e) => { if (e.target === $('modal')) closeSheet(); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSheet(); });
 
-  function confirmSheet(title, text, okLabel, onOk, danger) {
+  function confirmSheet(title, text, okLabel, onOk, danger, cancelLabel) {
     openSheet(
       '<h3>' + esc(title) + '</h3><p class="about" style="margin-bottom:18px">' + esc(text) + '</p>' +
-      '<div class="row"><button class="pill-btn ghost" data-cancel>Abbrechen</button>' +
+      '<div class="row"><button class="pill-btn ghost" data-cancel>' + esc(cancelLabel || 'Abbrechen') + '</button>' +
       '<button class="pill-btn primary' + (danger ? ' danger' : '') + '" data-ok>' + esc(okLabel) + '</button></div>',
       (sh) => {
         sh.querySelector('[data-cancel]').onclick = closeSheet;
@@ -339,8 +339,8 @@
         setTimeout(() => {
           $('oracleStatus').style.display = 'none'; $('daisyHint').style.display = 'none';
           $('oracleEmoji').textContent = saidLoves ? '🌼💕' : '🌼🙈';
-          $('oracleResultText').textContent = saidLoves ? 'Ja! ' + S.sender + ' liebt mich!' : 'Hm … das Orakel zögert.';
-          $('oracleResultSub').textContent = saidLoves ? 'Das Orakel hat gesprochen, ' + S.receiver + ' ✨' : 'Blumen irren sich. Frag nochmal, ' + S.receiver + '.';
+          $('oracleResultText').textContent = saidLoves ? 'Ja! ' + S.receiver + ' liebt dich!' : 'Hm … das Orakel zögert.';
+          $('oracleResultSub').textContent = saidLoves ? 'Das Orakel hat gesprochen, ' + S.sender + ' ✨' : 'Diese Blume hat sich verzählt. Frag nochmal, ' + S.sender + '.';
           $('oracleResult').classList.add('visible');
           if (window.LZP) window.LZP.mountTips($('oracleTips'), 'oracle', saidLoves ? 'Zur Feier des Tages' : 'Nachhelfen');
           if (saidLoves) spawnHearts(14, $('daisyWrap'));
@@ -352,20 +352,29 @@
   function updatePhrase(loves, remaining) {
     const ph = $('oraclePhrase'); ph.style.opacity = 0;
     setTimeout(() => {
-      ph.textContent = loves ? '❤ ' + S.sender + ' liebt mich …' : S.sender + ' liebt mich nicht …';
+      ph.textContent = loves ? '❤ ' + oracleSubj() + ' liebt mich …' : oracleSubj() + ' liebt mich nicht …';
       ph.className = 'oracle-phrase ' + (loves ? 'loves' : 'loves-not');
       $('oracleCount').textContent = 'Noch ' + remaining + ' Blütenblatt' + (remaining === 1 ? '' : 'blätter');
       ph.style.opacity = 1;
     }, 160);
+  }
+  /* Wer wird befragt? Der Schatz – in der Anrede, die er oder sie selbst gewählt hat. */
+  function partnerPronId() { return (window.LZP && window.LZP.partnerPron && window.LZP.partnerPron()) || S.rpron || ''; }
+  function oracleSubj() { const p = (D.prons || []).find((x) => x.id === partnerPronId()); return p ? p.subj : S.receiver; }
+  function pronChips(box, sel, onPick) {
+    if (!box) return;
+    box.innerHTML = (D.prons || []).map((p) => '<button type="button" data-p="' + p.id + '"' + (p.id === sel ? ' class="on"' : '') + (onPick ? '' : ' disabled') + '>' + esc(p.label) + '</button>').join('');
+    if (onPick) box.querySelectorAll('button').forEach((b) => b.onclick = () => { onPick(b.dataset.p); pronChips(box, b.dataset.p, onPick); });
   }
   function renderOracleStats() {
     const o = S.oracle; $('oracleStats').textContent = o.asked ? o.asked + '× gefragt · ' + o.yes + '× Ja' : '';
   }
   function initDaisy() {
     daisyReady = true; busy = false;
-    TOTAL = S.alwaysYes ? 11 : (Math.random() < .5 ? 11 : 10);
+    /* Zufällig, mit starker Neigung zum Ja (ungerade Blütenzahl endet auf „liebt mich“) */
+    TOTAL = Math.random() < .86 ? [9, 11, 13][Math.floor(Math.random() * 3)] : [10, 12][Math.floor(Math.random() * 2)];
     petalsLeft = TOTAL;
-    $('oraclePhrase').textContent = S.sender + ' liebt mich …'; $('oraclePhrase').className = 'oracle-phrase';
+    $('oraclePhrase').textContent = oracleSubj() + ' liebt mich …'; $('oraclePhrase').className = 'oracle-phrase';
     $('oracleCount').textContent = TOTAL + ' Blütenblätter';
     $('oracleStatus').style.display = 'flex'; $('oracleResult').classList.remove('visible'); $('daisyHint').style.display = 'block';
     buildDaisy(TOTAL); renderOracleStats();
@@ -491,11 +500,15 @@
   }
   function setToggle(id, val) { $(id).setAttribute('aria-checked', val ? 'true' : 'false'); }
   function renderSettings() {
-    $('setSender').value = S.sender; $('setReceiver').value = S.receiver;
+    const jn = !!(window.LZP && window.LZP.joined && window.LZP.joined());
+    $('setSender').value = S.sender; $('setReceiver').value = S.receiver; $('setReceiver').disabled = jn;
+    $('lblReceiver').textContent = jn ? 'Dein Schatz · aus der verbundenen App' : 'Dein Schatz';
+    pronChips($('setPron'), S.pron, (id) => { S.pron = id; save(); if (window.LZP && window.LZP.announce) window.LZP.announce(); });
+    pronChips($('setRPron'), partnerPronId(), jn ? null : (id) => { S.rpron = id; save(); daisyReady = false; });
     emojiGrid($('emojiSender'), S.emojiS, (e) => { S.emojiS = e; save(); renderHeader(); });
     emojiGrid($('emojiReceiver'), S.emojiR, (e) => { S.emojiR = e; save(); renderHeader(); });
     themeGrid($('themeGrid'), S.theme, (t) => { S.theme = t; save(); applyTheme(); });
-    setToggle('togAlwaysYes', S.alwaysYes); setToggle('togMotion', S.motion); setToggle('togHaptic', S.haptic);
+    setToggle('togMotion', S.motion); setToggle('togHaptic', S.haptic);
     $('aboutVersion').textContent = D.version;
     const l = $('ownMsgList'); l.innerHTML = '';
     if (!S.ownMessages.length) l.innerHTML = '<div class="empty">Noch keine eigenen Botschaften. Persönliche Worte machen das Geschenk einzigartig.</div>';
@@ -507,10 +520,9 @@
     });
   }
   function nameInput(id, key) {
-    $(id).addEventListener('change', () => { const v = $(id).value.trim(); if (v) { S[key] = v; save(); renderHeader(); refillQueue(); if (current.text) $('msgText').textContent = fmt(current.text); } else $(id).value = S[key]; });
+    $(id).addEventListener('change', () => { const v = $(id).value.trim(); if (v) { S[key] = v; save(); renderHeader(); refillQueue(); daisyReady = false; if (current.text) $('msgText').textContent = fmt(current.text); if (key === 'sender' && window.LZP && window.LZP.announce) window.LZP.announce(); } else $(id).value = S[key]; });
   }
   nameInput('setSender', 'sender'); nameInput('setReceiver', 'receiver');
-  $('togAlwaysYes').onclick = () => { S.alwaysYes = !S.alwaysYes; save(); setToggle('togAlwaysYes', S.alwaysYes); daisyReady = false; };
   $('togMotion').onclick = () => { S.motion = !S.motion; save(); setToggle('togMotion', S.motion); applyTheme(); };
   $('togHaptic').onclick = () => { S.haptic = !S.haptic; save(); setToggle('togHaptic', S.haptic); haptic(15); };
   $('btnWrite2').onclick = () => writeOwn(() => renderSettings());
@@ -547,16 +559,17 @@
     const inp = document.querySelector('.ob-step.active input'); if (inp && obStep < 2) setTimeout(() => inp.focus(), 100);
   }
   function startOnboarding() {
-    Object.assign(ob, { sender: S.sender, receiver: S.receiver, emojiS: S.emojiS, emojiR: S.emojiR, theme: S.theme, anniversary: S.anniversary });
+    Object.assign(ob, { sender: S.sender, receiver: S.receiver, pron: S.pron || '', emojiS: S.emojiS, emojiR: S.emojiR, theme: S.theme, anniversary: S.anniversary });
     $('obSender').value = S.onboarded ? S.sender : ''; $('obReceiver').value = S.onboarded ? S.receiver : ''; $('obDate').value = S.anniversary || '';
     emojiGrid($('obEmojiSender'), ob.emojiS, (e) => ob.emojiS = e);
+    pronChips($('obPron'), ob.pron, (id) => ob.pron = id);
     emojiGrid($('obEmojiReceiver'), ob.emojiR, (e) => ob.emojiR = e);
     themeGrid($('obThemeGrid'), ob.theme, (t) => { ob.theme = t; document.documentElement.setAttribute('data-theme', t); });
     $('onboarding').classList.remove('hidden'); obShow(0);
   }
   document.querySelectorAll('#onboarding [data-next]').forEach((b) => b.onclick = () => {
     if (obStep === 0) { const v = $('obSender').value.trim(); if (!v) { toast('Wie soll ich dich nennen?'); return; } ob.sender = v; }
-    if (obStep === 1) { const v = $('obReceiver').value.trim(); if (!v) { toast('Wen liebst du?'); return; } ob.receiver = v; }
+    if (obStep === 1) { const v = $('obReceiver').value.trim(); if (!v) { toast('Wie heißt dein Schatz?'); return; } ob.receiver = v; }
     if (obStep === 2) { const v = $('obDate').value; if (v && parseISODate(v) > new Date()) { toast('Das Datum liegt in der Zukunft'); return; } ob.anniversary = v || null; }
     obShow(obStep + 1);
   });

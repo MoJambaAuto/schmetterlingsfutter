@@ -274,10 +274,12 @@
 
       <div class="card" style="padding:18px 20px">
         <div class="eyebrow">Namen</div>
-        <div class="field"><label for="setSender">Absender (wer liebt?)</label><input id="setSender" maxlength="18" placeholder="z. B. Hase"></div>
-        <div class="field"><label for="setReceiver">Empfänger (wer wird geliebt?)</label><input id="setReceiver" maxlength="18" placeholder="z. B. Darling"></div>
-        <div class="field"><label>Symbol Absender</label><div class="emoji-grid" id="emojiSender"></div></div>
-        <div class="field" style="margin-bottom:4px"><label>Symbol Empfänger</label><div class="emoji-grid" id="emojiReceiver"></div></div>
+        <div class="field"><label for="setSender">Dein Name</label><input id="setSender" maxlength="18" placeholder="z. B. Hase"></div>
+        <div class="field"><label>Ich bin</label><div class="chips big" id="setPron"></div></div>
+        <div class="field"><label for="setReceiver" id="lblReceiver">Dein Schatz</label><input id="setReceiver" maxlength="18" placeholder="z. B. Darling"></div>
+        <div class="field"><label>Dein Schatz ist</label><div class="chips big" id="setRPron"></div></div>
+        <div class="field"><label>Dein Symbol</label><div class="emoji-grid" id="emojiSender"></div></div>
+        <div class="field" style="margin-bottom:4px"><label>Symbol deines Schatzes</label><div class="emoji-grid" id="emojiReceiver"></div></div>
       </div>
 
       <div class="card" style="padding:18px 20px">
@@ -286,7 +288,6 @@
       </div>
 
       <div class="card">
-        <div class="switch"><div>Orakel sagt immer Ja<small>Aus = das Orakel entscheidet zufällig</small></div><button class="toggle" id="togAlwaysYes" role="switch" aria-checked="true" aria-label="Orakel sagt immer Ja"></button></div>
         <div class="switch"><div>Animationen<small>Herzen, Sterne, Pulsieren</small></div><button class="toggle" id="togMotion" role="switch" aria-checked="true" aria-label="Animationen"></button></div>
         <div class="switch"><div>Vibration<small>Kurzes Feedback beim Zupfen</small></div><button class="toggle" id="togHaptic" role="switch" aria-checked="true" aria-label="Vibration"></button></div>
         <div class="switch"><div>Bereich „Zweisamkeit“<small>Flirt, Fragen für zwei, Wünsche – nur für Erwachsene</small></div><button class="toggle" id="togIntim" role="switch" aria-checked="false" aria-label="Bereich Zweisamkeit anzeigen"></button></div>
@@ -380,12 +381,13 @@
     <div class="step-dots" id="obDots"><i class="on"></i><i></i><i></i><i></i></div>
 
     <div class="ob-step active" data-step="0">
-      <div class="field"><label for="obSender">Wie nennst du dich? (Absender)</label><input id="obSender" maxlength="18" placeholder="z. B. Hase" autocomplete="off"></div>
+      <div class="field"><label for="obSender">Wie nennst du dich?</label><input id="obSender" maxlength="18" placeholder="z. B. Hase" autocomplete="off"></div>
+      <div class="field"><label>Ich bin</label><div class="chips big" id="obPron"></div></div>
       <div class="field"><label>Dein Symbol</label><div class="emoji-grid" id="obEmojiSender"></div></div>
       <div class="ob-nav"><button class="pill-btn primary" data-next>Weiter</button></div>
     </div>
     <div class="ob-step" data-step="1">
-      <div class="field"><label for="obReceiver">Wen liebst du? (Empfänger)</label><input id="obReceiver" maxlength="18" placeholder="z. B. Darling" autocomplete="off"></div>
+      <div class="field"><label for="obReceiver">Wie heißt dein Schatz?</label><input id="obReceiver" maxlength="18" placeholder="z. B. Darling" autocomplete="off"></div>
       <div class="field"><label>Symbol</label><div class="emoji-grid" id="obEmojiReceiver"></div></div>
       <div class="ob-nav"><button class="pill-btn ghost" data-prev>Zurück</button><button class="pill-btn primary" data-next>Weiter</button></div>
     </div>
@@ -396,7 +398,7 @@
     </div>
     <div class="ob-step" data-step="3">
       <div class="field"><label>Farbwelt</label><div class="theme-grid" id="obThemeGrid"></div></div>
-      <p class="about" style="margin:6px 0 16px">Alles bleibt auf diesem Gerät. Keine Anmeldung, keine Werbeanzeigen. Eure Apps verbinden könnt ihr später freiwillig – verschlüsselt.</p>
+      <p class="about" style="margin:6px 0 16px">Alles bleibt auf diesem Gerät. Keine Anmeldung, keine Werbebanner. Eure Apps verbinden könnt ihr später freiwillig – verschlüsselt.</p>
       <div class="ob-nav"><button class="pill-btn ghost" data-prev>Zurück</button><button class="pill-btn primary" id="obFinish">Los geht's ❤</button></div>
     </div>
   </div>

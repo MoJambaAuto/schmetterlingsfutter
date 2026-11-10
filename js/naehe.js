@@ -371,24 +371,40 @@
   /* ---- 4b. Sag's sanft: Ich-Botschaft bauen ---- */
   function softStart(topic) {
     P.closeMatch();
-    L.openSheet('<h3>🕊️ Sag’s sanft</h3><p class="about" style="font-size:13px;margin-bottom:10px">' + (topic ? 'Thema: <b>' + esc(topic) + '</b>. ' : '') + 'Drei Bausteine machen aus einem Vorwurf eine Einladung: was passiert ist, wie es dir damit geht, was du dir wünschst.</p>' +
+    L.openSheet('<h3>🕊️ Sag’s sanft</h3><p class="about" style="font-size:13px;margin-bottom:10px">' + (topic ? 'Thema: <b>' + esc(topic) + '</b>. ' : '') + 'Was ist passiert, wie geht es dir, was wünschst du dir?</p>' +
       '<div class="field"><label for="ssSit">Mir ist aufgefallen, dass …</label><input id="ssSit" maxlength="140" placeholder="z. B. wir diese Woche jeden Abend getrennt am Handy saßen" autocomplete="off"></div>' +
       '<div class="field"><label>Ich fühle mich dabei …</label><div class="chips" id="ssFeel">' + K.feelings.map((f) => '<button type="button" data-f="' + f + '">' + f + '</button>').join('') + '</div></div>' +
       '<div class="field"><label for="ssWish">Ich wünsche mir, dass …</label><input id="ssWish" maxlength="140" placeholder="z. B. wir zwei Abende ohne Bildschirm einplanen" autocomplete="off"></div>' +
-      '<div class="card soft" style="padding:12px 14px;margin-bottom:10px"><div class="eyebrow" style="margin:0 0 4px">So klingt es</div><div id="ssOut" style="font-family:var(--serif);font-style:italic;font-size:15px;line-height:1.5"></div><div id="ssWarn" class="hint" style="text-align:left;margin-top:8px"></div></div>' +
+      '<div class="card soft" style="padding:12px 14px;margin-bottom:10px"><div class="eyebrow" style="margin:0 0 4px">So klingt es</div><div class="chips big" id="ssStyle" style="margin:6px 0 8px"></div><div id="ssOut" class="soft-out"></div><div id="ssWarn" class="hint" style="text-align:left;margin-top:8px"></div></div>' +
       '<div class="row wrap"><button class="pill-btn primary" data-ok>' + (P.joined() ? 'Senden' : 'Teilen ↗') + '</button><button class="pill-btn" data-copy>Kopieren</button><button class="pill-btn ghost" data-cancel>Abbrechen</button></div>' +
       '<p class="about" style="font-size:11px;color:var(--text-muted);margin-top:10px">Oder: laut vorlesen statt schicken. Schwierige Themen kommen von Angesicht zu Angesicht meist besser an.</p>', (sh) => {
       let feel = '';
       const val = (id) => sh.querySelector(id).value.trim().replace(/[.!]+$/, '');
-      const build = () => { const s1 = val('#ssSit'), w = val('#ssWish'); if (!s1 && !feel && !w) return ''; return 'Mir ist aufgefallen, dass ' + (s1 || '…') + '. Ich fühle mich dabei ' + (feel || '…') + '. Ich wünsche mir, dass ' + (w || '…') + '. Können wir darüber reden?'; };
+      /* Zu scharf? Dann wird der Satz nicht wörtlich übernommen, sondern durch eine entschärfte Fassung ersetzt. */
+      const isHarsh = (t) => { const low = ' ' + t.toLowerCase().replace(/\s+/g, ' ') + ' '; return K.harshAny.some((w) => low.indexOf(w) >= 0) || K.harshWords.some((w) => { const i = low.indexOf(w); return i > 0 && !/[a-zäöüß]/.test(low.charAt(i - 1)); }) || /[!?]{2,}/.test(t) || (t.length > 8 && t === t.toUpperCase() && /[A-ZÄÖÜ]/.test(t)); };
+      let style = '';
+      const lowerFirst = (t) => t ? t.charAt(0).toLowerCase() + t.slice(1) : t;
+      const build = () => {
+        const s1 = val('#ssSit'), w = val('#ssWish'); if (!s1 && !feel && !w) return { text: '', harsh: false, opts: [] };
+        const harsh = isHarsh(s1) || isHarsh(w);
+        const opts = harsh ? K.softLines : K.softFrames; const o = opts.find((x) => x.id === style) || opts[0];
+        /* In den entschärften Fassungen passt nur ein Gefühl, das man „gerade ist“ und an jemandem auslassen könnte */
+        const hot = ['genervt', 'überfordert', 'erschöpft', 'verletzt', 'enttäuscht'].indexOf(feel) >= 0 ? feel : 'gereizt';
+        let text = o.t.replace('{f}', harsh ? hot : (feel || '…')).replace('{s}', s1 ? lowerFirst(s1) : '…').replace('{w}', w ? lowerFirst(w) : '…');
+        if (harsh && w && !isHarsh(w)) text += ' Ich wünsche mir, dass ' + lowerFirst(w) + '.';
+        return { text, harsh, opts, id: o.id };
+      };
       const upd = () => {
-        const t = build(); sh.querySelector('#ssOut').textContent = t || 'Füll die drei Bausteine aus.';
-        const low = (val('#ssSit') + ' ' + val('#ssWish')).toLowerCase(); const hit = K.warnWords.find((w) => new RegExp('(^|[^a-zäöüß])' + w + '([^a-zäöüß]|$)').test(low));
-        sh.querySelector('#ssWarn').textContent = hit ? '😈 Das Teufelchen hebt die Braue: „' + hit + '“ macht aus einer Bitte einen Angriff. Beschreib lieber den einen konkreten Moment.' : '';
+        const b = build(); sh.querySelector('#ssOut').textContent = b.text || 'Füll die drei Bausteine aus.';
+        const box = sh.querySelector('#ssStyle');
+        box.innerHTML = b.opts.map((o) => '<button type="button" data-st="' + o.id + '"' + (o.id === b.id ? ' class="on"' : '') + '>' + esc(o.label) + '</button>').join('');
+        box.querySelectorAll('button').forEach((x) => x.onclick = () => { style = x.dataset.st; upd(); });
+        const low = (val('#ssSit') + ' ' + val('#ssWish')).toLowerCase(); const hit = !b.harsh && K.warnWords.find((w) => new RegExp('(^|[^a-zäöüß])' + w + '([^a-zäöüß]|$)').test(low));
+        sh.querySelector('#ssWarn').textContent = b.harsh ? '😈 Das war zu scharf zum Verschicken. Das Teufelchen hat entschärft.' : hit ? '😈 „' + hit + '“ klingt nach Angriff. Nimm lieber den einen konkreten Moment.' : '';
       };
       sh.querySelectorAll('#ssFeel button').forEach((b) => b.onclick = () => { feel = b.dataset.f; sh.querySelectorAll('#ssFeel button').forEach((x) => x.classList.toggle('on', x === b)); upd(); });
       sh.querySelector('#ssSit').addEventListener('input', upd); sh.querySelector('#ssWish').addEventListener('input', upd); upd();
-      const ready = () => { if (!val('#ssSit') || !feel || !val('#ssWish')) { L.toast('Alle drei Bausteine ausfüllen'); return null; } return build(); };
+      const ready = () => { if (!val('#ssSit') || !feel || !val('#ssWish')) { L.toast('Alle drei Bausteine ausfüllen'); return null; } return build().text; };
       sh.querySelector('[data-cancel]').onclick = L.closeSheet;
       sh.querySelector('[data-copy]').onclick = async () => { const t = ready(); if (!t) return; try { await navigator.clipboard.writeText(t); L.toast('Kopiert 📋'); } catch (e) { L.toast('Kopieren nicht möglich'); } };
       sh.querySelector('[data-ok]').onclick = () => { const t = ready(); if (!t) return; L.closeSheet(); setTimeout(() => P.sendOrShare(t, 'Klartext 🕊️'), 50); };
@@ -415,7 +431,7 @@
       P.openMatch(head('Zwiegespräch', '<span class="tag">' + (stt.turn + 1) + ' / 2</span>') + '<div class="match-intro"><div class="match-emoji">' + (stt.turn === 0 ? '🗣️' : '🗣️') + '</div><h2>' + esc(names[stt.turn]) + ' spricht</h2><p class="about">' + esc(names[1 - stt.turn]) + ' hört nur zu.</p>' +
         '<div class="zw-time" id="zwTime">' + mm + ':' + ss + '</div><div class="progress"><i id="zwBar" style="width:' + Math.round((1 - stt.left / (mins * 60)) * 100) + '%"></i></div>' +
         '<div class="row wrap" style="margin-top:18px"><button class="pill-btn" data-pause>' + (stt.paused ? '▶ Weiter' : '⏸ Pause') + '</button><button class="pill-btn ghost" data-next>' + (stt.turn === 0 ? 'Jetzt wechseln' : 'Beenden') + '</button></div></div>', (sc) => {
-        sc.querySelector('[data-close]').onclick = () => L.confirmSheet('Zwiegespräch abbrechen?', 'Die Zeit wird nicht gespeichert.', 'Abbrechen', closeOverlay, true);
+        sc.querySelector('[data-close]').onclick = () => L.confirmSheet('Zwiegespräch beenden?', 'Die Zeit wird nicht gespeichert.', 'Beenden', closeOverlay, true, 'Weiterreden');
         sc.querySelector('[data-pause]').onclick = () => { stt.paused = !stt.paused; draw(); };
         sc.querySelector('[data-next]').onclick = next;
       });

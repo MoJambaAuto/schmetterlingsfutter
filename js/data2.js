@@ -3,40 +3,50 @@
 (function () {
   'use strict';
   const D = window.LUZIFER_DATA;
-  D.version = '3.1.5';
+  D.version = '3.2.0';
+
+  /* Anrede: wählt jeder für sich, die verbundene App übernimmt sie (z. B. im Orakel: „Sie liebt mich …“) */
+  D.prons = [
+    { id: 'er', label: 'Er', subj: 'Er' },
+    { id: 'sie', label: 'Sie', subj: 'Sie' },
+    { id: 'es', label: 'Es', subj: 'Es' },
+    { id: 'einhorn', label: '🦄 Geflügeltes Einhorn', subj: 'Mein geflügeltes Einhorn' },
+    { id: 'schmetterling', label: '🦋 Bunter Schmetterling', subj: 'Mein bunter Schmetterling' }
+  ];
 
   /* ---- Klartext: Themen-Abgleich „Unausgesprochen“ (läuft über die Gleichklang-Technik) ---- */
   D.decks.push({
-    id: 'reden', icon: '🗝️', title: 'Unausgesprochen', talk: true, opts: 3,
-    sub: 'Worüber sollten wir mal reden? Jeder markiert für sich. Sichtbar wird nur, was ihr beide ansprechen wollt.',
-    labels: { nein: '👌 Passt gerade', vielleicht: '🤔 Wäre gut', ja: '❗ Ist mir wichtig' },
-    yesLabel: 'Beiden wichtig', openLabel: 'Beide offen dafür', openTitle: 'Beide fänden es gut, darüber zu reden',
+    id: 'reden', icon: '🗝️', title: 'Unausgesprochen', talk: true, opts: 3, round: 7,
+    prompt: 'Möchtest du mit deinem Schatz darüber reden?',
+    sub: 'Worüber möchtet ihr reden? Sichtbar wird nur, was ihr beide ansprechen wollt.',
+    labels: { nein: '👌 Nein, alles gut', vielleicht: '🤔 Wäre schön', ja: '💬 Ja, gern bald' },
+    yesLabel: 'Ihr wollt beide reden', openLabel: 'Fändet ihr beide schön', openTitle: 'Darüber würdet ihr beide gern mal reden',
     hitText: 'Darüber wollt ihr beide reden. Der schwerste Schritt ist damit getan.',
     noneText: 'Kein gemeinsames Thema markiert. Entweder läuft es rund – oder es traut sich noch keiner.',
     items: [
       { id: 'geld', t: 'Geld: Ausgaben, Sparen, wer zahlt was', e: '💶', q: 'Was wäre für dich beim Geld fair – und was macht dir Sorgen?' },
       { id: 'haushalt', t: 'Haushalt: wer macht wie viel', e: '🧺', q: 'Welche Aufgabe würdest du am liebsten abgeben, und welche übernehme ich?' },
       { id: 'mental', t: 'An alles denken müssen (Termine, Einkauf, Planung)', e: '🧠', q: 'Woran musst nur du denken, ohne dass ich es merke?' },
-      { id: 'zeit', t: 'Zu wenig Zeit zu zweit', e: '⏰', q: 'Wann hattest du zuletzt das Gefühl, dass wir richtig Zeit füreinander hatten?' },
+      { id: 'zeit', t: 'Unsere Zeit zu zweit', e: '⏰', q: 'Wann hattest du zuletzt das Gefühl, dass wir richtig Zeit füreinander hatten?' },
       { id: 'handy', t: 'Handy und Bildschirm, wenn wir zusammen sind', e: '📱', q: 'In welchen Momenten wünschst du dir, dass das Handy weg ist?' },
       { id: 'familie', t: 'Eltern, Schwiegereltern, Familie', e: '👪', q: 'Wo wünschst du dir, dass ich mich klarer an deine Seite stelle?' },
       { id: 'freunde', t: 'Freunde und eigene Unternehmungen', e: '👯', q: 'Was fehlt dir gerade mit deinen Leuten – und was mit mir?' },
-      { id: 'freiraum', t: 'Zeit nur für mich', e: '🌿', q: 'Wie viel Zeit für dich allein würde dir guttun, ohne schlechtes Gewissen?' },
+      { id: 'freiraum', t: 'Zeit für jeden allein', e: '🌿', q: 'Wie viel Zeit für dich allein würde dir guttun, ohne schlechtes Gewissen?' },
       { id: 'arbeit', t: 'Arbeit und Stress, der mit nach Hause kommt', e: '💼', q: 'Was brauchst du von mir, wenn du gestresst heimkommst – Ruhe, Zuhören oder Ablenkung?' },
-      { id: 'zukunft', t: 'Wo wollen wir in fünf Jahren sein?', e: '🧭', q: 'Welches Bild von uns in fünf Jahren macht dich froh?' },
+      { id: 'zukunft', t: 'Unsere Zukunft in fünf Jahren', e: '🧭', q: 'Welches Bild von uns in fünf Jahren macht dich froh?' },
       { id: 'wohnen', t: 'Wohnen: Ort, Umzug, Einrichtung', e: '🏡', q: 'Was müsste sich an unserem Zuhause ändern, damit du dich wohler fühlst?' },
       { id: 'kinder', t: 'Kinder: Wunsch, Erziehung, Aufteilung', e: '🧸', q: 'Was ist dir bei diesem Thema am wichtigsten, das ich wissen sollte?' },
       { id: 'zaertlich', t: 'Zärtlichkeit im Alltag', e: '🤗', q: 'Welche kleine Berührung fehlt dir im Alltag am meisten?' },
       { id: 'sex', t: 'Sex: Häufigkeit und Wünsche', e: '🔥', q: 'Was würde es dir leichter machen, über deine Wünsche zu sprechen?' },
       { id: 'streiten', t: 'Wie wir streiten', e: '🌩️', q: 'Was mache ich im Streit, das dich am meisten trifft – und was hilft dir?' },
       { id: 'alt', t: 'Etwas Altes, das noch wehtut', e: '🩹', q: 'Gibt es etwas von früher, für das du dir noch ein ehrliches Wort von mir wünschst?' },
-      { id: 'gesehen', t: 'Ich fühle mich nicht gesehen', e: '👀', q: 'Wofür wünschst du dir mehr Anerkennung von mir?' },
+      { id: 'gesehen', t: 'Anerkennung und gesehen werden', e: '👀', q: 'Wofür wünschst du dir mehr Anerkennung von mir?' },
       { id: 'eifersucht', t: 'Eifersucht und Vertrauen', e: '🫣', q: 'Was gibt dir Sicherheit bei uns – und was kratzt daran?' },
       { id: 'gesundheit', t: 'Gesundheit und Gewohnheiten', e: '🍏', q: 'Worüber machst du dir bei mir oder dir Gedanken?' },
       { id: 'ordnung', t: 'Ordnung und Pünktlichkeit', e: '🗂️', q: 'Welche eine Sache würde dir den Alltag sofort leichter machen?' },
       { id: 'urlaub', t: 'Urlaub und Freizeit', e: '🏖️', q: 'Wie sieht für dich Erholung aus – und passt das zu meiner?' },
-      { id: 'marotte', t: 'Eine Angewohnheit, die mich stört', e: '🙄', q: 'Darf ich dir etwas sagen, das mich stört – und du mir auch eins?' },
-      { id: 'schoenes', t: 'Etwas Schönes, das ich nie gesagt habe', e: '💝', q: 'Was wolltest du mir schon lange sagen und hast es nie getan?' }
+      { id: 'marotte', t: 'Kleine Angewohnheiten im Alltag', e: '🙄', q: 'Darf ich dir etwas sagen, das mich stört – und du mir auch eins?' },
+      { id: 'schoenes', t: 'Etwas Schönes, das noch ungesagt ist', e: '💝', q: 'Was wolltest du mir schon lange sagen und hast es nie getan?' }
     ]
   });
 
@@ -96,7 +106,24 @@
       'Wofür möchtest du, dass ich dir verzeihe?',
       'Was macht dir bei uns gerade am meisten Freude?'
     ],
-    warnWords: ['immer', 'nie', 'niemals', 'ständig', 'jedes mal', 'jedesmal', 'typisch', 'schon wieder', 'du bist']
+    warnWords: ['immer', 'nie', 'niemals', 'ständig', 'jedes mal', 'jedesmal', 'typisch', 'schon wieder', 'du bist'],
+    /* Wortstämme, bei denen der Satz nicht wörtlich übernommen wird (Beleidigung, Abwertung, Drohung) */
+    /* harshWords gelten am Wortanfang (damit „getrennt“ nicht als „trenn…“ zählt), harshAny überall im Wort */
+    harshWords: ['nervig', 'nervensäge', 'auf den sack', 'auf den keks', 'auf den geist', 'auf den zeiger', 'auf die nerven', 'auf die eier', 'kacke', 'verdammt', 'arsch', 'depp', 'blöd', 'bloed', 'dumm', 'dämlich', 'bescheuert', 'bekloppt', 'behindert', 'spinnst', 'spinner', 'hasse', 'verachte', 'widerlich', 'ekelhaft', 'ekelst', 'lächerlich', 'erbärmlich', 'armselig', 'versager', 'unfähig', 'nichtsnutz', 'faul', 'schlamp', 'egoist', 'halt die klappe', 'halts maul', 'halt’s maul', 'halt dein', 'fresse', 'schnauze', 'hau ab', 'geh mir aus', 'lass mich in ruhe', 'kann dich nicht', 'reicht mir mit dir', 'trenn', 'schluss mach', 'zicke', 'heulsuse', 'weichei', 'memme', 'psycho', 'krank im kopf', 'übertreib', 'stell dich nicht so an', 'selber schuld', 'selbst schuld', 'bist schuld', 'deine schuld', 'wie deine mutter', 'wie dein vater'],
+    harshAny: ['idiot', 'arschloch', 'scheiß', 'scheiss', 'kotz', 'verpiss', 'trottel', 'nervst', 'nervt'],
+    /* Entschärfte Fassungen, wenn die Eingabe zu scharf ist. {f} = gewähltes Gefühl */
+    softLines: [
+      { id: 'ruhig', label: 'Ruhig', t: 'Ich merke, dass ich gerade {f} bin, und ich will das nicht an dir auslassen. Können wir kurz durchatmen und dann in Ruhe darüber reden?' },
+      { id: 'verspielt', label: 'Verspielt', t: 'Mein Akku ist im roten Bereich und meine Geduld im Urlaub. Lass uns kurz Pause machen, einmal fest umarmen und dann klären, was los ist.' },
+      { id: 'herzlich', label: 'Herzlich', t: 'Mich beschäftigt gerade etwas, und ich möchte es dir sagen, ohne dass es wie ein Angriff klingt. Hast du gleich zehn Minuten für mich?' },
+      { id: 'wir', label: 'Für uns', t: 'Du bist mir zu wichtig, um mich wegen meiner Gereiztheit mit dir zu streiten. Lass uns kurz runterfahren und es gemeinsam lösen.' }
+    ],
+    /* Rahmen für sachliche Eingaben – dieselben drei Bausteine, unterschiedlich eingeleitet */
+    softFrames: [
+      { id: 'klar', label: 'Klar', t: 'Mir ist aufgefallen, dass {s}. Ich fühle mich dabei {f}. Ich wünsche mir, dass {w}. Können wir darüber reden?' },
+      { id: 'weich', label: 'Weich', t: 'Darf ich dir etwas sagen, das mich beschäftigt? Mir ist aufgefallen, dass {s}. Ich fühle mich dabei {f}. Schön wäre, wenn {w}.' },
+      { id: 'wir', label: 'Für uns', t: 'Weil du mir wichtig bist, sage ich es lieber gleich: Mir ist aufgefallen, dass {s}. Ich fühle mich dabei {f} und wünsche mir, dass {w}. Wie siehst du das?' }
+    ]
   };
 
   /* ---- Jingle-Box: kleine musikalische Liebeserklärungen (3–5 Sekunden).
