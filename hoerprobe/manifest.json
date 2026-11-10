@@ -1,0 +1,200 @@
+[
+ {
+  "id": "s-einfachso-1",
+  "cat": "einfachso",
+  "text": "Nur mal so zwischendurch: Ich lieb dich!",
+  "stil": "Retro-Gesangsgruppe mit Bläsern",
+  "sek": 4.8,
+  "suno": "81ca71b0-ac5f-4eb9-a6d7-42e01373d615",
+  "von": 0.32,
+  "bis": 5.12,
+  "kb": 66
+ },
+ {
+  "id": "s-einfachso-2",
+  "cat": "einfachso",
+  "text": "Mittendrin am Tag ein Gruß von mir.",
+  "stil": "Retro-Gesangsgruppe mit Bläsern",
+  "sek": 3.8,
+  "suno": "81ca71b0-ac5f-4eb9-a6d7-42e01373d615",
+  "von": 7.48,
+  "bis": 11.23,
+  "kb": 52
+ },
+ {
+  "id": "s-einfachso-3",
+  "cat": "einfachso",
+  "text": "Kleiner Gruß, großes Herz, für dich!",
+  "stil": "Retro-Gesangsgruppe mit Bläsern",
+  "sek": 6,
+  "suno": "81ca71b0-ac5f-4eb9-a6d7-42e01373d615",
+  "von": 11.24,
+  "bis": 17.2,
+  "kb": 82
+ },
+ {
+  "id": "s-morgen-1",
+  "cat": "morgen",
+  "text": "Guten Morgen, mein Sonnenschein!",
+  "stil": "Swing, Frauenstimme",
+  "sek": 4.4,
+  "suno": "ba7790fb-e188-4bdc-b5c1-59ea19127140",
+  "von": 0.97,
+  "bis": 5.33,
+  "kb": 60
+ },
+ {
+  "id": "s-morgen-2",
+  "cat": "morgen",
+  "text": "Aufgewacht, mein Lieblingsmensch!",
+  "stil": "Swing, Frauenstimme",
+  "sek": 4,
+  "suno": "ba7790fb-e188-4bdc-b5c1-59ea19127140",
+  "von": 5.33,
+  "bis": 9.3,
+  "kb": 55
+ },
+ {
+  "id": "s-morgen-3",
+  "cat": "morgen",
+  "text": "Kaffee, Kuss und los. Ich lieb dich!",
+  "stil": "Swing, Frauenstimme",
+  "sek": 4.5,
+  "suno": "ba7790fb-e188-4bdc-b5c1-59ea19127140",
+  "von": 10.33,
+  "bis": 14.8,
+  "kb": 62
+ },
+ {
+  "id": "s-nacht-1",
+  "cat": "nacht",
+  "text": "Schlaf gut, mein Herz.",
+  "stil": "Spieluhr, Harfe, leise Frauenstimme",
+  "sek": 4.5,
+  "suno": "5778deb9-2f50-41c7-92b7-fc1590c91e46",
+  "von": 5.31,
+  "bis": 9.81,
+  "kb": 62
+ },
+ {
+  "id": "s-nacht-2",
+  "cat": "nacht",
+  "text": "Träum was Schönes, ich bin da.",
+  "stil": "Spieluhr, Harfe, leise Frauenstimme",
+  "sek": 4.8,
+  "suno": "5778deb9-2f50-41c7-92b7-fc1590c91e46",
+  "von": 10.63,
+  "bis": 15.4,
+  "kb": 66
+ },
+ {
+  "id": "s-nacht-3",
+  "cat": "nacht",
+  "text": "Gute Nacht, ich lieb dich sehr.",
+  "stil": "Spieluhr, Harfe, leise Frauenstimme",
+  "sek": 7.3,
+  "suno": "5778deb9-2f50-41c7-92b7-fc1590c91e46",
+  "von": 15.55,
+  "bis": 22.85,
+  "kb": 100
+ },
+ {
+  "id": "s-danke-1",
+  "cat": "danke",
+  "text": "Tausend Dank, mein Schatz, für heut!",
+  "stil": "Klavier, Männerstimme",
+  "sek": 4.3,
+  "suno": "dae9fe9b-da9e-47e7-b32e-a3dad2d00b7c",
+  "von": 0.95,
+  "bis": 5.28,
+  "kb": 60
+ },
+ {
+  "id": "s-danke-2",
+  "cat": "danke",
+  "text": "Ich hab’s gesehen und sag: Dankeschön!",
+  "stil": "Klavier, Männerstimme",
+  "sek": 4.8,
+  "suno": "dae9fe9b-da9e-47e7-b32e-a3dad2d00b7c",
+  "von": 5.65,
+  "bis": 10.41,
+  "kb": 66
+ },
+ {
+  "id": "s-danke-3",
+  "cat": "danke",
+  "text": "Du bist Gold wert. Danke dir!",
+  "stil": "Klavier, Männerstimme",
+  "sek": 5,
+  "suno": "dae9fe9b-da9e-47e7-b32e-a3dad2d00b7c",
+  "von": 10.63,
+  "bis": 15.6,
+  "kb": 69
+ },
+ {
+  "id": "s-vergessen-1",
+  "cat": "vergessen_jahrestag",
+  "text": "Ups, vergessen! Doch ich lieb dich jeden Tag.",
+  "stil": "Ukulele, Pfeifen, Männerstimme",
+  "sek": 5.5,
+  "suno": "1242aa8f-c0fe-46d4-8d7f-7105a28a172c",
+  "von": 0,
+  "bis": 5.48,
+  "kb": 75
+ },
+ {
+  "id": "s-vergessen-2",
+  "cat": "vergessen_jahrestag",
+  "text": "Der Kalender lügt, mein Herz vergisst dich nie.",
+  "stil": "Ukulele, Pfeifen, Männerstimme",
+  "sek": 4.6,
+  "suno": "1242aa8f-c0fe-46d4-8d7f-7105a28a172c",
+  "von": 5.44,
+  "bis": 9.99,
+  "kb": 63
+ },
+ {
+  "id": "s-vergessen-3",
+  "cat": "vergessen_jahrestag",
+  "text": "Zu spät, ich weiß. Ich mach es wieder gut!",
+  "stil": "Ukulele, Pfeifen, Männerstimme",
+  "sek": 6.3,
+  "suno": "1242aa8f-c0fe-46d4-8d7f-7105a28a172c",
+  "von": 9.99,
+  "bis": 16.32,
+  "kb": 87
+ },
+ {
+  "id": "s-streit-1",
+  "cat": "streit",
+  "text": "Es tut mir leid, ich hab dich lieb.",
+  "stil": "A cappella, Doo-wop",
+  "sek": 5.3,
+  "suno": "009bb59a-5d79-44c6-9659-86570ceeb8d1",
+  "von": 0.82,
+  "bis": 6.08,
+  "kb": 73
+ },
+ {
+  "id": "s-streit-2",
+  "cat": "streit",
+  "text": "Weiße Fahne, Schatz! Vertragen wir uns?",
+  "stil": "A cappella, Doo-wop",
+  "sek": 5.3,
+  "suno": "009bb59a-5d79-44c6-9659-86570ceeb8d1",
+  "von": 6.18,
+  "bis": 11.44,
+  "kb": 73
+ },
+ {
+  "id": "s-streit-3",
+  "cat": "streit",
+  "text": "Streit vorbei? Ich nehm dich in den Arm.",
+  "stil": "A cappella, Doo-wop",
+  "sek": 7.5,
+  "suno": "009bb59a-5d79-44c6-9659-86570ceeb8d1",
+  "von": 11.48,
+  "bis": 19,
+  "kb": 104
+ }
+]

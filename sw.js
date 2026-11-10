@@ -1,5 +1,5 @@
 /* Schmetterlingsfutter Service Worker – App-Shell offline verfügbar machen. */
-const CACHE = 'schmetterlingsfutter-v3.1.4';
+const CACHE = 'schmetterlingsfutter-v3.1.5';
 const ASSETS = [
   './', './index.html', './privacy.html', './manifest.webmanifest',
   './css/app.css', './js/data.js', './js/data2.js', './js/vendor/qrcode.js', './js/app.js', './js/features.js', './js/partner.js', './js/naehe.js',
@@ -16,6 +16,7 @@ self.addEventListener('activate', (e) => {
 });
 self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET') return;
+  if (new URL(e.request.url).pathname.includes('/hoerprobe/')) return; // Hörprobe immer frisch aus dem Netz
   e.respondWith(
     caches.match(e.request, { ignoreSearch: true }).then((hit) => hit || fetch(e.request).then((res) => {
       if (res.ok && new URL(e.request.url).origin === location.origin) {

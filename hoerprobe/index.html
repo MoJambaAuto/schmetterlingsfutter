@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Jingle-Hörprobe – Schmetterlingsfutter</title>
+<style>
+  :root { --bg:#1a0a1e; --bg2:#2d1133; --acc:#ff85a1; --acc2:#e8305a; --text:rgba(255,235,240,.94); --soft:rgba(255,220,235,.75); --muted:rgba(255,150,180,.65); --line:rgba(255,150,180,.3); }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:linear-gradient(160deg,var(--bg),var(--bg2) 45%,var(--bg)); background-attachment:fixed; color:var(--text); font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif; line-height:1.5; min-height:100vh; }
+  main { max-width:560px; margin:0 auto; padding:24px 16px 120px; }
+  h1 { font-family:Georgia,'Times New Roman',serif; font-weight:400; font-style:italic; font-size:28px; color:var(--acc); margin-bottom:6px; }
+  h2 { font-family:Georgia,serif; font-weight:400; font-size:18px; margin:26px 0 10px; color:var(--acc); }
+  p { color:var(--soft); font-size:15px; margin-bottom:10px; }
+  .card { border:1px solid var(--line); background:rgba(255,255,255,.04); border-radius:16px; padding:14px 14px 12px; margin-bottom:12px; }
+  .card.done { border-color:rgba(126,232,180,.55); }
+  .head { display:flex; gap:12px; align-items:center; }
+  .play { flex:0 0 52px; width:52px; height:52px; border-radius:50%; border:1px solid var(--acc); background:var(--acc2); color:#fff; font-size:20px; cursor:pointer; }
+  .play.on { background:#fff; color:var(--acc2); }
+  .txt { font-family:Georgia,serif; font-style:italic; font-size:17px; }
+  .meta { font-size:12px; color:var(--muted); margin-top:2px; }
+  .q { margin-top:12px; }
+  .q label { display:block; font-size:13px; color:var(--soft); margin-bottom:6px; }
+  .scale { display:flex; gap:6px; }
+  .scale button { flex:1; min-height:42px; border-radius:10px; border:1px solid var(--line); background:transparent; color:var(--text); font-size:15px; cursor:pointer; }
+  .scale button.sel { background:var(--acc2); border-color:var(--acc); color:#fff; font-weight:600; }
+  .scale button:disabled { opacity:.35; cursor:default; }
+  .ends { display:flex; justify-content:space-between; font-size:11px; color:var(--muted); margin-top:3px; }
+  .hint { font-size:12px; color:var(--muted); margin-top:8px; }
+  .bar { position:fixed; left:0; right:0; bottom:0; background:rgba(26,10,30,.96); border-top:1px solid var(--line); padding:12px 16px calc(12px + env(safe-area-inset-bottom)); }
+  .bar .in { max-width:560px; margin:0 auto; display:flex; gap:12px; align-items:center; justify-content:space-between; }
+  .big { border-radius:24px; border:1px solid var(--acc); background:var(--acc2); color:#fff; padding:12px 20px; font-size:15px; cursor:pointer; }
+  .big:disabled { opacity:.4; cursor:default; }
+  .ghost { background:transparent; }
+  textarea, input[type=text] { width:100%; border-radius:12px; border:1px solid var(--line); background:rgba(0,0,0,.25); color:var(--text); font:inherit; font-size:14px; padding:10px 12px; }
+  textarea { min-height:90px; font-family:ui-monospace,Consolas,monospace; font-size:12px; }
+  table { width:100%; border-collapse:collapse; font-size:13px; margin-top:10px; }
+  th, td { text-align:left; padding:6px 4px; border-bottom:1px solid rgba(255,150,180,.18); }
+  th { color:var(--muted); font-weight:400; font-size:11px; text-transform:uppercase; letter-spacing:.5px; }
+  td.n { text-align:right; font-variant-numeric:tabular-nums; }
+  .hidden { display:none; }
+  a { color:var(--acc); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Jingle-Hörprobe 🦋</h1>
+  <p id="intro">Für die Paar-App „Schmetterlingsfutter“ suchen wir kleine gesungene Liebesgrüße, die man seinem Schatz schickt. Hör dir jeden Jingle an und sag ehrlich, wie er auf dich wirkt. Es gibt keine falschen Antworten – „peinlich“ ist genauso wertvoll wie „süß“. Dauer: etwa fünf Minuten, am besten mit Ton an.</p>
+  <div id="test">
+    <div id="list"></div>
+    <h2>Fast geschafft</h2>
+    <div class="q"><label for="fav">Welcher Jingle war dein Liebling – und welcher ging gar nicht? (ein Satz, freiwillig)</label><input type="text" id="fav" maxlength="160" placeholder="z. B. Der Morgen-Jingle ist süß, der mit der weißen Fahne zu albern"></div>
+    <div id="result" class="hidden">
+      <h2>Dein Ergebnis-Code</h2>
+      <p>Kopiere diesen Code und füge ihn als Antwort bei deiner Aufgabe im Schwarmwerk ein.</p>
+      <textarea id="code" readonly></textarea>
+      <p class="hint" id="copied"></p>
+    </div>
+  </div>
+  <div id="eval" class="hidden">
+    <h2>Auswertung</h2>
+    <p>Ergebnis-Codes hier einfügen, je Zeile einer. Die Tabelle zeigt die Durchschnitte je Jingle.</p>
+    <textarea id="codes" placeholder="SFH1 …"></textarea>
+    <div style="margin-top:10px"><button class="big" id="btnEval">Auswerten</button></div>
+    <div id="evalOut"></div>
+  </div>
+</main>
+<div class="bar" id="bar"><div class="in"><span id="progress" style="font-size:13px;color:var(--soft)"></span><button class="big" id="btnDone" disabled>Code erzeugen</button></div></div>
+<script>
+(async function () {
+  'use strict';
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const CATS = { einfachso: 'Einfach so', morgen: 'Guten Morgen', nacht: 'Gute Nacht', danke: 'Danke', vergessen_jahrestag: 'Jahrestag vergessen', streit: 'Nach dem Streit' };
+  const RUN = 'SFH1'; // Kennung dieser Hörprobe (Runde 1)
+  let items = [];
+  try { items = await (await fetch('manifest.json', { cache: 'no-store' })).json(); } catch (e) { $('list').innerHTML = '<p>Die Jingles konnten nicht geladen werden. Bitte Seite neu laden.</p>'; return; }
+  items.forEach((it, i) => { it.nr = String(i + 1).padStart(2, '0'); });
+
+  /* ---------- Auswertung (Adresse mit #auswertung) ---------- */
+  if (location.hash === '#auswertung') {
+    $('test').classList.add('hidden'); $('bar').classList.add('hidden'); $('eval').classList.remove('hidden'); $('intro').textContent = 'Auswertung der Hörprobe, Runde 1.';
+    $('btnEval').onclick = () => {
+      const agg = {}; let n = 0; const favs = [];
+      $('codes').value.split(/\n+/).forEach((line) => {
+        const m = /SFH1\s+(.+?)(?:\s*\|\s*(.*))?$/.exec(line.trim()); if (!m) return; n++;
+        if (m[2]) favs.push(m[2]);
+        m[1].trim().split(/\s+/).forEach((tok) => { const t = /^(\d\d):([1-5])([1-5])([jn])$/.exec(tok); if (!t) return; const a = agg[t[1]] = agg[t[1]] || { r: 0, w: 0, j: 0, n: 0 }; a.r += +t[2]; a.w += +t[3]; a.j += t[4] === 'j' ? 1 : 0; a.n++; });
+      });
+      const rows = items.map((it) => { const a = agg[it.nr]; return a ? { it, r: a.r / a.n, w: a.w / a.n, j: a.j / a.n, n: a.n } : null; }).filter(Boolean).sort((x, y) => (y.r + y.w + y.j * 2) - (x.r + x.w + x.j * 2));
+      $('evalOut').innerHTML = '<p style="margin-top:12px">' + n + ' gültige Codes.</p><table><tr><th>Jingle</th><th>Romantisch</th><th>Wirkung</th><th>Würde senden</th><th>Stimmen</th></tr>' +
+        rows.map((r) => '<tr><td>' + r.it.nr + ' · ' + esc(r.it.text) + '<br><span class="meta">' + esc(CATS[r.it.cat] || r.it.cat) + ' · ' + esc(r.it.stil) + '</span></td><td class="n">' + r.r.toFixed(1) + '</td><td class="n">' + r.w.toFixed(1) + '</td><td class="n">' + Math.round(r.j * 100) + ' %</td><td class="n">' + r.n + '</td></tr>').join('') + '</table>' +
+        (favs.length ? '<h2>Anmerkungen</h2>' + favs.map((f) => '<p>„' + esc(f) + '“</p>').join('') : '');
+    };
+    return;
+  }
+
+  /* ---------- Hörtest ---------- */
+  const ans = {}; const heard = {}; let current = null, audio = null;
+  const list = $('list');
+  items.forEach((it) => {
+    const d = document.createElement('div'); d.className = 'card'; d.id = 'c' + it.nr;
+    d.innerHTML = '<div class="head"><button class="play" data-play aria-label="Jingle ' + it.nr + ' abspielen">▶</button><div><div class="txt">' + esc(it.text) + '</div><div class="meta">Nr. ' + it.nr + ' · ' + esc(CATS[it.cat] || it.cat) + ' · ' + it.sek + ' s</div></div></div>' +
+      '<div class="q"><label>Wie romantisch ist der Jingle?</label><div class="scale" data-k="r">' + [1, 2, 3, 4, 5].map((n) => '<button type="button" disabled data-v="' + n + '">' + n + '</button>').join('') + '</div><div class="ends"><span>gar nicht</span><span>sehr</span></div></div>' +
+      '<div class="q"><label>Wie stark wirkt er auf dich? (Lächeln, Gänsehaut, Ohrwurm)</label><div class="scale" data-k="w">' + [1, 2, 3, 4, 5].map((n) => '<button type="button" disabled data-v="' + n + '">' + n + '</button>').join('') + '</div><div class="ends"><span>lässt mich kalt</span><span>trifft mich</span></div></div>' +
+      '<div class="q"><label>Würdest du ihn deinem Schatz schicken?</label><div class="scale" data-k="s"><button type="button" disabled data-v="j">Ja</button><button type="button" disabled data-v="n">Nein, zu peinlich oder zu schwach</button></div></div>' +
+      '<div class="hint" data-hint>Erst anhören, dann bewerten.</div>';
+    list.appendChild(d);
+    const btn = d.querySelector('[data-play]');
+    btn.onclick = () => {
+      if (audio) { audio.pause(); if (current) current.textContent = '▶', current.classList.remove('on'); if (current === btn) { current = null; audio = null; return; } }
+      audio = new Audio('audio/' + it.id + '.mp3'); current = btn; btn.textContent = '■'; btn.classList.add('on');
+      audio.onended = () => { btn.textContent = '↻'; btn.classList.remove('on'); current = null; audio = null; if (!heard[it.nr]) { heard[it.nr] = true; d.querySelectorAll('.scale button').forEach((b) => b.disabled = false); d.querySelector('[data-hint]').textContent = 'Nochmal hören geht jederzeit.'; } };
+      audio.onerror = () => { btn.textContent = '▶'; btn.classList.remove('on'); d.querySelector('[data-hint]').textContent = 'Ton konnte nicht geladen werden – bitte nochmal tippen.'; current = null; audio = null; };
+      audio.play().catch(() => audio && audio.onerror());
+    };
+    d.querySelectorAll('.scale').forEach((sc) => sc.querySelectorAll('button').forEach((b) => b.onclick = () => {
+      ans[it.nr] = ans[it.nr] || {}; ans[it.nr][sc.dataset.k] = b.dataset.v; sc.querySelectorAll('button').forEach((x) => x.classList.toggle('sel', x === b));
+      const a = ans[it.nr]; d.classList.toggle('done', !!(a.r && a.w && a.s)); progress();
+    }));
+  });
+  const complete = () => items.filter((it) => { const a = ans[it.nr]; return a && a.r && a.w && a.s; }).length;
+  function progress() { const c = complete(); $('progress').textContent = c + ' von ' + items.length + ' bewertet'; $('btnDone').disabled = c < items.length; }
+  progress();
+  $('btnDone').onclick = async () => {
+    const fav = $('fav').value.trim().replace(/[|\n\r]/g, ' ');
+    const code = RUN + ' ' + items.map((it) => it.nr + ':' + ans[it.nr].r + ans[it.nr].w + ans[it.nr].s).join(' ') + (fav ? ' | ' + fav : '');
+    $('code').value = code; $('result').classList.remove('hidden'); $('result').scrollIntoView({ behavior: 'smooth' });
+    try { await navigator.clipboard.writeText(code); $('copied').textContent = 'Der Code ist schon in deiner Zwischenablage. Danke fürs Mithören! ❤'; } catch (e) { $('copied').textContent = 'Bitte den Code markieren und kopieren. Danke fürs Mithören! ❤'; $('code').select(); }
+  };
+})();
+</script>
+</body>
+</html>

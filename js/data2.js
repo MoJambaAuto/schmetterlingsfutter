@@ -3,7 +3,7 @@
 (function () {
   'use strict';
   const D = window.LUZIFER_DATA;
-  D.version = '3.1.4';
+  D.version = '3.1.5';
 
   /* ---- Klartext: Themen-Abgleich „Unausgesprochen“ (läuft über die Gleichklang-Technik) ---- */
   D.decks.push({
