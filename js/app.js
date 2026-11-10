@@ -621,6 +621,9 @@
     setToggle, showEnvelope
   };
 
+  /* Melden: schickt den Wortlaut der Vorlage (ohne eure Namen) an die Redaktion */
+  $('btnReport').onclick = () => { if (window.LZP && window.LZP.reportSheet) window.LZP.reportSheet(current.text); };
+
   /* ---------- Start ---------- */
   applyTheme(); renderHeader(); refillQueue(); renderFavs();
   $('tapCounter').textContent = S.taps >= 10 ? S.taps + ' × Liebe abgeholt' : '';

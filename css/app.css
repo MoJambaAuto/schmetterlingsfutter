@@ -531,3 +531,7 @@ input, textarea, select { font-size:19px; }
 label.check { display:flex; align-items:center; gap:10px; font-size:18px; margin:2px 0 8px; }
 label.check input { width:24px; height:24px; accent-color:var(--accent-dark); }
 .field textarea { min-height:96px; }
+
+/* Melden */
+.msg-actions { flex-wrap:wrap; }
+#ideaRow2 .row { flex-wrap:wrap; gap:10px; }

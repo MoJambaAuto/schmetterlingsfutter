@@ -415,6 +415,8 @@
     });
     /* Der Ideen-Briefkasten erscheint erst, wenn der Vermittlungsdienst ihn annimmt (Schalter D.ideaBox) */
     ['ideaRow', 'ideaRow2'].forEach((id) => { const el = $(id); if (el) el.classList.toggle('hidden', !D.ideaBox); });
+    const rb = $('btnReport'); if (rb) rb.classList.toggle('hidden', !D.ideaBox);
+    const rb2 = $('btnReport2'); if (rb2) rb2.onclick = () => reportSheet('');
     const ib = $('btnIdea'); if (ib) ib.onclick = () => ideaSheet('frage');
     const ib2 = $('btnIdea2'); if (ib2) ib2.onclick = () => ideaSheet('sonstiges');
     const hint = $('deckHint'); if (hint) hint.textContent = paired() && joined() ? '' : 'Ohne Verbindung spielt ihr an einem Handy.';
@@ -448,6 +450,31 @@
         ok.disabled = true; ok.textContent = '…';
         try { await post('/idea', { kind: k, text, adult: !!(ad && ad.checked), app: D.version }, true); L.closeSheet(); L.toast('Danke! Deine Idee ist angekommen 🦋'); L.spawnHearts(8); }
         catch (e) { ok.disabled = false; ok.textContent = 'Spenden'; L.toast(e.status === 429 ? 'Für heute reicht es. Morgen gern wieder.' : 'Keine Verbindung. Versuch es später nochmal.'); }
+      };
+    });
+  }
+
+  /* ---------- Melden: unpassende Inhalte oder Fehler, ohne Namen, über denselben Briefkasten wie die Ideen ---------- */
+  const REPORT_KINDS = [['seltsam', 'Klingt seltsam'], ['unpassend', 'Unpassend'], ['fehler', 'Funktioniert nicht'], ['sonst', 'Etwas anderes']];
+  const noNames = (text) => { [[S().sender, '{s}'], [S().receiver, '{r}']].forEach((p) => { if (!p[0] || p[0].length < 2) return; const name = p[0].replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); text = text.replace(new RegExp('(^|[^A-Za-zÄÖÜäöüß])' + name + '(?![A-Za-zÄÖÜäöüß])', 'gi'), '$1' + p[1]); }); return text; };
+  function reportSheet(quote) {
+    let k = quote ? 'seltsam' : 'fehler';
+    L.openSheet('<h3>🚩 Melden</h3>' + (quote ? '<p class="about" style="margin-bottom:14px">„' + L.esc(L.fmt(quote)) + '“</p>' : '') +
+      '<div class="field"><label>Was stört?</label><div class="chips big" id="rpKind"></div></div>' +
+      '<div class="field"><label for="rpText">' + (quote ? 'Magst du mehr dazu sagen?' : 'Was ist passiert?') + '</label><textarea id="rpText" maxlength="140" rows="2"></textarea></div>' +
+      '<div class="row"><button class="pill-btn ghost" data-cancel>Abbrechen</button><button class="pill-btn primary" data-ok>Melden</button></div>', (sh) => {
+      const box = sh.querySelector('#rpKind');
+      const draw = () => { box.innerHTML = REPORT_KINDS.map((x) => '<button type="button" data-k="' + x[0] + '"' + (x[0] === k ? ' class="on"' : '') + '>' + x[1] + '</button>').join(''); box.querySelectorAll('button').forEach((b) => b.onclick = () => { k = b.dataset.k; draw(); }); };
+      draw();
+      sh.querySelector('[data-cancel]').onclick = L.closeSheet;
+      const ok = sh.querySelector('[data-ok]');
+      ok.onclick = async () => {
+        const note = sh.querySelector('#rpText').value.replace(/\s+/g, ' ').trim();
+        if (!quote && note.length < 5) { L.toast('Beschreib kurz, was nicht passt'); return; }
+        const text = noNames('MELDUNG ' + k + (quote ? ' | „' + quote.slice(0, 110) + '“' : '') + (note ? ' | ' + note : '')).slice(0, 240);
+        ok.disabled = true; ok.textContent = '…';
+        try { await post('/idea', { kind: 'sonstiges', text, app: D.version }, true); L.closeSheet(); L.toast('Danke! Wir schauen es uns an.'); }
+        catch (e) { ok.disabled = false; ok.textContent = 'Melden'; L.toast(e.status === 429 ? 'Für heute reicht es. Morgen gern wieder.' : 'Keine Verbindung. Versuch es später nochmal.'); }
       };
     });
   }
@@ -603,7 +630,7 @@
   setInterval(() => { if (document.visibilityState === 'visible') pull(); }, 45000);
   $('obFinish').addEventListener('click', () => setTimeout(() => { renderAll(); offerPendingPair(); }, 80));
 
-  window.LZP = { P, paired, joined, partnerName, sendOrShare, sendCoupon, send, pull, pairSheet, inboxSheet, playDeck, renderDecks, renderAll, renderGiftRadar, amazonUrl, tips, tipsHtml, bindTips, mountTips, leavePair, unread, RELAY, on, inboxType, openMatch, closeMatch, online, pairLink, ideaSheet, partnerPron: () => (P().partner && P().partner.pron) || '', announce: () => { if (paired() && joined()) send({ t: 'hello', name: S().sender, pron: S().pron || '' }).catch(() => {}); } };
+  window.LZP = { P, paired, joined, partnerName, sendOrShare, sendCoupon, send, pull, pairSheet, inboxSheet, playDeck, renderDecks, renderAll, renderGiftRadar, amazonUrl, tips, tipsHtml, bindTips, mountTips, leavePair, unread, RELAY, on, inboxType, openMatch, closeMatch, online, pairLink, ideaSheet, reportSheet, partnerPron: () => (P().partner && P().partner.pron) || '', announce: () => { if (paired() && joined()) send({ t: 'hello', name: S().sender, pron: S().pron || '' }).catch(() => {}); } };
   renderAll(); handlePairParam();
   if (window.LZF) { window.LZF.renderPiek(); window.LZF.renderGiftRadar && window.LZF.renderGiftRadar(); }
   /* Erst abholen, wenn alle Skripte geladen sind (naehe.js meldet eigene Nachrichtenarten an) */
