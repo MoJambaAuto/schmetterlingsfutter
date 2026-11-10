@@ -250,13 +250,26 @@
       ta.remove();
     }
   }
+  const REASON_LABEL = 'Warum ich dich liebe';
+  function showReason(r) { spawnHearts(6); showMessage({ text: r, own: true }, REASON_LABEL); const h = $('msgText'); if (h && h.scrollIntoView) h.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+  /* Gründe, die der Schatz geschickt hat, sammeln sich darunter */
+  function renderReasonsFrom() {
+    const box = $('reasonFrom'); if (!box) return;
+    const got = (S.inbox || []).filter((m) => m.t === 'msg' && m.label === REASON_LABEL); const seen = {};
+    const list = got.filter((m) => !seen[m.text] && (seen[m.text] = 1)).reverse();
+    if (!list.length) { box.innerHTML = ''; return; }
+    box.innerHTML = '<div class="eyebrow" style="margin:18px 0 10px">Von ' + esc(S.receiver) + ' für dich</div>' + list.map((m) => '<div class="reason-item"><div class="reason-dot"></div><div class="reason-text">' + esc(m.text) + '</div></div>').join('');
+  }
   function renderReasons() {
-    const l = $('reasonList'); l.innerHTML = '';
+    const l = $('reasonList'); l.innerHTML = ''; renderReasonsFrom();
+    const joined = !!(window.LZP && window.LZP.joined && window.LZP.joined());
     if (!S.reasons.length) { l.innerHTML = '<div class="empty">Noch keine Gründe. Füge den ersten hinzu.</div>'; return; }
     S.reasons.forEach((r, i) => {
       const d = document.createElement('div'); d.className = 'reason-item'; d.style.animationDelay = (i * .06) + 's';
-      d.innerHTML = '<div class="reason-dot"></div><div class="reason-text">' + esc(fmt(r)) + '</div><button class="reason-del" aria-label="Grund löschen">✕</button>';
-      d.querySelector('button').onclick = () => confirmSheet('Grund löschen?', '„' + fmt(r) + '“', 'Löschen', () => { S.reasons.splice(i, 1); save(); renderReasons(); }, true);
+      d.innerHTML = '<div class="reason-dot"></div><button type="button" class="reason-text" data-show>' + esc(fmt(r)) + '</button><button class="icon-btn" data-send aria-label="' + (joined ? 'An ' + esc(S.receiver) + ' schicken' : 'Teilen') + '">' + (joined ? '💌' : '↗') + '</button><button class="reason-del" aria-label="Grund löschen">✕</button>';
+      d.querySelector('[data-show]').onclick = () => showReason(r);
+      d.querySelector('[data-send]').onclick = () => { if (window.LZP) window.LZP.sendOrShare(fmt(r), REASON_LABEL); else shareText('🌹 ' + fmt(r)); };
+      d.querySelector('.reason-del').onclick = () => confirmSheet('Grund löschen?', '„' + fmt(r) + '“', 'Löschen', () => { S.reasons.splice(i, 1); save(); renderReasons(); }, true);
       l.appendChild(d);
     });
   }
@@ -277,6 +290,7 @@
   $('btnNight').onclick = () => { spawnHearts(5); showMessage({ text: pick(D.goodnight), own: false }, 'Gute Nacht'); };
   $('btnWrite').onclick = () => writeOwn((t) => showMessage({ text: t, own: true }, 'Persönlich für dich'));
   $('btnReasons').onclick = () => { const p = $('reasonPanel'); const open = p.classList.toggle('hidden'); if (!open) { renderReasons(); if (window.LZP) window.LZP.mountTips($('reasonTips'), 'reasons', 'Gründe schenken'); p.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } };
+  $('btnDrawReason').onclick = () => { if (!S.reasons.length) { toast('Füge erst einen Grund hinzu'); return; } showReason(pick(S.reasons)); };
   $('btnAddReason').onclick = () => promptSheet('Neuer Grund', [{ key: 'r', label: 'Warum ich dich liebe …', placeholder: 'z. B. Wie du morgens singst', max: 120 }], 'Hinzufügen', (v) => {
     if (!v.r) return false; S.reasons.push(v.r); save(); renderReasons();
   });
