@@ -531,7 +531,6 @@
   $('togMotion').onclick = () => { S.motion = !S.motion; save(); setToggle('togMotion', S.motion); applyTheme(); };
   $('togHaptic').onclick = () => { S.haptic = !S.haptic; save(); setToggle('togHaptic', S.haptic); haptic(15); };
   $('btnWrite2').onclick = () => writeOwn(() => renderSettings());
-  $('btnSeal').onclick = () => confirmSheet('App versiegeln?', 'Beim nächsten Öffnen erscheint der Briefumschlag für ' + S.receiver + '. Du kannst ihn selbst öffnen, um die Ansicht zu prüfen.', 'Versiegeln 💌', () => { S.giftSealed = true; save(); showGift(); });
   $('btnExport').onclick = () => {
     const copy = Object.assign({}, S); delete copy.partner; delete copy.deviceId; delete copy.pendingPair; // Verbindung ist gerätegebunden
     const blob = new Blob([JSON.stringify(copy, null, 2)], { type: 'application/json' });
@@ -589,22 +588,26 @@
   };
 
   /* ---------- Geschenk-Umschlag ---------- */
-  function showGift() {
-    $('giftName').textContent = S.receiver; $('envLetter').textContent = 'Für ' + S.receiver + ', von ' + S.sender + ' …';
-    $('envelope').classList.remove('open'); $('btnGiftEnter').classList.add('hidden'); $('envHint').textContent = 'Tippe auf den Umschlag';
+  /* Briefumschlag: zeigt eine Überraschung aus der App des Schatzes (siehe naehe.js, „Überraschung senden“) */
+  let envOpts = {};
+  function showEnvelope(o) {
+    envOpts = o || {};
+    $('giftName').textContent = envOpts.name || S.sender; $('envLetter').textContent = envOpts.letter || '';
+    $('envelope').classList.remove('open'); $('btnGiftEnter').classList.add('hidden'); $('btnGiftEnter').textContent = envOpts.button || 'Auspacken ❤';
+    $('envHint').textContent = 'Tippe auf den Umschlag';
     $('giftScreen').classList.remove('hidden'); showView('home');
   }
   function openEnvelope() {
     const env = $('envelope'); if (env.classList.contains('open')) return;
     env.classList.add('open'); haptic(20); spawnHearts(16, env);
-    $('envHint').textContent = 'Jemand hat an dich gedacht ❤';
+    $('envHint').textContent = envOpts.hint || 'Jemand hat an dich gedacht ❤';
     setTimeout(() => $('btnGiftEnter').classList.remove('hidden'), 1100);
   }
   $('envelope').addEventListener('click', openEnvelope);
   $('envelope').addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openEnvelope(); } });
   $('btnGiftEnter').onclick = () => {
-    S.giftSealed = false; save(); $('giftScreen').classList.add('hidden');
-    showMessage(dailyMessage(), 'Für dich, ' + S.receiver); spawnHearts(14);
+    $('giftScreen').classList.add('hidden'); spawnHearts(14);
+    const f = envOpts.onEnter; envOpts = {}; if (f) f();
   };
 
   /* ---------- API für features.js ---------- */
@@ -615,14 +618,14 @@
   window.LZ = {
     get S() { return S; }, save, fmt, esc, pick, toast, openSheet, closeSheet, confirmSheet, promptSheet,
     spawnHearts, showMessage, showView, showSub, haptic, fmtDate, parseISODate, atMidnight, todayKey, shareText, renderHeader,
-    setToggle
+    setToggle, showEnvelope
   };
 
   /* ---------- Start ---------- */
   applyTheme(); renderHeader(); refillQueue(); renderFavs();
   $('tapCounter').textContent = S.taps >= 10 ? S.taps + ' × Liebe abgeholt' : '';
   if (!S.onboarded) startOnboarding();
-  else if (S.giftSealed) showGift();
+  else if (S.giftSealed) { S.giftSealed = false; save(); } // altes „Versiegeln“ gibt es nicht mehr
   showMessage(dailyMessage(), 'Heute für dich');
 
   if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {

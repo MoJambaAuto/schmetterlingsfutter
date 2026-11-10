@@ -136,7 +136,7 @@
       '<span class="kz-sep"></span>' + stamps.map((e) => '<button type="button" class="kz-s" data-s="' + e + '" aria-label="Stempel ' + e + '">' + e + '</button>').join('') + '</div>' +
       '<div class="row wrap" style="margin:10px 0"><button class="pill-btn small ghost" data-clear>🧽 Leeren</button><button class="pill-btn small ghost" data-photo>📷 Foto dahinter</button><input type="file" accept="image/*" class="hidden" id="kzFile"></div>' +
       '<div class="field"><label for="kzText">Ein Satz dazu (optional)</label><input id="kzText" maxlength="80" placeholder="z. B. Denk an dich!" autocomplete="off"></div>' +
-      '<div class="row wrap">' + (joined ? '<button class="pill-btn primary" data-send>💌 An ' + esc(you()) + '</button>' : '') + '<button class="pill-btn' + (joined ? '' : ' primary') + '" data-share>↗ Teilen</button><button class="pill-btn ghost" data-cancel>Abbrechen</button></div>' +
+      '<div class="row wrap">' + (joined ? '<button class="pill-btn primary" data-send>💌 An ' + esc(you()) + '</button><button class="pill-btn" data-gift>🎁 Als Überraschung</button>' : '') + '<button class="pill-btn' + (joined ? '' : ' primary') + '" data-share>↗ Teilen</button><button class="pill-btn ghost" data-cancel>Abbrechen</button></div>' +
       (joined ? '' : '<p class="about" style="font-size:16px;color:var(--text-muted);margin-top:10px">Mit verbundenen Apps landet das Bild direkt auf der Startseite deines Schatzes. „Teilen“ öffnet das Teilen-Menü deines Handys – dort gibt es auch Quick Share und AirDrop für Geräte in der Nähe.</p>') +
       P.tipsHtml(P.tips('kritzel', 2), 'Zum Aufhängen'), (sh) => {
       const cv = sh.querySelector('#kzCanvas'), ctx = cv.getContext('2d');
@@ -173,6 +173,11 @@
       const grab = () => { if (!dirty) { L.toast('Erst etwas malen oder stempeln 😈'); return null; } const u = encodeCanvas(cv); if (!u) L.toast('Bild zu groß – bitte weniger Details'); return u; };
       const text = () => sh.querySelector('#kzText').value.trim();
       sh.querySelector('[data-share]').onclick = () => { const u = grab(); if (u) shareImage(u, (text() ? text() + ' — ' : '') + me() + ' ❤'); };
+      const gb = sh.querySelector('[data-gift]'); if (gb) gb.onclick = async () => {
+        const u = grab(); if (!u) return; gb.disabled = true;
+        try { await P.send({ t: 'gift', kind: 'pic', img: u, text: text(), open: 0 }); L.closeSheet(); L.toast('🎁 Überraschung unterwegs zu ' + you()); L.spawnHearts(10); }
+        catch (e) { gb.disabled = false; L.toast('Senden fehlgeschlagen – ' + (P.online() ? 'später nochmal' : 'offline')); }
+      };
       const sb = sh.querySelector('[data-send]'); if (sb) sb.onclick = async () => {
         const u = grab(); if (!u) return; const t = text(); sb.disabled = true; sb.textContent = '…';
         try { await P.send({ t: 'pic', img: u, text: t }); L.closeSheet(); L.toast('🎨 Kritzel-Gruß unterwegs zu ' + you()); L.spawnHearts(10); }
@@ -496,6 +501,7 @@
      ===================================================================== */
   const bind = (id, fn) => { const b = $(id); if (b) b.onclick = fn; };
   bind('btnKritzel', kritzelSheet);
+  bind('btnGift', giftSheet);
   bind('btnJingle', () => openJingles());
   bind('btnKlartext', () => { L.showView('play'); L.showSub('play', 'klartext'); renderKlartext(); });
   bind('btnNah', nahSheet);
@@ -504,8 +510,92 @@
   $('nav-play').addEventListener('click', () => { renderKlartext(); renderJingles(); });
   $('nav-home').addEventListener('click', renderFromPartner);
 
-  function render() { renderFromPartner(); renderKlartext(); renderJingles(); }
-  window.LZN = { render, softStart, fillQr, qrSvg, kritzelSheet, openJingles, playJingle, jingleById, checkinStart, weekKey, greetLink };
+
+  /* =====================================================================
+     5. Überraschung senden: Botschaft, Gutschein, Jingle oder Kritzel-Bild kommen als versiegelter
+        Umschlag in der App des Schatzes an – sofort oder ab einem gewählten Zeitpunkt.
+     ===================================================================== */
+  const GIFT_KINDS = [['msg', '💌 Botschaft'], ['coupon', '🎟️ Gutschein'], ['jingle', '🎶 Jingle'], ['pic', '🎨 Kritzel-Bild']];
+  function giftTimes() {
+    const out = [['now', 'Sofort', 0]];
+    const t = new Date(); t.setDate(t.getDate() + 1); t.setHours(7, 0, 0, 0); out.push(['morning', 'Morgen früh', t.getTime()]);
+    const a = S().anniversary && L.parseISODate(S().anniversary);
+    if (a) { const n = new Date(); const d = new Date(n.getFullYear(), a.getMonth(), a.getDate(), 0, 0, 0, 0); if (d.getTime() <= n.getTime()) d.setFullYear(d.getFullYear() + 1); out.push(['anniv', 'Am Jahrestag', d.getTime()]); }
+    return out;
+  }
+  function giftSheet() {
+    if (!P.joined()) { L.toast('Dafür müssen eure Apps verbunden sein'); P.pairSheet(); return; }
+    let kind = 'msg', when = 'now';
+    const times = giftTimes();
+    const coupons = (S().coupons || []).filter((c) => !c.used && !c.from);
+    const jingles = D.jingles.filter((j) => !D.jingleCats.find((c) => c.id === j.cat && c.adult) || S().intim);
+    L.openSheet('<h3>🎁 Überraschung senden</h3>' +
+      '<div class="field"><label>Im Umschlag</label><div class="chips big" id="gfKind"></div></div>' +
+      '<div class="field" id="gfBody"></div>' +
+      '<div class="field"><label>Öffnen</label><div class="chips big" id="gfWhen"></div></div>' +
+      '<div class="row"><button class="pill-btn ghost" data-cancel>Abbrechen</button><button class="pill-btn primary" data-ok>Senden</button></div>', (sh) => {
+      const body = sh.querySelector('#gfBody');
+      const drawBody = () => {
+        if (kind === 'msg') body.innerHTML = '<textarea id="gfText" maxlength="400" rows="3" placeholder="Deine Botschaft"></textarea>';
+        else if (kind === 'coupon') body.innerHTML = coupons.length ? '<select id="gfCoupon">' + coupons.map((c) => '<option value="' + esc(c.id) + '">' + esc(c.icon + ' ' + c.title) + '</option>').join('') + '</select>' : '<p class="about">Du hast gerade keinen freien Gutschein.</p>';
+        else if (kind === 'jingle') body.innerHTML = '<select id="gfJingle">' + jingles.map((j) => '<option value="' + esc(j.id) + '">' + (j.sung ? '🎤 ' : '') + esc(j.title) + '</option>').join('') + '</select>';
+        else body.innerHTML = '';
+      };
+      const drawKind = () => { const b = sh.querySelector('#gfKind'); b.innerHTML = GIFT_KINDS.map((x) => '<button type="button" data-k="' + x[0] + '"' + (x[0] === kind ? ' class="on"' : '') + '>' + x[1] + '</button>').join(''); b.querySelectorAll('button').forEach((x) => x.onclick = () => { if (x.dataset.k === 'pic') { L.closeSheet(); setTimeout(kritzelSheet, 60); return; } kind = x.dataset.k; drawKind(); drawBody(); }); };
+      const drawWhen = () => { const b = sh.querySelector('#gfWhen'); b.innerHTML = times.map((x) => '<button type="button" data-w="' + x[0] + '"' + (x[0] === when ? ' class="on"' : '') + '>' + x[1] + '</button>').join(''); b.querySelectorAll('button').forEach((x) => x.onclick = () => { when = x.dataset.w; drawWhen(); }); };
+      drawKind(); drawBody(); drawWhen();
+      sh.querySelector('[data-cancel]').onclick = L.closeSheet;
+      const ok = sh.querySelector('[data-ok]');
+      ok.onclick = async () => {
+        const open = (times.find((x) => x[0] === when) || times[0])[2];
+        let msg = null;
+        if (kind === 'msg') { const t = sh.querySelector('#gfText').value.trim(); if (t.length < 2) { L.toast('Schreib ein paar Worte'); return; } msg = { t: 'gift', kind, text: t, open }; }
+        else if (kind === 'coupon') { const el = sh.querySelector('#gfCoupon'); const c = el && coupons.find((x) => x.id === el.value); if (!c) { L.toast('Kein Gutschein gewählt'); return; } msg = { t: 'gift', kind, icon: c.icon, title: c.title, desc: c.desc || '', open }; }
+        else if (kind === 'jingle') { const j = jingleById(sh.querySelector('#gfJingle').value); if (!j) return; msg = { t: 'gift', kind, jid: j.id, text: L.fmt(j.text || j.title), open }; }
+        if (!msg) return;
+        ok.disabled = true; ok.textContent = '…';
+        try { await P.send(msg); L.closeSheet(); L.toast('🎁 Überraschung unterwegs zu ' + you()); L.spawnHearts(12); }
+        catch (e) { ok.disabled = false; ok.textContent = 'Senden'; L.toast('Senden fehlgeschlagen – ' + (P.online() ? 'später nochmal' : 'offline')); }
+      };
+    });
+  }
+  /* Empfang: Umschlag liegt bereit, bis er geöffnet werden darf */
+  P.on('gift', (obj, created) => {
+    const s = st(); if (!s.gifts) s.gifts = [];
+    const kind = ['msg', 'coupon', 'jingle', 'pic'].indexOf(obj.kind) >= 0 ? obj.kind : '';
+    if (!kind) return false;
+    const g = { id: uid('g'), kind, at: created || Date.now(), open: Math.max(0, Number(obj.open) || 0), opened: false };
+    if (kind === 'msg') g.text = String(obj.text || '').slice(0, 600);
+    if (kind === 'coupon') { g.icon = String(obj.icon || '🎁').slice(0, 4); g.title = String(obj.title || 'Gutschein').slice(0, 50); g.desc = String(obj.desc || '').slice(0, 120); }
+    if (kind === 'jingle') { g.jid = String(obj.jid || '').slice(0, 40); g.text = String(obj.text || '').slice(0, 200); }
+    if (kind === 'pic') { const img = String(obj.img || ''); if (img.length > 70000 || !PIC_RE.test(img)) return false; g.img = img; g.text = String(obj.text || '').slice(0, 120); }
+    s.gifts.push(g); if (s.gifts.length > 12) s.gifts = s.gifts.slice(-12);
+    L.toast('🎁 ' + you() + ' hat eine Überraschung für dich'); L.haptic(20); return true;
+  });
+  function unwrapGift(g) {
+    const s = st(); g.opened = true; L.showView('home'); window.scrollTo(0, 0);
+    if (g.kind === 'msg') { s.inbox.push({ id: uid('m'), t: 'msg', text: g.text, label: 'Überraschung', at: Date.now(), read: true }); L.showMessage({ text: g.text, own: true }, '🎁 Von ' + you() + ' für dich'); }
+    if (g.kind === 'coupon') { S().coupons.push({ id: uid('p'), icon: g.icon, title: g.title, desc: g.desc, used: null, from: you() }); L.showMessage({ text: g.icon + ' ' + g.title + (g.desc ? ' – ' + g.desc : ''), own: true }, '🎟️ Gutschein von ' + you()); }
+    if (g.kind === 'jingle') { const j = jingleById(g.jid); if (j) playJingle(j); L.showMessage({ text: g.text || (j ? j.title : 'Ein Jingle für dich'), own: true }, '🎶 Von ' + you() + ' für dich'); }
+    if (g.kind === 'pic') { const m = { id: uid('m'), t: 'pic', img: g.img, text: g.text, at: Date.now(), read: true }; s.inbox.push(m); g.img = ''; picSheet(m); }
+    s.gifts = s.gifts.filter((x) => !x.opened); L.save();
+    P.send({ t: 'seen' }).catch(() => {});
+    P.renderAll();
+  }
+  function giftCheck() {
+    const s = st(); const gifts = (s.gifts || []).filter((g) => !g.opened); const tz = $('giftTeaser');
+    const now = Date.now(); const ready = gifts.find((g) => g.open <= now); const later = gifts.filter((g) => g.open > now).sort((a, b) => a.open - b.open)[0];
+    if (tz) {
+      if (later) { tz.classList.remove('hidden'); tz.innerHTML = '<div class="eyebrow" style="margin:0 0 4px">🎁 Überraschung von ' + esc(you()) + '</div><div>Öffnet sich am ' + esc(new Date(later.open).toLocaleString('de-DE', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })) + ' Uhr.</div>'; }
+      else { tz.classList.add('hidden'); tz.innerHTML = ''; }
+    }
+    const busy = !$('giftScreen').classList.contains('hidden') || !$('onboarding').classList.contains('hidden') || !$('matchScreen').classList.contains('hidden');
+    if (ready && !busy && S().onboarded) L.showEnvelope({ name: me(), letter: 'Von ' + you() + ' …', hint: you() + ' hat an dich gedacht ❤', button: 'Auspacken ❤', onEnter: () => unwrapGift(ready) });
+    const card = $('btnGift') && $('btnGift').closest('.card'); if (card) card.classList.toggle('hidden', !P.joined());
+  }
+
+  function render() { renderFromPartner(); renderKlartext(); renderJingles(); giftCheck(); }
+  window.LZN = { render, softStart, fillQr, qrSvg, kritzelSheet, giftSheet, giftCheck, openJingles, playJingle, jingleById, checkinStart, weekKey, greetLink };
   window.addEventListener('hashchange', handleGreet); // App ist schon offen und bekommt einen Liebes-Link
   render(); handleGreet();
 })();
