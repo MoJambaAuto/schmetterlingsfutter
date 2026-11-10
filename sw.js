@@ -1,5 +1,5 @@
 /* Schmetterlingsfutter Service Worker – App-Shell offline verfügbar machen. */
-const CACHE = 'schmetterlingsfutter-v3.1.1';
+const CACHE = 'schmetterlingsfutter-v3.1.2';
 const ASSETS = [
   './', './index.html', './privacy.html', './manifest.webmanifest',
   './css/app.css', './js/data.js', './js/data2.js', './js/vendor/qrcode.js', './js/app.js', './js/features.js', './js/partner.js', './js/naehe.js',
@@ -8,7 +8,8 @@ const ASSETS = [
   './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png', './icons/apple-touch-icon.png'
 ];
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting()));
+  // cache:'reload' = am Browser-Zwischenspeicher vorbei laden, damit eine neue Version nie alte Dateien einsammelt
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS.map((u) => new Request(u, { cache: 'reload' })))).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', (e) => {
   e.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim()));
