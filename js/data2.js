@@ -1,0 +1,178 @@
+/* Schmetterlingsfutter – Inhalte Teil 2 (Version 3.1): Klartext, Jingle-Box, Kritzel-Gruß, Nah dran.
+   Erweitert window.LUZIFER_DATA aus data.js. */
+(function () {
+  'use strict';
+  const D = window.LUZIFER_DATA;
+  D.version = '3.1.0';
+
+  /* ---- Klartext: Themen-Abgleich „Unausgesprochen“ (läuft über die Gleichklang-Technik) ---- */
+  D.decks.push({
+    id: 'reden', icon: '🗝️', title: 'Unausgesprochen', talk: true, opts: 3,
+    sub: 'Worüber sollten wir mal reden? Jeder markiert für sich. Sichtbar wird nur, was ihr beide ansprechen wollt.',
+    labels: { nein: '👌 Passt gerade', vielleicht: '🤔 Wäre gut', ja: '❗ Ist mir wichtig' },
+    yesLabel: 'Beiden wichtig', openLabel: 'Beide offen dafür', openTitle: 'Beide fänden es gut, darüber zu reden',
+    hitText: 'Darüber wollt ihr beide reden. Der schwerste Schritt ist damit getan.',
+    noneText: 'Kein gemeinsames Thema markiert. Entweder läuft es rund – oder es traut sich noch keiner.',
+    items: [
+      { id: 'geld', t: 'Geld: Ausgaben, Sparen, wer zahlt was', e: '💶', q: 'Was wäre für dich beim Geld fair – und was macht dir Sorgen?' },
+      { id: 'haushalt', t: 'Haushalt: wer macht wie viel', e: '🧺', q: 'Welche Aufgabe würdest du am liebsten abgeben, und welche übernehme ich?' },
+      { id: 'mental', t: 'An alles denken müssen (Termine, Einkauf, Planung)', e: '🧠', q: 'Woran musst nur du denken, ohne dass ich es merke?' },
+      { id: 'zeit', t: 'Zu wenig Zeit zu zweit', e: '⏰', q: 'Wann hattest du zuletzt das Gefühl, dass wir richtig Zeit füreinander hatten?' },
+      { id: 'handy', t: 'Handy und Bildschirm, wenn wir zusammen sind', e: '📱', q: 'In welchen Momenten wünschst du dir, dass das Handy weg ist?' },
+      { id: 'familie', t: 'Eltern, Schwiegereltern, Familie', e: '👪', q: 'Wo wünschst du dir, dass ich mich klarer an deine Seite stelle?' },
+      { id: 'freunde', t: 'Freunde und eigene Unternehmungen', e: '👯', q: 'Was fehlt dir gerade mit deinen Leuten – und was mit mir?' },
+      { id: 'freiraum', t: 'Zeit nur für mich', e: '🌿', q: 'Wie viel Zeit für dich allein würde dir guttun, ohne schlechtes Gewissen?' },
+      { id: 'arbeit', t: 'Arbeit und Stress, der mit nach Hause kommt', e: '💼', q: 'Was brauchst du von mir, wenn du gestresst heimkommst – Ruhe, Zuhören oder Ablenkung?' },
+      { id: 'zukunft', t: 'Wo wollen wir in fünf Jahren sein?', e: '🧭', q: 'Welches Bild von uns in fünf Jahren macht dich froh?' },
+      { id: 'wohnen', t: 'Wohnen: Ort, Umzug, Einrichtung', e: '🏡', q: 'Was müsste sich an unserem Zuhause ändern, damit du dich wohler fühlst?' },
+      { id: 'kinder', t: 'Kinder: Wunsch, Erziehung, Aufteilung', e: '🧸', q: 'Was ist dir bei diesem Thema am wichtigsten, das ich wissen sollte?' },
+      { id: 'zaertlich', t: 'Zärtlichkeit im Alltag', e: '🤗', q: 'Welche kleine Berührung fehlt dir im Alltag am meisten?' },
+      { id: 'sex', t: 'Sex: Häufigkeit und Wünsche', e: '🔥', q: 'Was würde es dir leichter machen, über deine Wünsche zu sprechen?' },
+      { id: 'streiten', t: 'Wie wir streiten', e: '🌩️', q: 'Was mache ich im Streit, das dich am meisten trifft – und was hilft dir?' },
+      { id: 'alt', t: 'Etwas Altes, das noch wehtut', e: '🩹', q: 'Gibt es etwas von früher, für das du dir noch ein ehrliches Wort von mir wünschst?' },
+      { id: 'gesehen', t: 'Ich fühle mich nicht gesehen', e: '👀', q: 'Wofür wünschst du dir mehr Anerkennung von mir?' },
+      { id: 'eifersucht', t: 'Eifersucht und Vertrauen', e: '🫣', q: 'Was gibt dir Sicherheit bei uns – und was kratzt daran?' },
+      { id: 'gesundheit', t: 'Gesundheit und Gewohnheiten', e: '🍏', q: 'Worüber machst du dir bei mir oder dir Gedanken?' },
+      { id: 'ordnung', t: 'Ordnung und Pünktlichkeit', e: '🗂️', q: 'Welche eine Sache würde dir den Alltag sofort leichter machen?' },
+      { id: 'urlaub', t: 'Urlaub und Freizeit', e: '🏖️', q: 'Wie sieht für dich Erholung aus – und passt das zu meiner?' },
+      { id: 'marotte', t: 'Eine Angewohnheit, die mich stört', e: '🙄', q: 'Darf ich dir etwas sagen, das mich stört – und du mir auch eins?' },
+      { id: 'schoenes', t: 'Etwas Schönes, das ich nie gesagt habe', e: '💝', q: 'Was wolltest du mir schon lange sagen und hast es nie getan?' }
+    ]
+  });
+
+  D.klartext = {
+    /* Wetterbericht der Woche: jeder schätzt für sich ein, verglichen wird erst, wenn beide fertig sind */
+    areas: [
+      { id: 'naehe', t: 'Nähe und Zärtlichkeit', e: '🤗', q: 'Was hat dir diese Woche an Nähe gutgetan – und was hat gefehlt?' },
+      { id: 'reden', t: 'Unsere Gespräche', e: '💬', q: 'Wann hast du dich diese Woche von mir wirklich gehört gefühlt?' },
+      { id: 'alltag', t: 'Alltag und Aufgabenteilung', e: '🧺', q: 'Was war diese Woche unfair verteilt?' },
+      { id: 'zeit', t: 'Zeit zu zweit', e: '⏰', q: 'Welche Stunde nur für uns planen wir für nächste Woche fest ein?' },
+      { id: 'wert', t: 'Anerkennung und Wertschätzung', e: '🌟', q: 'Wofür hättest du dir diese Woche ein Danke gewünscht?' },
+      { id: 'freiraum', t: 'Freiraum für mich', e: '🌿', q: 'Was brauchst du nächste Woche nur für dich?' },
+      { id: 'leicht', t: 'Spaß und Leichtigkeit', e: '🎈', q: 'Wann haben wir zuletzt zusammen richtig gelacht – und wie kriegen wir das wieder hin?' },
+      { id: 'intim', t: 'Lust und Sex', e: '🔥', adult: true, q: 'Was würde dir helfen, dich fallen zu lassen?' }
+    ],
+    weather: ['⛈️', '🌧️', '⛅', '🌤️', '☀️'],
+    weatherText: ['Gewitter', 'Regen', 'bewölkt', 'heiter', 'Sonne'],
+    feelings: ['traurig', 'allein', 'überfordert', 'unsicher', 'verletzt', 'genervt', 'enttäuscht', 'ängstlich', 'erschöpft', 'übergangen', 'hilflos', 'unwichtig'],
+    /* Friedensangebote (Gottman: „Reparaturversuche“) */
+    peace: [
+      'Ich will nicht gegen dich gewinnen. Ich will mit dir klarkommen.',
+      'Das kam härter raus, als ich es meinte. Es tut mir leid.',
+      'Können wir nochmal von vorn anfangen?',
+      'Du bist mir wichtiger, als recht zu haben.',
+      'Ich habe dir nicht richtig zugehört. Sag es mir nochmal – ich höre zu.',
+      'Ich brauche eine Umarmung. Du auch?',
+      'Waffenstillstand? Ich mache uns einen Tee.',
+      'Ich bin noch sauer. Und ich liebe dich trotzdem.',
+      'Lass uns morgen in Ruhe weiterreden. Heute nur noch gut zueinander sein.',
+      'Mein Anteil daran ist größer, als ich vorhin zugegeben habe. Entschuldige.'
+    ],
+    pauseText: '⏸️ Ich brauche 20 Minuten Pause, damit ich wieder klar denken kann. Ich laufe nicht weg – ich komme zurück und dann reden wir weiter.',
+    /* Gesprächskarten: tiefer als Smalltalk, ohne Vorwurf */
+    cards: [
+      'Was habe ich diese Woche getan, das dir gutgetan hat?',
+      'Wobei fühlst du dich von mir manchmal allein gelassen?',
+      'Was ist gerade deine größte Sorge – auch wenn sie nichts mit uns zu tun hat?',
+      'Was vermisst du aus unserer Anfangszeit?',
+      'Welche Kleinigkeit von mir macht deinen Tag besser?',
+      'Wann warst du zuletzt stolz auf uns?',
+      'Was traust du dich mir schwer zu sagen?',
+      'Was würdest du gern öfter von mir hören?',
+      'Worüber haben wir aufgehört zu reden, obwohl es wichtig ist?',
+      'Was brauchst du von mir, wenn es dir schlecht geht?',
+      'Welche Entscheidung sollten wir endlich treffen?',
+      'Was war das Mutigste, das du je für uns getan hast?',
+      'Wofür habe ich mich nie richtig bei dir bedankt?',
+      'Was würdest du an unserem Alltag sofort ändern, wenn du könntest?',
+      'Wann fühlst du dich mir am nächsten?',
+      'Welchen Streit haben wir immer wieder – und worum geht es darin eigentlich?',
+      'Was habe ich über dich noch nicht verstanden?',
+      'Was wünschst du dir für uns in einem Jahr?',
+      'Wobei könnte ich dich mehr unterstützen?',
+      'Was ist ein Traum von dir, bei dem ich mitmachen soll?',
+      'Wann hast du zuletzt gedacht: Genau deshalb bin ich mit dir zusammen?',
+      'Was sollte ich über deinen Tag wissen, das ich nie frage?',
+      'Wofür möchtest du, dass ich dir verzeihe?',
+      'Was macht dir bei uns gerade am meisten Freude?'
+    ],
+    warnWords: ['immer', 'nie', 'niemals', 'ständig', 'jedes mal', 'jedesmal', 'typisch', 'schon wieder', 'du bist']
+  };
+
+  /* ---- Jingle-Box: kleine musikalische Liebeserklärungen (3–5 Sekunden).
+     src: 'synth' = wird in der App erzeugt (Noten unten); später kommen fertige Aufnahmen dazu (file: 'audio/…').
+     Melodien: Eigenkompositionen oder gemeinfreie Werke (Urheber seit über 70 Jahren tot), in `pd` vermerkt. ---- */
+  D.jingleCats = [
+    { id: 'einfachso', t: 'Einfach so', e: '❤️' },
+    { id: 'morgen', t: 'Guten Morgen', e: '☀️' },
+    { id: 'nacht', t: 'Gute Nacht', e: '🌙' },
+    { id: 'vermissen', t: 'Vermissen', e: '💭' },
+    { id: 'danke', t: 'Danke', e: '🙏' },
+    { id: 'stolz', t: 'Mut machen', e: '💪' },
+    { id: 'streit', t: 'Nach dem Streit', e: '🏳️' },
+    { id: 'vergessen_jahrestag', t: 'Jahrestag vergessen', e: '🙈' },
+    { id: 'vergessen_geburtstag', t: 'Geburtstag vergessen', e: '😬' },
+    { id: 'vergessen_feiertag', t: 'Feiertag vergessen', e: '🫠' },
+    { id: 'jahrestag', t: 'Jahrestag', e: '💍' },
+    { id: 'geburtstag', t: 'Geburtstag', e: '🎂' },
+    { id: 'valentin', t: 'Valentinstag', e: '💘' },
+    { id: 'weihnachten', t: 'Weihnachten', e: '🎄' },
+    { id: 'silvester', t: 'Silvester', e: '🎆' },
+    { id: 'lust', t: 'Lust auf dich', e: '🔥', adult: true }
+  ];
+  const J = (id, cat, title, text, bpm, timbre, notes, pd) => ({ id, cat, title, text, bpm, timbre, notes, pd: pd || '' });
+  D.jingles = [
+    J('es1', 'einfachso', 'Herzklopfen', 'Einfach so: Ich liebe dich, {r}.', 132, 'bell', 'E5 .5,G5 .5,C6 1,B5 .5,G5 .5,C6 2'),
+    J('es2', 'einfachso', 'Klopf, klopf', 'Klopf, klopf. Wer da? Jemand, der dich liebt.', 150, 'pluck', 'C5 1,G4 .5,G4 .5,A4 1,G4 1,- 1,B4 1,C5 1.5', 'Shave and a Haircut (trad.)'),
+    J('es3', 'einfachso', 'Schmetterlinge', 'Du machst mir immer noch Schmetterlinge.', 168, 'bell', 'C5 .5,E5 .5,G5 .5,C6 .5,E6 .5,C6 .5,G5 .5,E6 2'),
+    J('mo1', 'morgen', 'Morgenstimmung', 'Guten Morgen, {r}. Der Tag ist schön, weil es dich gibt.', 132, 'soft', 'G5 .5,E5 .5,D5 .5,C5 .5,D5 .5,E5 .5,G5 .5,E5 .5,D5 .5,C5 .5,D5 .5,E5 1.5', 'E. Grieg, Morgenstimmung (1875)'),
+    J('mo2', 'morgen', 'Aufstehen, Schatz', 'Schläfst du noch? Aufwachen, Lieblingsmensch!', 150, 'pluck', 'C5 1,D5 1,E5 1,C5 1,E5 1,F5 1,G5 2', 'Bruder Jakob (trad.)'),
+    J('mo3', 'morgen', 'Kaffee ist fertig', 'Kaffee, Sonne und ein Kuss – alles für dich.', 144, 'bell', 'G4 .5,C5 .5,E5 .5,G5 1,E5 .5,G5 2'),
+    J('na1', 'nacht', 'Guten Abend, gut’ Nacht', 'Schlaf gut, {r}. Ich träume von dir.', 104, 'soft', 'E5 .5,E5 .5,G5 2,E5 .5,E5 .5,G5 2', 'J. Brahms, Wiegenlied (1868)'),
+    J('na2', 'nacht', 'Der Mond ist aufgegangen', 'Gute Nacht. Die Sterne sind heute nur für dich da.', 96, 'soft', 'C5 .5,D5 1,C5 1,F5 1,E5 1,D5 1,C5 2', 'J. A. P. Schulz (1790)'),
+    J('na3', 'nacht', 'Sternschnuppe', 'Augen zu, Herz auf: Ich liebe dich.', 120, 'bell', 'C6 .5,G5 .5,E5 .5,C5 1,E5 .5,G5 2'),
+    J('ve1', 'vermissen', 'Du fehlst', 'Du fehlst mir. Komm bald heim.', 100, 'soft', 'A4 .5,C5 1,D5 .5,E5 .75,F5 .25,E5 .5,D5 2', 'Greensleeves (trad.)'),
+    J('ve2', 'vermissen', 'Denk an dich', 'Ich denke gerade an dich. Wie eigentlich immer.', 110, 'bell', 'E5 1,D5 .5,C5 .5,E5 1,G5 2.5'),
+    J('ve3', 'vermissen', 'Für dich', 'Zwischen all dem Kram heute: ein Gedanke nur für dich.', 132, 'pluck', 'E5 .5,D#5 .5,E5 .5,D#5 .5,E5 .5,B4 .5,D5 .5,C5 .5,A4 2', 'L. v. Beethoven, Für Elise (1810)'),
+    J('da1', 'danke', 'Tausend Dank', 'Danke. Ich hab’s gesehen – und es war nicht selbstverständlich.', 138, 'bell', 'C5 .5,E5 .5,G5 1,A5 .5,G5 .5,C6 2'),
+    J('da2', 'danke', 'Du bist die Beste / der Beste', 'Danke, dass es dich gibt.', 120, 'soft', 'G4 1,C5 1,E5 1,D5 .5,C5 .5,C5 2'),
+    J('st1', 'stolz', 'Tusch', 'Ich bin stolz auf dich. Richtig stolz.', 150, 'brass', 'C4 .5,E4 .5,G4 .5,C5 1.5,G4 .5,C5 3'),
+    J('st2', 'stolz', 'Du schaffst das', 'Du schaffst das. Ich glaube an dich.', 190, 'bell', 'E4 1,E4 1,F4 1,G4 1,G4 1,F4 1,E4 1,D4 1,C4 2', 'L. v. Beethoven, Ode an die Freude (1824)'),
+    J('st3', 'stolz', 'Rückenwind', 'Kopf hoch. Ich stehe hinter dir.', 144, 'pluck', 'G4 .5,A4 .5,C5 .5,D5 .5,E5 1,G5 2'),
+    J('sr1', 'streit', 'Weiße Fahne', 'Frieden? Du bist mir wichtiger, als recht zu haben.', 96, 'soft', 'G5 1,E5 1,C5 1,D5 1,E5 .5,C5 2.5'),
+    J('sr2', 'streit', 'Es tut mir leid', 'Es tut mir leid. Ehrlich.', 88, 'soft', 'A4 1,C5 1,E5 1.5,D5 .5,C5 1,A4 2'),
+    J('sr3', 'streit', 'Nochmal von vorn', 'Können wir nochmal von vorn anfangen?', 120, 'bell', 'C5 .5,D5 .5,E5 .5,G5 1,- .5,C5 .5,E5 .5,G5 .5,C6 2'),
+    J('vj1', 'vergessen_jahrestag', 'Oh nein', 'Ich habe unseren Jahrestag verpennt. Schande über mich – ich mach’s wieder gut.', 108, 'brass', 'G4 .5,G4 .5,G4 .5,Eb4 3', 'L. v. Beethoven, 5. Sinfonie (1808)'),
+    J('vj2', 'vergessen_jahrestag', 'Besser spät', 'Zu spät, aber von Herzen: Alles Liebe zu unserem Tag.', 120, 'bell', 'G4 1,C5 .75,C5 .25,C5 2,G4 1,D5 .75,B4 .25,C5 2', 'R. Wagner, Brautchor (1850)'),
+    J('vg1', 'vergessen_geburtstag', 'Nachträglich', 'Nachträglich alles Liebe! Mein Kalender ist schuld. Na gut: ich.', 132, 'pluck', 'G4 .75,G4 .25,A4 1,G4 1,C5 1,B4 1.5,- .5,B4 .5,Bb4 .5,A4 2', 'Happy Birthday (Hill, 1893) mit Absturz'),
+    J('vg2', 'vergessen_geburtstag', 'Asche auf mein Haupt', 'Geburtstag vergessen. Ich schäme mich und backe Kuchen.', 150, 'brass', 'A3 1,A3 .75,A3 .25,A3 1,C4 .75,B3 .25,B3 .75,A3 .25,A3 .75,G#3 .25,A3 2', 'F. Chopin, Trauermarsch (1839)'),
+    J('vf1', 'vergessen_feiertag', 'Ups', 'Ups. Der Tag ist an mir vorbeigerauscht. Hol ich nach – versprochen.', 100, 'brass', 'D4 1,C#4 1,C4 1,B3 3'),
+    J('vf2', 'vergessen_feiertag', 'Verspätete Post', 'Verspätet, aber mit Liebe verpackt.', 150, 'bell', 'C5 .5,C5 .5,G5 1,- .5,E5 .5,C5 .5,G4 2'),
+    J('ja1', 'jahrestag', 'Unser Tag', 'Alles Liebe zu unserem Jahrestag. Ich würde dich wieder wählen.', 168, 'bell', 'F#5 1,E5 1,D5 1,C#5 1,B4 1,A4 1,B4 1,C#5 2', 'J. Pachelbel, Kanon in D (um 1680)'),
+    J('ja2', 'jahrestag', 'Ja, ich will', 'Noch ein Jahr mit dir. Bitte gern noch viele.', 120, 'brass', 'G4 1,C5 .75,C5 .25,C5 2,G4 1,D5 .75,B4 .25,C5 2', 'R. Wagner, Brautchor (1850)'),
+    J('ge1', 'geburtstag', 'Zum Geburtstag viel Glück', 'Alles Liebe zum Geburtstag, {r}!', 132, 'bell', 'G4 .75,G4 .25,A4 1,G4 1,C5 1,B4 2', 'Happy Birthday (Hill, 1893)'),
+    J('ge2', 'geburtstag', 'Hoch sollst du leben', 'Heute dreht sich alles um dich. Zu Recht.', 160, 'brass', 'C5 .5,C5 .5,C5 .5,E5 1,D5 .5,C5 .5,D5 .5,E5 .5,C5 2'),
+    J('va1', 'valentin', 'Herz an Herz', 'Sei mein Valentinsschatz. Heute und überhaupt.', 112, 'soft', 'E5 1,G5 .5,C6 1.5,B5 .5,A5 .5,G5 2'),
+    J('va2', 'valentin', 'Amors Pfeil', 'Getroffen. Schon lange. Von dir.', 176, 'pluck', 'C5 .25,D5 .25,E5 .25,F5 .25,G5 .25,A5 .25,B5 .25,C6 1,- .5,G5 .5,C6 2'),
+    J('we1', 'weihnachten', 'Jingle Bells', 'Frohe Weihnachten, mein Herz.', 152, 'bell', 'E5 .5,E5 .5,E5 1,E5 .5,E5 .5,E5 1,E5 .5,G5 .5,C5 .75,D5 .25,E5 2', 'J. L. Pierpont (1857)'),
+    J('we2', 'weihnachten', 'Stille Nacht', 'Mein schönstes Geschenk bist du.', 96, 'soft', 'G4 1.5,A4 .5,G4 1,E4 3', 'F. X. Gruber (1818)'),
+    J('we3', 'weihnachten', 'O Tannenbaum', 'Advent, Advent – ich denk an dich.', 112, 'pluck', 'C4 .5,F4 .75,F4 .25,F4 1,G4 .5,A4 .75,A4 .25,A4 1.5', 'O Tannenbaum (trad., 1824)'),
+    J('si1', 'silvester', 'Auf uns', 'Frohes Neues! Auf ein weiteres Jahr mit dir.', 126, 'soft', 'C4 1,F4 1.5,F4 .5,F4 1,A4 1,G4 1.5,F4 .5,G4 1', 'Auld Lang Syne (trad.)'),
+    J('si2', 'silvester', 'Feuerwerk', 'Drei, zwei, eins – Kuss!', 200, 'bell', 'C5 .5,E5 .5,G5 .5,C6 .5,- .5,C6 .25,E6 .25,G6 .5,C6 .5,E6 2'),
+    J('lu1', 'lust', 'Habanera', 'Heute Abend: du, ich, kein Handy.', 116, 'pluck', 'D5 1,C#5 .5,C5 .5,C5 .5,B4 .5,Bb4 .5,A4 1.5', 'G. Bizet, Carmen (1875)'),
+    J('lu2', 'lust', 'Komm her', 'Ich. Will. Dich.', 92, 'soft', 'E4 1,G4 1,Bb4 1.5,A4 .5,G4 2')
+  ];
+
+  /* ---- Passend dazu (Werbelinks) für die neuen Bereiche ---- */
+  Object.assign(D.tips, {
+    klartext: [ { icon: '🃏', title: 'Gesprächskarten für Paare', q: 'Gesprächskarten Paare' }, { icon: '📖', title: 'Buch: Gewaltfreie Kommunikation', q: 'Gewaltfreie Kommunikation Buch' }, { icon: '📔', title: 'Paar-Tagebuch', q: 'Paar Tagebuch Fragen' } ],
+    match_reden: [ { icon: '🃏', title: 'Gesprächskarten für Paare', q: 'Gesprächskarten Paare' }, { icon: '📖', title: 'Buch über Paar-Kommunikation', q: 'Buch Kommunikation Beziehung Paare' } ],
+    checkin: [ { icon: '📔', title: 'Paar-Tagebuch für den Wochen-Rückblick', q: 'Paar Tagebuch Fragen' }, { icon: '⏳', title: 'Sanduhr für Redezeiten', q: 'Sanduhr 10 Minuten' } ],
+    peace: [ { icon: '💐', title: 'Blumen sagen es auch', q: 'Blumenstrauß Entschuldigung' }, { icon: '🍫', title: 'Versöhnungs-Schokolade', q: 'Schokolade Entschuldigung Geschenk' }, { icon: '🫖', title: 'Tee für zwei', q: 'Tee Geschenkset für zwei' } ],
+    zwiegespraech: [ { icon: '⏳', title: 'Sanduhr für Redezeiten', q: 'Sanduhr 10 Minuten' }, { icon: '🕯️', title: 'Kerze für ruhige Gespräche', q: 'Duftkerze Geschenk' } ],
+    vergessen: [ { icon: '🎁', title: 'Gutschein zum Sofort-Ausdrucken', q: 'Amazon Gutschein zum Drucken' }, { icon: '💐', title: 'Blumen als Wiedergutmachung', q: 'Blumenstrauß Geschenk' }, { icon: '🗓️', title: 'Familienkalender, damit es nicht wieder passiert', q: 'Familienplaner Kalender Paar' } ],
+    jingle: [ { icon: '🔊', title: 'Kleine Box für eure Küche', q: 'Bluetooth Lautsprecher klein' }, { icon: '🎵', title: 'Spieluhr mit eurem Lied', q: 'Spieluhr personalisiert' } ],
+    kritzel: [ { icon: '🖨️', title: 'Mini-Fotodrucker fürs Handy', q: 'Mini Fotodrucker Smartphone' }, { icon: '🖼️', title: 'Herz-Bilderrahmen', q: 'Bilderrahmen Herz Collage' } ],
+    nfc: [ { icon: '🏷️', title: 'NFC-Sticker (NTAG215)', q: 'NFC Sticker NTAG215' }, { icon: '🔑', title: 'NFC-Schlüsselanhänger', q: 'NFC Schlüsselanhänger NTAG215' } ]
+  });
+})();

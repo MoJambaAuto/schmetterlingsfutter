@@ -34,7 +34,8 @@
     thanks: [],
     hiddenOccasions: [],
     wishFilter: 'alle',
-    partner: null, inbox: [], matches: {}, deviceId: null, pendingPair: null
+    partner: null, inbox: [], matches: {}, deviceId: null, pendingPair: null,
+    checkins: {}, pauseUntil: null, jingleCat: 'einfachso'
   });
   let S = load();
 

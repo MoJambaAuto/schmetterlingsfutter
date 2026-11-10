@@ -6,9 +6,9 @@
    Speicher: Cloudflare D1 (SQLite). Alles Unbenutzte wird nach 180 Tagen gelöscht, Nachrichten nach 30 Tagen. */
 
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-const MAX_BODY = 16 * 1024;        // Bytes je Anfrage
+const MAX_BODY = 96 * 1024;        // Bytes je Anfrage (Kritzel-Grüße als kleine PNGs)
 const MAX_HASHES = 400;            // Hashes je Deck
-const MAX_MSG_BODY = 8 * 1024;     // Zeichen je verschlüsselter Nachricht
+const MAX_MSG_BODY = 80 * 1024;    // Zeichen je verschlüsselter Nachricht (Text, Jingle-Verweis oder Kritzel-Bild)
 const MAX_MSGS_PER_PAIR = 200;
 const PAIR_IDLE_DAYS = 180;
 const UNJOINED_HOURS = 48;
