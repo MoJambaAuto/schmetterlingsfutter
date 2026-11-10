@@ -107,13 +107,13 @@
       wishes.slice(0, 5).forEach((w) => { html += '<button class="gift-item" data-q="' + L.esc(w.text) + '"><span class="g-ico">⭐</span><span class="g-t">' + L.esc(w.text) + (w.note ? '<span class="g-s">' + L.esc(w.note) + '</span>' : '') + '</span><span>↗</span></button>'; });
       html += '<div class="eyebrow" style="margin-top:14px">Weitere Ideen</div>';
     } else {
-      html += '<p class="about" style="margin-bottom:10px;font-size:13px">Tipp: Wünsche, die ' + L.esc(S().receiver) + ' nebenbei äußert, im Wunschsammler notieren – dann stehen sie hier zuerst.</p>';
+      html += '<p class="about" style="margin-bottom:10px;font-size:17px">Tipp: Wünsche, die ' + L.esc(S().receiver) + ' nebenbei äußert, im Wunschsammler notieren – dann stehen sie hier zuerst.</p>';
     }
     ideas.forEach((g) => { if (g.q) html += '<button class="gift-item" data-q="' + L.esc(g.q) + '"><span class="g-ico">' + g.icon + '</span><span class="g-t">' + L.esc(g.title) + '</span><span>↗</span></button>'; });
     html += '<div class="eyebrow" style="margin-top:14px">Erlebnis statt Ding (nichts zu kaufen)</div>';
     [L.pick(D.experiences), L.pick(D.experiences)].filter((v, i, a) => a.indexOf(v) === i).forEach((e) => { html += '<div class="gift-item" style="cursor:default"><span class="g-ico">' + e.icon + '</span><span class="g-t">' + L.esc(e.title) + '</span></div>'; });
     html += '<div class="row" style="margin-top:14px"><button class="pill-btn ghost" data-cancel>Schließen</button></div>';
-    html += '<p class="about" style="font-size:11px;color:var(--text-muted);margin-top:10px"><span class="ad-note">Werbelinks</span> – Der Anbieter erhält bei einem Kauf eine Provision von Amazon. Links öffnen die Amazon-Suche im Browser, nie in der App.</p>';
+    html += '<p class="about" style="font-size:16px;color:var(--text-muted);margin-top:10px"><span class="ad-note">Werbelinks</span> – Der Anbieter erhält bei einem Kauf eine Provision von Amazon. Links öffnen die Amazon-Suche im Browser, nie in der App.</p>';
     L.openSheet(html, (sh) => {
       sh.querySelector('[data-cancel]').onclick = L.closeSheet;
       sh.querySelectorAll('[data-q]').forEach((b) => b.onclick = () => window.open(amazonUrl(b.dataset.q), '_blank', 'noopener'));
@@ -345,7 +345,7 @@
   /* ---------- 8. Persönlich machen (Konkretheit vor dem Senden) ---------- */
   $('btnPersonal').onclick = () => {
     const base = $('msgText').textContent; if (!base || base === '…') return;
-    L.openSheet('<h3>✎ Persönlich machen</h3><p class="about" style="font-size:13px;margin-bottom:10px">Das Teufelchen sagt: Standardsprüche sind okay, ein konkretes Detail von heute ist besser. Ergänze einen Satz, dann senden.</p>' +
+    L.openSheet('<h3>✎ Persönlich machen</h3><p class="about" style="font-size:17px;margin-bottom:10px">Das Teufelchen sagt: Standardsprüche sind okay, ein konkretes Detail von heute ist besser. Ergänze einen Satz, dann senden.</p>' +
       '<div class="field"><label for="pf-p">Deine Nachricht</label><textarea id="pf-p" maxlength="400">' + L.esc(base) + '</textarea></div>' +
       '<div class="row"><button class="pill-btn ghost" data-cancel>Abbrechen</button><button class="pill-btn primary" data-ok>Senden ↗</button></div>', (sh) => {
       sh.querySelector('[data-cancel]').onclick = L.closeSheet;

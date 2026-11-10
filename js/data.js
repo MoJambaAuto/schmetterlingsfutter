@@ -213,7 +213,7 @@ window.LUZIFER_DATA = {
       "😏 Zieh dir was Bequemes an. Oder auch nicht.",
       "😏 Ich vermisse deine Hände. Komm bald heim.",
       "😏 Du siehst heute morgen verboten gut aus. Nur damit du es weißt.",
-      "😏 Das Teufelchen sagt: Heute wird gekuschelt, bis einer von uns einschläft. Oder nicht einschläft.",
+      "😏 Das Teufelchen sagt: Heute wird gekuschelt, bis jemand von uns einschläft. Oder nicht einschläft.",
       "😏 Ich habe Kerzen gekauft. Den Rest überlasse ich deiner Fantasie.",
       "😏 Drei Worte: Ich. Will. Dich."
     ],
@@ -232,7 +232,7 @@ window.LUZIFER_DATA = {
       "Wann fühlst du dich mir am nächsten?"
     ],
     dates: [
-      "🕯️ Kerzen-Abend ohne Handys: Jeder bereitet eine Überraschung für den anderen vor.",
+      "🕯️ Kerzen-Abend ohne Handys: Bereitet beide eine Überraschung für den anderen vor.",
       "🛁 Gemeinsames Bad mit Musik, danach gegenseitige Massage.",
       "🍓 Picknick im Wohnzimmer – auf dem Boden, mit Decke, Erdbeeren und Blickkontakt.",
       "💃 Langsam tanzen in der Küche zu eurem Lied. Mindestens drei Songs.",
@@ -337,7 +337,7 @@ window.LUZIFER_DATA = {
   /* ---- Gleichklang: Match-Spiele. Beide antworten getrennt, sichtbar wird nur, was BEIDE wollen.
      opts: 2 = Ja/Nein, 3 = Ja/Vielleicht/Nein. tip = Suchbegriff für einen passenden Amazon-Vorschlag (Werbelink). ---- */
   decks: [
-    { id: "bock", icon: "🎯", title: "Worauf habt ihr heute Bock?", sub: "Für heute. Jeder tippt, was er mag – angezeigt wird nur, was beide wollen.", daily: true, opts: 2, items: [
+    { id: "bock", icon: "🎯", title: "Worauf habt ihr heute Bock?", sub: "Für heute. Tippt beide an, was ihr mögt – angezeigt wird nur, was ihr beide wollt.", daily: true, opts: 2, items: [
       { id: "spazieren", t: "Spaziergang", e: "🚶", tip: "Thermosbecher to go" },
       { id: "kochen", t: "Zusammen kochen", e: "🍳", tip: "Kochbuch für zwei" },
       { id: "serie", t: "Serienabend auf dem Sofa", e: "📺", tip: "Kuscheldecke XXL" },
@@ -388,13 +388,13 @@ window.LUZIFER_DATA = {
       { id: "brunch", t: "Langer Sonntagsbrunch auswärts", e: "🥂", tip: "" },
       { id: "hotel", t: "Eine Nacht im Hotel in der eigenen Stadt", e: "🏨", tip: "Hotelgutschein" },
       { id: "picknick", t: "Picknick mit allem, was dazugehört", e: "🧺", tip: "Picknickkorb für 2" },
-      { id: "konzert", t: "Konzert einer Band, die einer von uns liebt", e: "🎤", tip: "Konzertkarten Geschenk" },
+      { id: "konzert", t: "Konzert einer Band, die jemand von uns liebt", e: "🎤", tip: "Konzertkarten Geschenk" },
       { id: "kochen_land", t: "Ein Land kochen, in dem wir noch nie waren", e: "🌍", tip: "Kochbuch Weltküche" }
     ] },
-    { id: "vorlieben", icon: "🔥", title: "Vorlieben – nur für euch", sub: "Jeder antwortet für sich. Ihr seht nur, was ihr beide wollt. Alles andere bleibt geheim – auch voreinander.", adult: true, opts: 3, items: [
+    { id: "vorlieben", icon: "🔥", title: "Vorlieben – nur für euch", sub: "Ihr antwortet getrennt. Ihr seht nur, was ihr beide wollt. Alles andere bleibt geheim – auch voreinander.", adult: true, opts: 3, items: [
       { id: "massage", t: "Ausgiebige Massage mit Öl", e: "💆", tip: "Massageöl erotisch Paar" },
       { id: "bad", t: "Gemeinsam baden bei Kerzenlicht", e: "🛁", tip: "Badezusatz Rosen Kerzen Set" },
-      { id: "augenbinde", t: "Augenbinde – einer sieht nichts", e: "🕶️", tip: "Augenbinde Satin" },
+      { id: "augenbinde", t: "Augenbinde – wer sie trägt, sieht nichts", e: "🕶️", tip: "Augenbinde Satin" },
       { id: "nachrichten", t: "Tagsüber anzügliche Nachrichten schicken", e: "📱", tip: "" },
       { id: "waesche", t: "Neue Wäsche oder Dessous füreinander", e: "👙", tip: "Dessous Set" },
       { id: "rollenspiel", t: "Rollenspiel: Fremde in einer Bar", e: "🎭", tip: "" },

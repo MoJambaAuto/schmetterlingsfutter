@@ -3,13 +3,14 @@
 (function () {
   'use strict';
   const D = window.LUZIFER_DATA;
-  D.version = '3.2.0';
+  D.version = '3.3.0';
 
-  /* Anrede: wählt jeder für sich, die verbundene App übernimmt sie (z. B. im Orakel: „Sie liebt mich …“) */
+  /* Geschlecht: wählt jede Person selbst, die verbundene App übernimmt es. Angesprochen wird immer mit dem Namen;
+     die Angabe sorgt nur dafür, dass Fürwörter stimmen (pro = Fürwort, leer = Name wird wiederholt). */
   D.prons = [
-    { id: 'er', label: 'Er', subj: 'Er' },
-    { id: 'sie', label: 'Sie', subj: 'Sie' },
-    { id: 'es', label: 'Es', subj: 'Es' },
+    { id: 'er', label: 'Er', subj: 'Er', pro: 'er' },
+    { id: 'sie', label: 'Sie', subj: 'Sie', pro: 'sie' },
+    { id: 'es', label: 'Es', subj: 'Es', pro: 'es' },
     { id: 'einhorn', label: '🦄 Geflügeltes Einhorn', subj: 'Mein geflügeltes Einhorn' },
     { id: 'schmetterling', label: '🦋 Bunter Schmetterling', subj: 'Mein bunter Schmetterling' }
   ];

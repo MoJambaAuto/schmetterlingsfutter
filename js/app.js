@@ -360,7 +360,7 @@
   }
   /* Wer wird befragt? Der Schatz – in der Anrede, die er oder sie selbst gewählt hat. */
   function partnerPronId() { return (window.LZP && window.LZP.partnerPron && window.LZP.partnerPron()) || S.rpron || ''; }
-  function oracleSubj() { const p = (D.prons || []).find((x) => x.id === partnerPronId()); return p ? p.subj : S.receiver; }
+  function oracleSubj() { return S.receiver; }
   function pronChips(box, sel, onPick) {
     if (!box) return;
     box.innerHTML = (D.prons || []).map((p) => '<button type="button" data-p="' + p.id + '"' + (p.id === sel ? ' class="on"' : '') + (onPick ? '' : ' disabled') + '>' + esc(p.label) + '</button>').join('');

@@ -80,8 +80,8 @@
     const list = D.jingles.filter((j) => j.cat === s.jingleCat);
     const joined = P.joined();
     box.innerHTML = '<div class="row between"><div class="eyebrow" style="margin:0">🎶 Jingle-Box</div><span class="tag">' + D.jingles.filter((j) => cats.find((c) => c.id === j.cat)).length + ' Jingles</span></div>' +
-      '<p class="about" style="font-size:13px;margin:8px 0 10px">Kleine musikalische Liebeserklärungen, drei bis fünf Sekunden. ' + (joined ? 'Ein Tipp und sie klingen in der App von ' + esc(you()) + '.' : 'Mit verbundenen Apps klingen sie direkt beim anderen.') + '</p>' +
-      '<div class="chips" id="jingleChips">' + cats.map((c) => '<button type="button" class="' + (c.id === s.jingleCat ? 'on' : '') + '" data-cat="' + c.id + '">' + c.e + ' ' + esc(c.t) + '</button>').join('') + '</div>' +
+      '<p class="about" style="font-size:17px;margin:8px 0 10px">Kleine musikalische Liebeserklärungen, drei bis fünf Sekunden. ' + (joined ? 'Ein Tipp und sie klingen in der App von ' + esc(you()) + '.' : 'Mit verbundenen Apps klingen sie direkt beim anderen.') + '</p>' +
+      '<div class="chips' + (window.__sfJingleOpen ? ' open' : '') + '" id="jingleChips">' + cats.map((c) => '<button type="button" class="' + (c.id === s.jingleCat ? 'on' : '') + '" data-cat="' + c.id + '">' + c.e + ' ' + esc(c.t) + '</button>').join('') + '</div><button type="button" class="pill-btn ghost small" id="jingleMore" style="margin-bottom:12px">' + (window.__sfJingleOpen ? 'Weniger Anlässe' : 'Alle Anlässe') + '</button>' +
       '<div id="jingleList">' + list.map((j) => '<div class="jingle" data-id="' + j.id + '"><button class="icon-btn" data-play aria-label="Abspielen">▶</button><div class="j-b"><div class="j-t">' + esc(j.title) + ' <small>' + jingleSeconds(j) + ' s</small></div><div class="j-x">' + esc(L.fmt(j.text)) + '</div></div><button class="icon-btn" data-send aria-label="' + (joined ? 'An ' + esc(you()) + ' schicken' : 'Teilen') + '">' + (joined ? '💌' : '↗') + '</button></div>').join('') + '</div>' +
       '<div class="tips-slot" id="jingleTips"></div>';
     box.querySelectorAll('[data-cat]').forEach((b) => b.onclick = () => { s.jingleCat = b.dataset.cat; L.save(); renderJingles(); });
@@ -91,8 +91,7 @@
       row.querySelector('[data-send]').onclick = () => sendJingle(j);
     });
     P.mountTips($('jingleTips'), TIPKEY[s.jingleCat] || 'jingle', 'Passend dazu');
-    const chips = $('jingleChips'), on = chips && chips.querySelector('.on'); // gewählten Anlass in die Mitte der Leiste holen
-    if (on) chips.scrollLeft = Math.max(0, on.offsetLeft - chips.offsetLeft - (chips.clientWidth - on.offsetWidth) / 2);
+    const more = $('jingleMore'); if (more) more.onclick = () => { window.__sfJingleOpen = !window.__sfJingleOpen; renderJingles(); };
   }
   async function sendJingle(j) {
     const text = L.fmt(j.text);
@@ -138,7 +137,7 @@
       '<div class="row wrap" style="margin:10px 0"><button class="pill-btn small ghost" data-clear>🧽 Leeren</button><button class="pill-btn small ghost" data-photo>📷 Foto dahinter</button><input type="file" accept="image/*" class="hidden" id="kzFile"></div>' +
       '<div class="field"><label for="kzText">Ein Satz dazu (optional)</label><input id="kzText" maxlength="80" placeholder="z. B. Denk an dich!" autocomplete="off"></div>' +
       '<div class="row wrap">' + (joined ? '<button class="pill-btn primary" data-send>💌 An ' + esc(you()) + '</button>' : '') + '<button class="pill-btn' + (joined ? '' : ' primary') + '" data-share>↗ Teilen</button><button class="pill-btn ghost" data-cancel>Abbrechen</button></div>' +
-      (joined ? '' : '<p class="about" style="font-size:11px;color:var(--text-muted);margin-top:10px">Mit verbundenen Apps landet das Bild direkt auf der Startseite deines Schatzes. „Teilen“ öffnet das Teilen-Menü deines Handys – dort gibt es auch Quick Share und AirDrop für Geräte in der Nähe.</p>') +
+      (joined ? '' : '<p class="about" style="font-size:16px;color:var(--text-muted);margin-top:10px">Mit verbundenen Apps landet das Bild direkt auf der Startseite deines Schatzes. „Teilen“ öffnet das Teilen-Menü deines Handys – dort gibt es auch Quick Share und AirDrop für Geräte in der Nähe.</p>') +
       P.tipsHtml(P.tips('kritzel', 2), 'Zum Aufhängen'), (sh) => {
       const cv = sh.querySelector('#kzCanvas'), ctx = cv.getContext('2d');
       const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg1').trim() || '#2d1133';
@@ -254,11 +253,11 @@
   function greetSheet() {
     const hasNfc = 'NDEFReader' in window;
     const start = L.fmt(L.pick(D.messages));
-    L.openSheet('<h3>💌 Liebes-QR &amp; NFC-Sticker</h3><p class="about" style="font-size:13px;margin-bottom:10px">Versteck eine Botschaft: als QR-Code zum Scannen (am Spiegel, im Pausenbrot, auf dem Bildschirm) oder auf einem NFC-Sticker, den dein Schatz mit dem Handy antippt.</p>' +
+    L.openSheet('<h3>💌 Liebes-QR &amp; NFC-Sticker</h3><p class="about" style="font-size:17px;margin-bottom:10px">Versteck eine Botschaft: als QR-Code zum Scannen (am Spiegel, im Pausenbrot, auf dem Bildschirm) oder auf einem NFC-Sticker, den dein Schatz mit dem Handy antippt.</p>' +
       '<div class="field"><label for="grText">Deine Botschaft</label><textarea id="grText" maxlength="140">' + esc(start) + '</textarea></div>' +
       '<div class="qr hidden" id="grQr"></div>' +
       '<div class="row wrap"><button class="pill-btn primary" data-qrbtn>QR-Code zeigen</button>' + (hasNfc ? '<button class="pill-btn" data-nfc>🏷️ Auf NFC-Sticker schreiben</button>' : '') + '<button class="pill-btn" data-link>Link teilen ↗</button><button class="pill-btn ghost" data-cancel>Schließen</button></div>' +
-      '<p class="about" style="font-size:11px;color:var(--text-muted);margin-top:10px">' + (hasNfc ? 'NFC: Sticker (NTAG) an die Rückseite deines Handys halten, wenn du auf „schreiben“ getippt hast.' : 'NFC-Sticker lassen sich nur mit Chrome auf einem Android-Handy beschreiben. Lesen kann sie jedes aktuelle Handy.') + ' Die Botschaft steckt im Code selbst, sie wird nirgends hochgeladen.</p>' +
+      '<p class="about" style="font-size:16px;color:var(--text-muted);margin-top:10px">' + (hasNfc ? 'NFC: Sticker (NTAG) an die Rückseite deines Handys halten, wenn du auf „schreiben“ getippt hast.' : 'NFC-Sticker lassen sich nur mit Chrome auf einem Android-Handy beschreiben. Lesen kann sie jedes aktuelle Handy.') + ' Die Botschaft steckt im Code selbst, sie wird nirgends hochgeladen.</p>' +
       P.tipsHtml(P.tips('nfc', 2), 'Sticker besorgen'), (sh) => {
       sh.querySelector('[data-cancel]').onclick = L.closeSheet; P.bindTips(sh);
       const text = () => sh.querySelector('#grText').value.trim();
@@ -272,7 +271,7 @@
     });
   }
   function nahSheet() {
-    L.openSheet('<h3>📡 Nah dran</h3><p class="about" style="font-size:13px;margin-bottom:12px">Für die Momente, in denen ihr nebeneinander sitzt – oder euch etwas zum Finden hinterlasst.</p>' +
+    L.openSheet('<h3>📡 Nah dran</h3><p class="about" style="font-size:17px;margin-bottom:12px">Für die Momente, in denen ihr nebeneinander sitzt – oder euch etwas zum Finden hinterlasst.</p>' +
       (P.RELAY && !P.joined() ? '<button type="button" class="deck" data-pair><span class="d-ico">💞</span><div class="d-body"><div class="d-title">Apps per QR-Code verbinden</div><div class="d-sub">Code zeigen, mit der Handy-Kamera scannen, fertig.</div></div><span class="d-go">›</span></button>' : '') +
       '<button type="button" class="deck" data-kritzel><span class="d-ico">🎨</span><div class="d-body"><div class="d-title">Bild in der Nähe teilen</div><div class="d-sub">Kritzel-Gruß über Quick Share (Android) oder AirDrop (iPhone).</div></div><span class="d-go">›</span></button>' +
       '<button type="button" class="deck" data-greet><span class="d-ico">🏷️</span><div class="d-body"><div class="d-title">Liebes-QR &amp; NFC-Sticker</div><div class="d-sub">Botschaft verstecken – zum Scannen oder Antippen.</div></div><span class="d-go">›</span></button>' +
@@ -301,8 +300,8 @@
     const s = st(), wk = weekKey(), rec = s.checkins[wk] || {};
     if (rec.mine && rec.theirs) return checkinShow(wk);
     if (rec.mine && P.joined()) return checkinWait(wk);
-    P.openMatch(head('Wetterbericht') + '<div class="match-intro"><div class="match-emoji">🌦️</div><h2>Wie war eure Woche?</h2><p class="about">Jeder schätzt für sich ein, wie es in ' + areas().length + ' Bereichen lief – von Gewitter bis Sonne. Verglichen wird erst, wenn beide fertig sind. So seht ihr, wo ihr es gleich erlebt und wo nicht.</p>' +
-      '<p class="about" style="font-size:13px;color:var(--text-muted)">' + (P.joined() ? 'Du antwortest hier, ' + esc(you()) + ' in der eigenen App.' : 'Ohne Verbindung: erst du, dann gibst du das Handy an ' + esc(you()) + ' weiter.') + '</p>' +
+    P.openMatch(head('Wetterbericht') + '<div class="match-intro"><div class="match-emoji">🌦️</div><h2>Wie war eure Woche?</h2><p class="about">Ihr schätzt beide für euch ein, wie es in ' + areas().length + ' Bereichen lief – von Gewitter bis Sonne. Verglichen wird erst, wenn beide fertig sind. So seht ihr, wo ihr es gleich erlebt und wo nicht.</p>' +
+      '<p class="about" style="font-size:17px;color:var(--text-muted)">' + (P.joined() ? 'Du antwortest hier, ' + esc(you()) + ' in der eigenen App.' : 'Ohne Verbindung: erst du, dann gibst du das Handy an ' + esc(you()) + ' weiter.') + '</p>' +
       '<div class="row" style="margin-top:18px"><button class="pill-btn primary" data-start>Los geht’s</button></div></div>', (sc) => {
       sc.querySelector('[data-close]').onclick = closeOverlay;
       sc.querySelector('[data-start]').onclick = () => checkinAsk('me', 0, {}, (mine) => {
@@ -323,7 +322,7 @@
     const a = list[i];
     P.openMatch(head((who === 'me' ? me() : you()) + ' schätzt ein', '<span class="tag">' + (i + 1) + ' / ' + list.length + '</span>') +
       '<div class="progress" style="margin:0 0 20px"><i style="width:' + Math.round(i / list.length * 100) + '%"></i></div>' +
-      '<div class="match-card"><div class="match-emoji">' + a.e + '</div><div class="match-q">' + esc(a.t) + '</div><div class="about" style="font-size:13px">Wie war das diese Woche für dich?</div></div>' +
+      '<div class="match-card"><div class="match-emoji">' + a.e + '</div><div class="match-q">' + esc(a.t) + '</div><div class="about" style="font-size:17px">Wie war das diese Woche für dich?</div></div>' +
       '<div class="weather">' + K.weather.map((w, n) => '<button type="button" data-v="' + (n + 1) + '"><b>' + w + '</b><small>' + K.weatherText[n] + '</small></button>').join('') + '</div>' +
       (i > 0 ? '<div class="row" style="margin-top:14px"><button class="pill-btn ghost small" data-back>Zurück</button></div>' : ''), (sc) => {
       sc.querySelector('[data-close]').onclick = closeOverlay;
@@ -346,9 +345,9 @@
     const title = top && top.gap >= 2 ? 'Hier erlebt ihr es verschieden' : low.length ? 'Hier hakt es für euch beide' : 'Ziemlich im Gleichklang';
     const note = (r) => r.gap >= 2 ? 'Unterschiedlich erlebt – darüber reden lohnt sich' : (r.m <= 2 && r.t <= 2) ? 'Für beide gerade schwierig' : (r.m >= 4 && r.t >= 4) ? 'Läuft für euch beide' : 'Ähnlich erlebt';
     const focus = top && top.gap >= 2 ? top : (low[0] || null);
-    let html = head('Wetterbericht ' + wk.replace('-W', ' · Woche ')) + '<div class="match-intro" style="padding-bottom:8px"><div class="match-emoji">' + (top && top.gap >= 2 ? '🌦️' : low.length ? '🌧️' : '☀️') + '</div><h2>' + title + '</h2><p class="about" style="font-size:13px">Links ' + esc(me()) + ', rechts ' + esc(you()) + '. Kein Zeugnis – nur ein Anlass zum Reden.</p></div><div class="match-list">' +
+    let html = head('Wetterbericht ' + wk.replace('-W', ' · Woche ')) + '<div class="match-intro" style="padding-bottom:8px"><div class="match-emoji">' + (top && top.gap >= 2 ? '🌦️' : low.length ? '🌧️' : '☀️') + '</div><h2>' + title + '</h2><p class="about" style="font-size:17px">Links ' + esc(me()) + ', rechts ' + esc(you()) + '. Kein Zeugnis – nur ein Anlass zum Reden.</p></div><div class="match-list">' +
       rows.map((r) => '<div class="match-item' + (r.gap >= 2 ? ' gap' : '') + '"><span class="mi-e">' + r.a.e + '</span><div class="mi-b"><div class="mi-t">' + esc(r.a.t) + '</div><div class="mi-s">' + note(r) + '</div></div><span class="wx">' + K.weather[r.m - 1] + ' ' + K.weather[r.t - 1] + '</span></div>').join('') + '</div>';
-    if (focus) html += '<div class="card soft" style="margin-top:14px;padding:14px 16px"><div class="eyebrow" style="margin:0 0 6px">💬 Einstieg ins Gespräch</div><div style="font-family:var(--serif);font-style:italic;font-size:16px">' + esc(focus.a.q) + '</div></div>';
+    if (focus) html += '<div class="card soft" style="margin-top:14px;padding:14px 16px"><div class="eyebrow" style="margin:0 0 6px">💬 Einstieg ins Gespräch</div><div style="font-family:var(--serif);font-style:italic;font-size:19px">' + esc(focus.a.q) + '</div></div>';
     html += P.tipsHtml(P.tips('checkin', 2), 'Hilft beim Wochen-Rückblick') + '<div class="row wrap" style="margin-top:18px"><button class="pill-btn primary" data-zwie>⏳ Zwiegespräch starten</button>' + (focus ? '<button class="pill-btn" data-soft>🕊️ Sanft ansprechen</button>' : '') + '<button class="pill-btn ghost small" data-redo>Neu einschätzen</button></div>';
     P.openMatch(html, (sc) => {
       sc.querySelector('[data-close]').onclick = closeOverlay; P.bindTips(sc);
@@ -371,13 +370,13 @@
   /* ---- 4b. Sag's sanft: Ich-Botschaft bauen ---- */
   function softStart(topic) {
     P.closeMatch();
-    L.openSheet('<h3>🕊️ Sag’s sanft</h3><p class="about" style="font-size:13px;margin-bottom:10px">' + (topic ? 'Thema: <b>' + esc(topic) + '</b>. ' : '') + 'Was ist passiert, wie geht es dir, was wünschst du dir?</p>' +
+    L.openSheet('<h3>🕊️ Sag’s sanft</h3><p class="about" style="font-size:17px;margin-bottom:10px">' + (topic ? 'Thema: <b>' + esc(topic) + '</b>. ' : '') + 'Was ist passiert, wie geht es dir, was wünschst du dir?</p>' +
       '<div class="field"><label for="ssSit">Mir ist aufgefallen, dass …</label><input id="ssSit" maxlength="140" placeholder="z. B. wir diese Woche jeden Abend getrennt am Handy saßen" autocomplete="off"></div>' +
       '<div class="field"><label>Ich fühle mich dabei …</label><div class="chips" id="ssFeel">' + K.feelings.map((f) => '<button type="button" data-f="' + f + '">' + f + '</button>').join('') + '</div></div>' +
       '<div class="field"><label for="ssWish">Ich wünsche mir, dass …</label><input id="ssWish" maxlength="140" placeholder="z. B. wir zwei Abende ohne Bildschirm einplanen" autocomplete="off"></div>' +
       '<div class="card soft" style="padding:12px 14px;margin-bottom:10px"><div class="eyebrow" style="margin:0 0 4px">So klingt es</div><div class="chips big" id="ssStyle" style="margin:6px 0 8px"></div><div id="ssOut" class="soft-out"></div><div id="ssWarn" class="hint" style="text-align:left;margin-top:8px"></div></div>' +
       '<div class="row wrap"><button class="pill-btn primary" data-ok>' + (P.joined() ? 'Senden' : 'Teilen ↗') + '</button><button class="pill-btn" data-copy>Kopieren</button><button class="pill-btn ghost" data-cancel>Abbrechen</button></div>' +
-      '<p class="about" style="font-size:11px;color:var(--text-muted);margin-top:10px">Oder: laut vorlesen statt schicken. Schwierige Themen kommen von Angesicht zu Angesicht meist besser an.</p>', (sh) => {
+      '<p class="about" style="font-size:16px;color:var(--text-muted);margin-top:10px">Oder: laut vorlesen statt schicken. Schwierige Themen kommen von Angesicht zu Angesicht meist besser an.</p>', (sh) => {
       let feel = '';
       const val = (id) => sh.querySelector(id).value.trim().replace(/[.!]+$/, '');
       /* Zu scharf? Dann wird der Satz nicht wörtlich übernommen, sondern durch eine entschärfte Fassung ersetzt. */
@@ -413,8 +412,8 @@
 
   /* ---- 4c. Zwiegespräch: einer spricht, einer hört zu, dann Wechsel ---- */
   function zwieIntro() {
-    P.openMatch(head('Zwiegespräch') + '<div class="match-intro"><div class="match-emoji">⏳</div><h2>Einer spricht. Einer hört zu.</h2>' +
-      '<p class="about" style="text-align:left">1. Wer dran ist, spricht über sich: was mich bewegt, was mir fehlt, was mich freut – nicht, was der andere falsch macht.<br>2. Wer zuhört, hört nur zu. Kein Unterbrechen, kein Augenrollen, kein Verteidigen.<br>3. Nach der Zeit wird getauscht.<br>4. Danach keine Diskussion. Wirken lassen, in den Arm nehmen.</p>' +
+    P.openMatch(head('Zwiegespräch') + '<div class="match-intro"><div class="match-emoji">⏳</div><h2>Eine Person spricht. Die andere hört zu.</h2>' +
+      '<p class="about" style="text-align:left">1. Wer dran ist, spricht über sich: was mich bewegt, was mir fehlt, was mich freut – nicht, was dein Schatz falsch macht.<br>2. Wer zuhört, hört nur zu. Kein Unterbrechen, kein Augenrollen, kein Verteidigen.<br>3. Nach der Zeit wird getauscht.<br>4. Danach keine Diskussion. Wirken lassen, in den Arm nehmen.</p>' +
       '<div class="eyebrow" style="margin-top:16px">Redezeit pro Person</div><div class="row wrap"><button class="pill-btn" data-min="5">5 Min</button><button class="pill-btn primary" data-min="10">10 Min</button><button class="pill-btn" data-min="15">15 Min</button></div>' +
       P.tipsHtml(P.tips('zwiegespraech', 2), 'Für die Stimmung') + '</div>', (sc) => {
       sc.querySelector('[data-close]').onclick = closeOverlay; P.bindTips(sc);
@@ -451,10 +450,10 @@
   /* ---- 4d. Weiße Fahne und Pause-Knopf ---- */
   function peaceSheet() {
     const s = st(); const pausing = s.pauseUntil && s.pauseUntil > Date.now();
-    L.openSheet('<h3>🏳️ Weiße Fahne</h3><p class="about" style="font-size:13px;margin-bottom:8px">Ein Friedensangebot mitten im Streit ist kein Verlieren. Tipp einen Satz an – er geht an ' + esc(you()) + '.</p>' +
+    L.openSheet('<h3>🏳️ Weiße Fahne</h3><p class="about" style="font-size:17px;margin-bottom:8px">Ein Friedensangebot mitten im Streit ist kein Verlieren. Tipp einen Satz an – er geht an ' + esc(you()) + '.</p>' +
       K.peace.map((t, i) => '<button class="gift-item" data-p="' + i + '"><span class="g-ico">🕊️</span><span class="g-t">' + esc(t) + '</span><span>↗</span></button>').join('') +
       '<div class="row wrap" style="margin-top:14px"><button class="pill-btn" data-jingle>🎶 Versöhnungs-Jingle</button><button class="pill-btn" data-pause>' + (pausing ? '⏸️ Pause läuft noch ' + Math.ceil((s.pauseUntil - Date.now()) / 60000) + ' Min' : '⏸️ 20 Minuten Pause') + '</button><button class="pill-btn ghost" data-cancel>Schließen</button></div>' +
-      '<p class="about" style="font-size:11px;color:var(--text-muted);margin-top:10px">Pause: Wenn der Puls rast, kann niemand gut zuhören. Zwanzig Minuten getrennt durchatmen, dann weiterreden.</p>' +
+      '<p class="about" style="font-size:16px;color:var(--text-muted);margin-top:10px">Pause: Wenn der Puls rast, kann niemand gut zuhören. Zwanzig Minuten getrennt durchatmen, dann weiterreden.</p>' +
       P.tipsHtml(P.tips('peace', 2), 'Sagt es auch ohne Worte'), (sh) => {
       sh.querySelector('[data-cancel]').onclick = L.closeSheet; P.bindTips(sh);
       sh.querySelectorAll('[data-p]').forEach((b) => b.onclick = () => { const t = K.peace[Number(b.dataset.p)]; L.closeSheet(); setTimeout(() => P.sendOrShare(t, 'Friedensangebot 🏳️'), 50); });
@@ -466,7 +465,7 @@
   /* ---- 4e. Gesprächskarten ---- */
   function cardSheet() {
     let cur = L.pick(K.cards);
-    const draw = () => L.openSheet('<h3>🃏 Gesprächskarte</h3><div class="card msg-card" style="min-height:130px"><div class="msg-text">' + esc(cur) + '</div></div><p class="about" style="font-size:12px;color:var(--text-muted);margin-bottom:12px">Beide antworten. Wer fragt, hört zuerst zu.</p><div class="row wrap"><button class="pill-btn primary" data-next>Nächste Karte</button><button class="pill-btn" data-send>' + (P.joined() ? 'An ' + esc(you()) : 'Teilen ↗') + '</button><button class="pill-btn ghost" data-cancel>Schließen</button></div>' + P.tipsHtml(P.tips('klartext', 2), 'Mehr Fragen'), (sh) => {
+    const draw = () => L.openSheet('<h3>🃏 Gesprächskarte</h3><div class="card msg-card" style="min-height:130px"><div class="msg-text">' + esc(cur) + '</div></div><p class="about" style="font-size:16px;color:var(--text-muted);margin-bottom:12px">Beide antworten. Wer fragt, hört zuerst zu.</p><div class="row wrap"><button class="pill-btn primary" data-next>Nächste Karte</button><button class="pill-btn" data-send>' + (P.joined() ? 'An ' + esc(you()) : 'Teilen ↗') + '</button><button class="pill-btn ghost" data-cancel>Schließen</button></div>' + P.tipsHtml(P.tips('klartext', 2), 'Mehr Fragen'), (sh) => {
       sh.querySelector('[data-cancel]').onclick = L.closeSheet; P.bindTips(sh);
       sh.querySelector('[data-next]').onclick = () => { let n; do { n = L.pick(K.cards); } while (n === cur && K.cards.length > 1); cur = n; draw(); };
       sh.querySelector('[data-send]').onclick = () => { const t = cur; L.closeSheet(); setTimeout(() => P.sendOrShare('Frage für uns zwei: ' + t, 'Gesprächskarte 🃏'), 50); };
@@ -480,10 +479,10 @@
     const pausing = s.pauseUntil && s.pauseUntil > Date.now();
     const redenRec = (s.matches || {}).reden;
     const tools = [
-      { e: '🌦️', t: 'Wetterbericht der Woche', sub: rec.mine && rec.theirs ? 'Vergleich ansehen' : rec.mine ? 'Wartet auf ' + you() : rec.theirs ? '✨ ' + you() + ' ist fertig – jetzt du' : 'Wie lief die Woche für jeden von euch? Zwei Minuten.', go: checkinStart },
+      { e: '🌦️', t: 'Wetterbericht der Woche', sub: rec.mine && rec.theirs ? 'Vergleich ansehen' : rec.mine ? 'Wartet auf ' + you() : rec.theirs ? '✨ ' + you() + ' ist fertig – jetzt du' : 'Wie lief die Woche für euch beide? Zwei Minuten.', go: checkinStart },
       { e: '🗝️', t: 'Unausgesprochen', sub: redenRec ? (redenRec.matches === null ? 'Wartet auf ' + you() : (redenRec.matches.length === 1 ? '1 gemeinsames Thema' : redenRec.matches.length + ' gemeinsame Themen')) : 'Worüber sollten wir mal reden? Sichtbar wird nur, was beide wollen.', go: () => P.playDeck('reden') },
       { e: '🕊️', t: 'Sag’s sanft', sub: 'Aus einem Vorwurf eine Einladung machen – in drei Bausteinen.', go: () => softStart('') },
-      { e: '⏳', t: 'Zwiegespräch', sub: 'Einer spricht, einer hört zu, dann Wechsel. Mit Timer und Gong.', go: zwieIntro },
+      { e: '⏳', t: 'Zwiegespräch', sub: 'Erst spricht die eine Person, dann die andere. Mit Timer und Gong.', go: zwieIntro },
       { e: '🏳️', t: 'Weiße Fahne', sub: pausing ? '⏸️ Pause läuft noch ' + Math.ceil((s.pauseUntil - Date.now()) / 60000) + ' Minuten' : 'Friedensangebot oder 20 Minuten Pause – mit einem Tipp.', go: peaceSheet },
       { e: '🃏', t: 'Gesprächskarte ziehen', sub: 'Eine Frage, die tiefer geht als „Wie war dein Tag?“', go: cardSheet }
     ];

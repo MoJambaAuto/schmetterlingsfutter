@@ -161,7 +161,7 @@
   /* ---------- Senden oder Teilen ---------- */
   function sendOrShare(text, label) {
     if (!paired() || !joined()) return L.shareText(text + '\n— ' + S().sender + ' ❤');
-    L.openSheet('<h3>Wohin damit?</h3><p class="about" style="margin-bottom:14px;font-size:13px">' + L.esc(text.length > 160 ? text.slice(0, 160) + '…' : text) + '</p>' +
+    L.openSheet('<h3>Wohin damit?</h3><p class="about" style="margin-bottom:14px;font-size:17px">' + L.esc(text.length > 160 ? text.slice(0, 160) + '…' : text) + '</p>' +
       '<div class="row wrap"><button class="pill-btn primary" data-app>💌 In die App von ' + L.esc(partnerName()) + '</button><button class="pill-btn" data-share>↗ WhatsApp &amp; Co.</button><button class="pill-btn ghost" data-cancel>Abbrechen</button></div>', (sh) => {
       sh.querySelector('[data-cancel]').onclick = L.closeSheet;
       sh.querySelector('[data-share]').onclick = () => { L.closeSheet(); L.shareText(text + '\n— ' + S().sender + ' ❤'); };
@@ -248,7 +248,7 @@
     let html = '<div class="match-head"><button class="icon-btn" data-close aria-label="Schließen">✕</button><div class="eyebrow" style="margin:0">Gleichklang</div><span></span></div>' +
       '<div class="match-intro"><div class="match-emoji">' + deck.icon + '</div><h2>' + L.esc(deck.title) + '</h2><p class="about">' + L.esc(deck.sub) + '</p>';
     if (canRelay) html += '<div class="seg-mode" role="group" aria-label="Spielweise"><button type="button" data-mode="relay"' + (mode === 'relay' ? ' class="on" aria-pressed="true"' : '') + '>📱📱 Zwei Handys</button><button type="button" data-mode="pass"' + (mode === 'pass' ? ' class="on" aria-pressed="true"' : '') + '>📱 Ein Handy</button></div>';
-    html += '<p class="about mode-line">' + (mode === 'relay' ? 'Jeder antwortet in seiner App.' : 'Erst du, dann ' + L.esc(partnerName()) + '.') + ' ' + game.items.length + ' Fragen.</p>';
+    html += '<p class="about mode-line">' + (mode === 'relay' ? 'Ihr antwortet beide in der eigenen App.' : 'Erst du, dann ' + L.esc(partnerName()) + '.') + ' ' + game.items.length + ' Fragen.</p>';
     html += '<div class="row wrap" style="margin-top:18px"><button class="pill-btn primary" data-start>' + (deck.daily ? 'Heute antworten' : 'Los geht’s') + '</button>' +
       (prev && prev.matches ? '<button class="pill-btn" data-prev>Letztes Ergebnis</button>' : '') +
       (paired() ? '' : '<button class="pill-btn ghost small" data-connect>Apps verbinden</button>') + '</div></div>';
@@ -283,6 +283,7 @@
     if (g.mode === 'pass') {
       if (g.who === 'me') {
         g.who = 'them'; g.step = 0;
+        const answered = (g.items || deck.items).filter((it) => g.mine[it.id]); if (answered.length) g.items = answered;
         openMatch('<div class="match-head"><button class="icon-btn" data-close aria-label="Abbrechen">✕</button><div class="eyebrow" style="margin:0">Handy weitergeben</div><span></span></div>' +
           '<div class="match-intro"><div class="match-emoji">📲</div><h2>Jetzt ' + L.esc(partnerName()) + '</h2><p class="about">' + L.esc(S().sender) + ', gib das Handy weiter und schau nicht hin. ' + L.esc(partnerName()) + ' antwortet für sich – sichtbar wird nachher nur, was ihr beide wollt.</p>' +
           '<div class="row" style="margin-top:18px"><button class="pill-btn primary" data-start>Ich bin ' + L.esc(partnerName()) + ' – los</button></div></div>', (sc) => {
@@ -361,17 +362,17 @@
       const yes = rec.matches.map((id) => deck.items.find((it) => it.id === id)).filter(Boolean);
       const open = (rec.open || []).map((id) => deck.items.find((it) => it.id === id)).filter(Boolean);
       html += '<div class="match-intro" style="padding-bottom:8px"><div class="match-emoji">' + (yes.length ? '💞' : '🫤') + '</div><h2>' + (yes.length ? yes.length + (yes.length === 1 ? ' Treffer' : ' Treffer') : 'Kein gemeinsames Ja') + '</h2>' +
-        '<p class="about" style="font-size:13px">' + (yes.length ? (deck.hitText || 'Das wollt ihr beide. Alles andere bleibt geheim.') : (open.length ? 'Aber ihr seid beide bei ein paar Dingen offen – siehe unten.' : (deck.noneText || (deck.daily ? 'Heute nicht. Morgen gibt es neue Chancen – oder einer gibt nach. 😈' : 'Vielleicht beim nächsten Mal. Das Teufelchen empfiehlt: Vielleicht großzügiger antippen.')))) + '</p></div>';
+        '<p class="about" style="font-size:17px">' + (yes.length ? (deck.hitText || 'Das wollt ihr beide. Alles andere bleibt geheim.') : (open.length ? 'Aber ihr seid beide bei ein paar Dingen offen – siehe unten.' : (deck.noneText || (deck.daily ? 'Heute nicht. Morgen gibt es neue Chancen – oder jemand gibt nach. 😈' : 'Vielleicht beim nächsten Mal. Das Teufelchen empfiehlt: Vielleicht großzügiger antippen.')))) + '</p></div>';
       if (yes.length) html += '<div class="match-list">' + yes.map((it) => matchItem(it, deck.yesLabel || 'Beide Ja', deck.adult)).join('') + '</div>';
       if (open.length) html += '<div class="eyebrow" style="margin-top:14px">' + L.esc(deck.openTitle || 'Beide offen dafür') + '</div><div class="match-list">' + open.map((it) => matchItem(it, deck.openLabel || 'Vielleicht', deck.adult)).join('') + '</div>';
       /* Mut-Karte: Themen, die nur mir wichtig sind, bleiben geheim – aber ich bekomme Hilfe, sie selbst anzusprechen */
       if (deck.talk && rec.mode === 'relay') {
         const hidden = (rec.mine || []).filter((id) => !rec.matches.includes(id) && !(rec.open || []).includes(id)).map((id) => deck.items.find((it) => it.id === id)).filter(Boolean);
-        if (hidden.length) html += '<div class="card soft" style="margin-top:14px;padding:14px 16px"><div class="eyebrow" style="margin:0 0 6px">🔒 Nur für dich</div><p class="about" style="font-size:13px">' + (hidden.length === 1 ? 'Ein Thema ist dir wichtig, das noch kein Treffer ist.' : hidden.length + ' Themen sind dir wichtig, die noch kein Treffer sind.') + ' ' + name + ' sieht das nicht. Unausgesprochenes wächst – das Teufelchen hilft dir, eines davon sanft selbst anzusprechen.</p><div class="row" style="justify-content:flex-start;margin-top:10px"><button class="pill-btn small" data-hidden>Anzeigen</button></div><div class="match-list hidden" data-hidden-list style="margin-top:10px">' + hidden.map((it) => matchItem(it, 'Nur dir wichtig')).join('') + '</div></div>';
+        if (hidden.length) html += '<div class="card soft" style="margin-top:14px;padding:14px 16px"><div class="eyebrow" style="margin:0 0 6px">🔒 Nur für dich</div><p class="about" style="font-size:17px">' + (hidden.length === 1 ? 'Ein Thema ist dir wichtig, das noch kein Treffer ist.' : hidden.length + ' Themen sind dir wichtig, die noch kein Treffer sind.') + ' ' + name + ' sieht das nicht. Unausgesprochenes wächst – das Teufelchen hilft dir, eines davon sanft selbst anzusprechen.</p><div class="row" style="justify-content:flex-start;margin-top:10px"><button class="pill-btn small" data-hidden>Anzeigen</button></div><div class="match-list hidden" data-hidden-list style="margin-top:10px">' + hidden.map((it) => matchItem(it, 'Nur dir wichtig')).join('') + '</div></div>';
       }
       if (!yes.length || deck.talk) html += tipsHtml(tips('match_' + deck.id, 2), deck.talk ? 'Hilft beim Reden' : 'Für den nächsten Versuch');
       html += '<div class="row wrap" style="margin-top:18px">' + (yes.length ? '<button class="pill-btn primary" data-share-res>Plan teilen ↗</button>' : '') + (!deck.daily && deck.items.length > roundSize(deck) ? '<button class="pill-btn" data-next>Neue Fragen</button>' : '<button class="pill-btn" data-again>Nochmal spielen</button>') + (rec.mode === 'relay' ? '<button class="pill-btn ghost small" data-refresh>Aktualisieren</button>' : '') + '</div>' +
-        '<p class="about" style="font-size:11px;color:var(--text-muted);margin-top:12px">Stand ' + L.fmtDate(new Date(rec.date)) + (rec.mode === 'relay' ? ' · über die Partner-Verbindung, nur Prüfsummen verglichen' : ' · Handy-weitergeben-Modus') + '. Produktvorschläge sind Werbelinks zur Amazon-Suche.</p>';
+        '<p class="about" style="font-size:16px;color:var(--text-muted);margin-top:12px">Stand ' + L.fmtDate(new Date(rec.date)) + (rec.mode === 'relay' ? ' · über die Partner-Verbindung, nur Prüfsummen verglichen' : ' · Handy-weitergeben-Modus') + '. Produktvorschläge sind Werbelinks zur Amazon-Suche.</p>';
     }
     openMatch(html, (sc) => {
       sc.querySelector('[data-close]').onclick = closeMatch; bindTips(sc);
@@ -412,7 +413,7 @@
       };
       l.appendChild(d);
     });
-    const hint = $('deckHint'); if (hint) hint.textContent = paired() && joined() ? 'Verbunden mit ' + partnerName() + ' – jeder antwortet in seiner App.' : 'Ohne Verbindung spielt ihr an einem Handy. Verbunden antwortet jeder für sich.';
+    const hint = $('deckHint'); if (hint) hint.textContent = paired() && joined() ? '' : 'Ohne Verbindung spielt ihr an einem Handy.';
   }
 
   /* ---------- Koppel-Oberfläche ---------- */
@@ -427,7 +428,7 @@
           : '<p class="about" style="margin-bottom:10px">Noch wartet die Verbindung auf ' + L.esc(S().receiver) + '. Sitzt ihr nebeneinander? Dann einfach diesen Code mit der Handy-Kamera scannen. Sonst Link oder Code schicken:</p><div class="qr" data-qr="' + L.esc(pairLink()) + '"></div><div class="paircode">' + code + '</div>') +
         '<div class="row wrap">' + (p.joined ? '' : '<button class="pill-btn primary" data-link>Link schicken ↗</button><button class="pill-btn" data-copy>Code kopieren</button><button class="pill-btn ghost small" data-check>Schon beigetreten?</button>') +
         '<button class="pill-btn ghost danger small" data-leave>Verbindung trennen</button><button class="pill-btn ghost" data-cancel>Schließen</button></div>' +
-        '<p class="about" style="font-size:11px;color:var(--text-muted);margin-top:12px">Der Code enthält ein Geheimnis, das nur eure beiden Apps kennen. Der Vermittlungsdienst sieht nur verschlüsselte Daten. „Trennen“ löscht dort alles sofort.</p>', (sh) => {
+        '<p class="about" style="font-size:16px;color:var(--text-muted);margin-top:12px">Der Code enthält ein Geheimnis, das nur eure beiden Apps kennen. Der Vermittlungsdienst sieht nur verschlüsselte Daten. „Trennen“ löscht dort alles sofort.</p>', (sh) => {
         sh.querySelector('[data-cancel]').onclick = L.closeSheet;
         if (window.LZN) window.LZN.fillQr(sh);
         const lk = sh.querySelector('[data-link]'); if (lk) lk.onclick = () => L.shareText('💞 Lass uns Schmetterlingsfutter verbinden! Öffne diesen Link auf deinem Handy (App vorher installieren: ' + location.origin + location.pathname + '):\n' + pairLink() + '\nOder gib in der App unter Mehr → Partner verbinden diesen Code ein: ' + code);
@@ -437,7 +438,7 @@
       });
       return;
     }
-    L.openSheet('<h3>💞 Apps verbinden</h3><p class="about" style="margin-bottom:14px">Dann landen Botschaften und Gutscheine direkt in der App von ' + L.esc(S().receiver) + ', und bei den Gleichklang-Spielen antwortet jeder heimlich auf dem eigenen Handy. Ohne Konto, verschlüsselt.</p>' +
+    L.openSheet('<h3>💞 Apps verbinden</h3><p class="about" style="margin-bottom:14px">Dann landen Botschaften und Gutscheine direkt in der App von ' + L.esc(S().receiver) + ', und bei den Gleichklang-Spielen antwortet ihr beide heimlich auf dem eigenen Handy. Ohne Konto, verschlüsselt.</p>' +
       '<div class="row wrap" style="margin-bottom:14px"><button class="pill-btn primary" data-new>Ich erzeuge den Code</button></div>' +
       '<div class="field"><label for="pf-code">… oder ich habe einen Code von ' + L.esc(S().receiver) + '</label><input id="pf-code" maxlength="24" placeholder="ABCDEF-GHJKLM-NPQRST" autocomplete="off" autocapitalize="characters" spellcheck="false"></div>' +
       '<div class="row"><button class="pill-btn ghost" data-cancel>Abbrechen</button><button class="pill-btn" data-join>Beitreten</button></div>', (sh) => {
@@ -510,9 +511,9 @@
     if (!RELAY) { c.classList.add('hidden'); }
     else {
       c.classList.remove('hidden');
-      if (!p) c.innerHTML = '<div class="row between"><div><div class="eyebrow" style="margin:0 0 4px">💞 Zu zweit noch besser</div><div style="font-size:14px">Verbinde deine App mit der von ' + L.esc(S().receiver) + ': Botschaften landen direkt dort, Gleichklang-Spiele laufen geheim auf zwei Handys.</div></div></div><div class="row wrap" style="margin-top:12px;justify-content:flex-start"><button class="pill-btn small primary" data-pair>Jetzt verbinden</button><button class="pill-btn small ghost" data-bock>🎯 Worauf Bock heute?</button></div>';
-      else if (!p.joined) c.innerHTML = '<div class="eyebrow" style="margin:0 0 4px">⏳ Wartet auf ' + L.esc(S().receiver) + '</div><div style="font-size:14px">Dein Code ist bereit. ' + L.esc(S().receiver) + ' muss den Link öffnen oder den Code eingeben.</div><div class="row wrap" style="margin-top:12px;justify-content:flex-start"><button class="pill-btn small primary" data-pair>Link schicken</button><button class="pill-btn small ghost" data-check>Prüfen</button></div>';
-      else c.innerHTML = '<div class="eyebrow" style="margin:0 0 4px">💞 Verbunden mit ' + L.esc(partnerName()) + '</div><div style="font-size:13px;color:var(--text-soft)">' + (n ? (n === 1 ? 'Eine neue Nachricht wartet im Postfach.' : n + ' neue Nachrichten warten im Postfach.') : 'Botschaften und Gutscheine landen direkt bei ' + L.esc(partnerName()) + '.') + '</div><div class="row wrap" style="margin-top:12px;justify-content:flex-start"><button class="pill-btn small ' + (n ? 'primary' : '') + '" data-inbox>📬 Postfach <span class="badge' + (n ? '' : ' hidden') + '" id="inboxBadge">' + n + '</span></button><button class="pill-btn small" data-bock>🎯 Worauf Bock heute?</button><button class="pill-btn small ghost" data-pair>Verbindung</button></div>';
+      if (!p) c.innerHTML = '<div class="row between"><div><div class="eyebrow" style="margin:0 0 4px">💞 Zu zweit noch besser</div><div style="font-size:18px">Verbinde deine App mit der von ' + L.esc(S().receiver) + ': Botschaften landen direkt dort, Gleichklang-Spiele laufen geheim auf zwei Handys.</div></div></div><div class="row wrap" style="margin-top:12px;justify-content:flex-start"><button class="pill-btn small primary" data-pair>Jetzt verbinden</button><button class="pill-btn small ghost" data-bock>🎯 Worauf Bock heute?</button></div>';
+      else if (!p.joined) c.innerHTML = '<div class="eyebrow" style="margin:0 0 4px">⏳ Wartet auf ' + L.esc(S().receiver) + '</div><div style="font-size:18px">Dein Code ist bereit. ' + L.esc(S().receiver) + ' muss den Link öffnen oder den Code eingeben.</div><div class="row wrap" style="margin-top:12px;justify-content:flex-start"><button class="pill-btn small primary" data-pair>Link schicken</button><button class="pill-btn small ghost" data-check>Prüfen</button></div>';
+      else c.innerHTML = '<div class="eyebrow" style="margin:0 0 4px">💞 Verbunden mit ' + L.esc(partnerName()) + '</div><div style="font-size:17px;color:var(--text-soft)">' + (n ? (n === 1 ? 'Eine neue Nachricht wartet im Postfach.' : n + ' neue Nachrichten warten im Postfach.') : 'Botschaften und Gutscheine landen direkt bei ' + L.esc(partnerName()) + '.') + '</div><div class="row wrap" style="margin-top:12px;justify-content:flex-start"><button class="pill-btn small ' + (n ? 'primary' : '') + '" data-inbox>📬 Postfach <span class="badge' + (n ? '' : ' hidden') + '" id="inboxBadge">' + n + '</span></button><button class="pill-btn small" data-bock>🎯 Worauf Bock heute?</button><button class="pill-btn small ghost" data-pair>Verbindung</button></div>';
       const pr = c.querySelector('[data-pair]'); if (pr) pr.onclick = pairSheet;
       const ib = c.querySelector('[data-inbox]'); if (ib) ib.onclick = inboxSheet;
       const bk = c.querySelector('[data-bock]'); if (bk) bk.onclick = () => playDeck('bock');
@@ -529,7 +530,7 @@
     const key = o.id === 'jahrestag' ? 'jahrestag' : o.id === 'geburtstag' ? 'geburtstag' : (D.gifts[o.id] ? o.id : null);
     const ideas = ((key ? D.gifts[key] : []).concat(D.gifts.default)).filter((x) => x.q).slice(0, 2);
     let html = '<div class="row between"><div class="eyebrow" style="margin:0">🎁 Geschenk-Radar</div><span class="tag">' + (o.days === 0 ? 'heute' : 'in ' + o.days + (o.days === 1 ? ' Tag' : ' Tagen')) + '</span></div>' +
-      '<div style="font-size:14px;margin:6px 0 2px">' + o.icon + ' ' + L.esc(o.title) + (o.days <= 14 ? ' – jetzt wird es Zeit.' : ' – entspannt vorplanen.') + '</div>';
+      '<div style="font-size:18px;margin:6px 0 2px">' + o.icon + ' ' + L.esc(o.title) + (o.days <= 14 ? ' – jetzt wird es Zeit.' : ' – entspannt vorplanen.') + '</div>';
     const items = wishes.slice(0, 1).map((w) => ({ icon: '⭐', title: w.text, q: w.text })).concat(ideas.map((x) => ({ icon: x.icon, title: x.title, q: x.q })));
     html += tipsHtml(items, wishes.length ? 'Aus der Love Map und passende Ideen' : 'Ideen');
     html += '<div class="row wrap" style="margin-top:8px;justify-content:flex-start"><button class="pill-btn small ghost" data-all>Alle Ideen für ' + L.esc(o.title) + '</button><button class="pill-btn small ghost" data-wish>+ Wunsch notieren</button></div>';
@@ -539,8 +540,8 @@
   }
   function renderSettingsCard() {
     const c = $('partnerSettings'); if (!c) return; const p = P().partner;
-    if (!RELAY) { c.innerHTML = '<div class="eyebrow">Partner-Verbindung</div><p class="about" style="font-size:13px">In dieser Version noch nicht freigeschaltet.</p>'; return; }
-    c.innerHTML = '<div class="eyebrow">Partner-Verbindung</div><p class="about" style="font-size:13px;margin-bottom:10px">' + (!p ? 'Nicht verbunden. Mit Verbindung landen Botschaften und Gutscheine direkt in der App von ' + L.esc(S().receiver) + ', und Gleichklang-Spiele laufen getrennt auf zwei Handys.' : p.joined ? 'Verbunden mit ' + L.esc(partnerName()) + '. Der Vermittlungsdienst sieht nur verschlüsselte Daten.' : 'Code erzeugt, wartet auf ' + L.esc(S().receiver) + '.') + '</p><div class="row wrap" style="justify-content:flex-start"><button class="pill-btn small ' + (p ? '' : 'primary') + '" data-pair>' + (!p ? 'Jetzt verbinden' : 'Verbindung verwalten') + '</button>' + (p && p.joined ? '<button class="pill-btn small ghost" data-inbox>📬 Postfach</button>' : '') + '</div>';
+    if (!RELAY) { c.innerHTML = '<div class="eyebrow">Partner-Verbindung</div><p class="about" style="font-size:17px">In dieser Version noch nicht freigeschaltet.</p>'; return; }
+    c.innerHTML = '<div class="eyebrow">Partner-Verbindung</div><p class="about" style="font-size:17px;margin-bottom:10px">' + (!p ? 'Nicht verbunden. Mit Verbindung landen Botschaften und Gutscheine direkt in der App von ' + L.esc(S().receiver) + ', und Gleichklang-Spiele laufen getrennt auf zwei Handys.' : p.joined ? 'Verbunden mit ' + L.esc(partnerName()) + '. Der Vermittlungsdienst sieht nur verschlüsselte Daten.' : 'Code erzeugt, wartet auf ' + L.esc(S().receiver) + '.') + '</p><div class="row wrap" style="justify-content:flex-start"><button class="pill-btn small ' + (p ? '' : 'primary') + '" data-pair>' + (!p ? 'Jetzt verbinden' : 'Verbindung verwalten') + '</button>' + (p && p.joined ? '<button class="pill-btn small ghost" data-inbox>📬 Postfach</button>' : '') + '</div>';
     c.querySelector('[data-pair]').onclick = pairSheet; const ib = c.querySelector('[data-inbox]'); if (ib) ib.onclick = inboxSheet;
   }
   function renderSendButtons() {
