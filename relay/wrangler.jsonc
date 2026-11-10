@@ -14,8 +14,8 @@
     {
       "binding": "DB",
       "database_name": "schmetterlingsfutter",
-      // database_id nach `wrangler d1 create schmetterlingsfutter --location weur` eintragen (lokal reicht der Platzhalter)
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      // angelegt am 10.11.2026 mit `wrangler d1 create schmetterlingsfutter --jurisdiction eu` (Konto mojamba.automation)
+      "database_id": "6f04ade0-c92e-489e-bf97-6c3dbdb96f79",
       "migrations_dir": "migrations"
     }
   ]

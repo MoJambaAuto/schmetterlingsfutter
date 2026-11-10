@@ -6,8 +6,8 @@ window.LUZIFER_DATA = {
   version: '3.0.0',
 
   /* ---- Partner-Verbindung: Adresse des Relay-Dienstes (relay/README.md). Leer = Funktion aus.
-     Bei lokalem Start (localhost/127.0.0.1) nimmt die App automatisch http://localhost:8787. ---- */
-  relayUrl: '',
+     Bei lokalem Start (localhost/127.0.0.1) nimmt die App http://localhost:8787 – außer localStorage 'sf.relay' steht auf 'prod'. ---- */
+  relayUrl: 'https://schmetterlingsfutter-relay.mojamba-automation.workers.dev',
 
   /* ---- Amazon-Partnerkennung von MoJamba (PartnerNet → Tracking-ID). Leer = Suchlinks ohne Kennung. ---- */
   affiliateTag: '',

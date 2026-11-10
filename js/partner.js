@@ -15,7 +15,8 @@
   const unb64u = (s) => { s = s.replace(/-/g, '+').replace(/_/g, '/'); while (s.length % 4) s += '='; return Uint8Array.from(atob(s), (c) => c.charCodeAt(0)); };
   const subtle = (window.crypto && window.crypto.subtle) ? window.crypto.subtle : null;
   const isLocal = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
-  const RELAY = (D.relayUrl || '').replace(/\/$/, '') || (isLocal ? 'http://localhost:8787' : '');
+  let useProd = false; try { useProd = localStorage.getItem('sf.relay') === 'prod'; } catch (e) {}
+  const RELAY = (isLocal && !useProd) ? 'http://localhost:8787' : (D.relayUrl || '').replace(/\/$/, ''); // lokal gegen den lokalen Dienst testen
 
   /* ---------- Zustand ---------- */
   function P() { const s = S(); if (!s.partner) s.partner = null; if (!s.inbox) s.inbox = []; if (!s.matches) s.matches = {}; return s; }
