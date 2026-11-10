@@ -91,6 +91,8 @@
       row.querySelector('[data-send]').onclick = () => sendJingle(j);
     });
     P.mountTips($('jingleTips'), TIPKEY[s.jingleCat] || 'jingle', 'Passend dazu');
+    const chips = $('jingleChips'), on = chips && chips.querySelector('.on'); // gewählten Anlass in die Mitte der Leiste holen
+    if (on) chips.scrollLeft = Math.max(0, on.offsetLeft - chips.offsetLeft - (chips.clientWidth - on.offsetWidth) / 2);
   }
   async function sendJingle(j) {
     const text = L.fmt(j.text);
