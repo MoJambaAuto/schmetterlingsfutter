@@ -10,7 +10,7 @@ window.LUZIFER_DATA = {
   relayUrl: 'https://schmetterlingsfutter-relay.mojamba-automation.workers.dev',
 
   /* ---- Amazon-Partnerkennung von MoJamba (PartnerNet → Tracking-ID). Leer = Suchlinks ohne Kennung. ---- */
-  affiliateTag: '',
+  affiliateTag: 'schmetterlingsfutter-21',
   /* Kennung auch an Vorschlägen im 18+-Bereich anhängen? Aus = dort normale Suchlinks ohne Kennung. */
   affiliateAdult: false,
 
