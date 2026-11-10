@@ -3,10 +3,10 @@
 (function () {
   'use strict';
   const D = window.LUZIFER_DATA;
-  D.version = '3.5.0';
+  D.version = '3.5.1';
 
-  /* Ideen-Briefkasten: erst einschalten, wenn der Vermittlungsdienst die Adresse /idea kennt */
-  D.ideaBox = false;
+  /* Ideen-Briefkasten: eingeschaltet seit 10.11.2026 (Vermittlungsdienst kennt die Adresse /idea) */
+  D.ideaBox = true;
 
   /* Geschlecht: wählt jede Person selbst, die verbundene App übernimmt es. Angesprochen wird immer mit dem Namen;
      die Angabe sorgt nur dafür, dass Fürwörter stimmen (pro = Fürwort, leer = Name wird wiederholt). */
