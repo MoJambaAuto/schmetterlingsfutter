@@ -11,6 +11,8 @@ window.LUZIFER_DATA = {
 
   /* ---- Amazon-Partnerkennung von MoJamba (PartnerNet → Tracking-ID). Leer = Suchlinks ohne Kennung. ---- */
   affiliateTag: '',
+  /* Kennung auch an Vorschlägen im 18+-Bereich anhängen? Aus = dort normale Suchlinks ohne Kennung. */
+  affiliateAdult: false,
 
   messages: [
     "{r}, du bist das Schönste, das mir je passiert ist.",

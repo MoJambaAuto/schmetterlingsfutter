@@ -176,22 +176,26 @@
   }
 
   /* ---------- Passend dazu (Amazon-Suchlinks, Werbelinks) ---------- */
-  function amazonUrl(q) {
-    const tag = (D.affiliateTag || '').trim();
+  /* adult = Vorschlag steht im 18+-Bereich. Dort wird die Partnerkennung nur angehängt, wenn affiliateAdult eingeschaltet ist
+     (Amazon-Programmrichtlinien: Seiten mit sexuellen Inhalten gelten als ungeeignet – Entscheidung liegt bei Mo). */
+  const ADULT_KEYS = /^(intim_|match_vorlieben)/;
+  function amazonUrl(q, adult) {
+    const tag = (adult && !D.affiliateAdult) ? '' : (D.affiliateTag || '').trim();
     return 'https://www.amazon.de/s?k=' + encodeURIComponent(q) + (tag ? '&tag=' + encodeURIComponent(tag) : '');
   }
   function tips(key, n) {
-    const arr = (D.tips[key] || []).filter((t) => t.q); const out = arr.slice();
+    const ad = ADULT_KEYS.test(key);
+    const arr = (D.tips[key] || []).filter((t) => t.q); const out = arr.map((t) => (ad ? Object.assign({ adult: true }, t) : t));
     for (let i = out.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [out[i], out[j]] = [out[j], out[i]]; }
     return out.slice(0, n || 2);
   }
   function tipsHtml(items, title) {
     if (!items.length) return '';
     return '<div class="tips"><span class="tips-label">' + L.esc(title || 'Passend dazu') + ' <i class="ad-note">Werbelinks</i></span>' +
-      items.map((t) => '<button type="button" class="tip" data-q="' + L.esc(t.q) + '">' + (t.icon || '🛒') + ' ' + L.esc(t.title) + ' <span>↗</span></button>').join('') + '</div>';
+      items.map((t) => '<button type="button" class="tip" data-q="' + L.esc(t.q) + '"' + (t.adult ? ' data-adult="1"' : '') + '>' + (t.icon || '🛒') + ' ' + L.esc(t.title) + ' <span>↗</span></button>').join('') + '</div>';
   }
   function bindTips(root) {
-    root.querySelectorAll('.tip[data-q]').forEach((b) => { b.onclick = (e) => { e.stopPropagation(); window.open(amazonUrl(b.dataset.q), '_blank', 'noopener'); }; });
+    root.querySelectorAll('.tip[data-q]').forEach((b) => { b.onclick = (e) => { e.stopPropagation(); window.open(amazonUrl(b.dataset.q, b.dataset.adult === '1'), '_blank', 'noopener'); }; });
   }
   function mountTips(container, key, title, n) {
     if (!container) return; const items = typeof key === 'string' ? tips(key, n) : key;
@@ -327,8 +331,8 @@
       const open = (rec.open || []).map((id) => deck.items.find((it) => it.id === id)).filter(Boolean);
       html += '<div class="match-intro" style="padding-bottom:8px"><div class="match-emoji">' + (yes.length ? '💞' : '🫤') + '</div><h2>' + (yes.length ? yes.length + (yes.length === 1 ? ' Treffer' : ' Treffer') : 'Kein gemeinsames Ja') + '</h2>' +
         '<p class="about" style="font-size:13px">' + (yes.length ? (deck.hitText || 'Das wollt ihr beide. Alles andere bleibt geheim.') : (open.length ? 'Aber ihr seid beide bei ein paar Dingen offen – siehe unten.' : (deck.noneText || (deck.daily ? 'Heute nicht. Morgen gibt es neue Chancen – oder einer gibt nach. 😈' : 'Vielleicht beim nächsten Mal. Das Teufelchen empfiehlt: Vielleicht großzügiger antippen.')))) + '</p></div>';
-      if (yes.length) html += '<div class="match-list">' + yes.map((it) => matchItem(it, deck.yesLabel || 'Beide Ja')).join('') + '</div>';
-      if (open.length) html += '<div class="eyebrow" style="margin-top:14px">' + L.esc(deck.openTitle || 'Beide offen dafür') + '</div><div class="match-list">' + open.map((it) => matchItem(it, deck.openLabel || 'Vielleicht')).join('') + '</div>';
+      if (yes.length) html += '<div class="match-list">' + yes.map((it) => matchItem(it, deck.yesLabel || 'Beide Ja', deck.adult)).join('') + '</div>';
+      if (open.length) html += '<div class="eyebrow" style="margin-top:14px">' + L.esc(deck.openTitle || 'Beide offen dafür') + '</div><div class="match-list">' + open.map((it) => matchItem(it, deck.openLabel || 'Vielleicht', deck.adult)).join('') + '</div>';
       /* Mut-Karte: Themen, die nur mir wichtig sind, bleiben geheim – aber ich bekomme Hilfe, sie selbst anzusprechen */
       if (deck.talk && rec.mode === 'relay') {
         const hidden = (rec.mine || []).filter((id) => !rec.matches.includes(id) && !(rec.open || []).includes(id)).map((id) => deck.items.find((it) => it.id === id)).filter(Boolean);
@@ -352,9 +356,9 @@
     });
     renderDecks(); renderInboxBadge();
   }
-  function matchItem(it, badge) {
+  function matchItem(it, badge, adult) {
     if (it.q) return '<div class="match-item"><span class="mi-e">' + it.e + '</span><div class="mi-b"><div class="mi-t">' + L.esc(it.t) + '</div><div class="mi-s">' + L.esc(badge) + '</div><div class="mi-q">💬 ' + L.esc(it.q) + '</div><button type="button" class="tip inline" data-soft="' + L.esc(it.t) + '">🕊️ Sanft ansprechen</button></div></div>';
-    return'<div class="match-item"><span class="mi-e">' + it.e + '</span><div class="mi-b"><div class="mi-t">' + L.esc(it.t) + '</div><div class="mi-s">' + badge + (it.tip ? ' · <button type="button" class="tip inline" data-q="' + L.esc(it.tip) + '">🛒 ' + L.esc(it.tip) + ' ↗</button>' : '') + '</div></div></div>';
+    return'<div class="match-item"><span class="mi-e">' + it.e + '</span><div class="mi-b"><div class="mi-t">' + L.esc(it.t) + '</div><div class="mi-s">' + badge + (it.tip ? ' · <button type="button" class="tip inline" data-q="' + L.esc(it.tip) + '"' + (adult ? ' data-adult="1"' : '') + '>🛒 ' + L.esc(it.tip) + ' ↗</button>' : '') + '</div></div></div>';
   }
   function renderDecks() {
     const l = $('deckList'); if (!l) return; l.innerHTML = '';
