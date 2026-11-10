@@ -494,7 +494,7 @@
         '<p class="about" style="font-size:16px;color:var(--text-muted);margin-top:12px">Der Code enthält ein Geheimnis, das nur eure beiden Apps kennen. Der Vermittlungsdienst sieht nur verschlüsselte Daten. „Trennen“ löscht dort alles sofort.</p>', (sh) => {
         sh.querySelector('[data-cancel]').onclick = L.closeSheet;
         if (window.LZN) window.LZN.fillQr(sh);
-        const lk = sh.querySelector('[data-link]'); if (lk) lk.onclick = () => L.shareText('💞 Lass uns Schmetterlingsfutter verbinden! Öffne diesen Link auf deinem Handy (App vorher installieren: ' + location.origin + location.pathname + '):\n' + pairLink() + '\nOder gib in der App unter Mehr → Partner verbinden diesen Code ein: ' + code);
+        const lk = sh.querySelector('[data-link]'); if (lk) lk.onclick = () => L.shareText('💞 Lass uns Schmetterlingsfutter verbinden! Tipp auf den Link:\n' + pairLink() + '\nCode: ' + code + '\niPhone: erst ' + location.origin + location.pathname + ' in Safari öffnen, über Teilen „Zum Home-Bildschirm“ legen und den Code dort unter Mehr → Partner verbinden eingeben.');
         const cp = sh.querySelector('[data-copy]'); if (cp) cp.onclick = async () => { try { await navigator.clipboard.writeText(code); L.toast('Code kopiert 📋'); } catch (e) { L.toast(code); } };
         const ck = sh.querySelector('[data-check]'); if (ck) ck.onclick = async () => { ck.textContent = '…'; await pull(true); L.closeSheet(); if (joined()) L.toast('💞 Verbunden!'); else L.toast('Noch nicht – ' + S().receiver + ' muss den Link öffnen.'); };
         sh.querySelector('[data-leave]').onclick = () => { L.closeSheet(); L.confirmSheet('Verbindung trennen?', 'Beide Apps werden getrennt, alle Vermittlungsdaten werden gelöscht. Eure lokalen Daten bleiben.', 'Trennen', () => leavePair(), true); };
@@ -531,8 +531,18 @@
     P().pendingPair = code; L.save();
     if (S().onboarded) offerPendingPair();
   }
+  /* iPhone, Seite im Browser statt als Symbol auf dem Home-Bildschirm: dort hat die App einen eigenen Speicher */
+  function iosBrowser() { let test = false; try { test = sessionStorage.getItem('sfIos') === '1'; } catch (e) {} /* nur zum Testen am PC */ return test || (/iphone|ipad|ipod/i.test(navigator.userAgent) && !navigator.standalone && !(window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)); }
   function offerPendingPair() {
     const code = P().pendingPair; if (!code || paired()) return;
+    if (iosBrowser()) {
+      L.openSheet('<h3>📱 Erst auf den Home-Bildschirm</h3><p class="about" style="margin-bottom:10px">Tippe in Safari auf Teilen, dann „Zum Home-Bildschirm“. Starte die App dort und gib diesen Code ein:</p><div class="paircode">' + L.esc(code) + '</div>' +
+        '<div class="row wrap"><button class="pill-btn primary" data-copy>Code kopieren</button><button class="pill-btn ghost" data-here>Hier verbinden</button></div>', (sh) => {
+        sh.querySelector('[data-copy]').onclick = async () => { try { await navigator.clipboard.writeText(code); L.toast('Code kopiert 📋'); } catch (e) { L.toast(code); } };
+        sh.querySelector('[data-here]').onclick = () => { P().pendingPair = null; L.save(); L.closeSheet(); doJoin(code); };
+      });
+      return;
+    }
     L.confirmSheet('💞 Apps verbinden?', S().receiver + ' hat dir einen Verbindungs-Code geschickt. Jetzt verbinden?', 'Verbinden', () => { P().pendingPair = null; L.save(); doJoin(code); });
   }
 
@@ -630,7 +640,7 @@
   setInterval(() => { if (document.visibilityState === 'visible') pull(); }, 45000);
   $('obFinish').addEventListener('click', () => setTimeout(() => { renderAll(); offerPendingPair(); }, 80));
 
-  window.LZP = { P, paired, joined, partnerName, sendOrShare, sendCoupon, send, pull, pairSheet, inboxSheet, playDeck, renderDecks, renderAll, renderGiftRadar, amazonUrl, tips, tipsHtml, bindTips, mountTips, leavePair, unread, RELAY, on, inboxType, openMatch, closeMatch, online, pairLink, ideaSheet, reportSheet, partnerPron: () => (P().partner && P().partner.pron) || '', announce: () => { if (paired() && joined()) send({ t: 'hello', name: S().sender, pron: S().pron || '' }).catch(() => {}); } };
+  window.LZP = { P, paired, joined, partnerName, sendOrShare, sendCoupon, send, pull, pairSheet, inboxSheet, playDeck, renderDecks, renderAll, renderGiftRadar, amazonUrl, tips, tipsHtml, bindTips, mountTips, leavePair, unread, RELAY, on, inboxType, openMatch, closeMatch, online, pairLink, ideaSheet, reportSheet, iosBrowser, partnerPron: () => (P().partner && P().partner.pron) || '', announce: () => { if (paired() && joined()) send({ t: 'hello', name: S().sender, pron: S().pron || '' }).catch(() => {}); } };
   renderAll(); handlePairParam();
   if (window.LZF) { window.LZF.renderPiek(); window.LZF.renderGiftRadar && window.LZF.renderGiftRadar(); }
   /* Erst abholen, wenn alle Skripte geladen sind (naehe.js meldet eigene Nachrichtenarten an) */

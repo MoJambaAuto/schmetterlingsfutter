@@ -535,3 +535,9 @@ label.check input { width:24px; height:24px; accent-color:var(--accent-dark); }
 /* Melden */
 .msg-actions { flex-wrap:wrap; }
 #ideaRow2 .row { flex-wrap:wrap; gap:10px; }
+
+/* 3.8.0 Stimmen-Schalter */
+#jingleVoice { margin:0 0 6px; }
+#jingleVoice button { font-size:17px; font-weight:700; padding:11px 8px; color:var(--text-soft); }
+#jingleVoice button.active { background:var(--accent-dark); color:#fff; border-color:var(--accent-dark); }
+.jingle .j-t small { white-space:nowrap; }

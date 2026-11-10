@@ -3,7 +3,7 @@
 (function () {
   'use strict';
   const D = window.LUZIFER_DATA;
-  D.version = '3.7.0';
+  D.version = '3.8.0';
 
   /* Ideen-Briefkasten: eingeschaltet seit 10.11.2026 (Vermittlungsdienst kennt die Adresse /idea) */
   D.ideaBox = true;
@@ -258,10 +258,18 @@
     ["s-weihnachten-1","weihnachten","Unterm Baum","Unterm Baum ist Platz für uns zwei, mein Schatz. Mein liebstes Päckchen, das bist du.",8],
     ["s-weihnachten-2","weihnachten","Plätzchenduft","Plätzchenduft und du daneben, so mag ich den Advent.",8.1],
     ["s-lust-1","lust","Handy aus","Heute Abend nur wir zwei, Handy aus.",5],
-    ["s-lust-2","lust","Komm näher","Komm näher, ich hab Lust auf dich.",4.3],
-    ["s-lust-3","lust","Du und ich","Kerzen an, Tür zu, du und ich.",5.9]
+    ["s-lust-2","lust","Komm näher","Komm näher, ich hab Lust auf dich.",4.5],
+    ["s-lust-3","lust","Du und ich","Kerzen an, Tür zu, du und ich.",5.8]
   ].reverse().forEach((x) => D.jingles.unshift({ id: x[0], cat: x[1], title: x[2], text: x[3], sec: x[4], file: 'audio/jingles/' + x[0] + '.mp3', sung: true, pd: 'Aufnahme: Suno' }));
   /* ---- Ende Runde 2 ---- */
+
+  /* ---- Stimmen der Aufnahmen: w = Frauenstimme, m = Männerstimme, x = Duett (gilt für beide). Schlüssel = Kennung ohne „s-“ und Nummer.
+     D.jingleAlt: zusätzliche Aufnahme mit der anderen Stimme, [Kennung, Stimme, Sekunden] → audio/jingles/<Kennung>-<Stimme>.mp3 ---- */
+  D.jingleVoiceOf = { einfachso: 'm', morgen: 'w', nacht: 'w', danke: 'm', vergessen: 'm', streit: 'w', vermissen: 'w', stolz: 'w', streit2: 'm', vgeburtstag: 'm', vfeiertag: 'w', jahrestag: 'x', geburtstag: 'w', valentin: 'x', weihnachten: 'w', silvester: 'x', lust: 'w' };
+  D.jingleAlt = [
+  ];
+  D.jingles.forEach((j) => { if (!j.sung) return; const base = j.id.replace(/^s-/, '').replace(/-\d+$/, ''); j.voices = {}; j.voices[D.jingleVoiceOf[base] || 'x'] = j.file; j.secs = {}; });
+  D.jingleAlt.forEach((a) => { const j = D.jingles.find((x) => x.id === a[0]); if (!j || !j.voices) return; j.voices[a[1]] = 'audio/jingles/' + a[0] + '-' + a[1] + '.mp3'; if (a[2]) j.secs[a[1]] = a[2]; });
 
   /* ---- Inhalte-Paket 2026-11 (Inhalte-Werkstatt): 40 neue Botschaften für „Heute für dich“ ---- */
   D.messages.push(

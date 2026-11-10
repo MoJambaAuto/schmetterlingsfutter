@@ -56,11 +56,16 @@
     j.notes.split(',').forEach((tok) => { const p = tok.trim().split(/\s+/); const d = (parseFloat(p[1]) || 1) * beat; if (p[0] !== '-') out.push({ n: p[0].split('+'), t, d }); t += d; });
     return { events: out, total: t };
   }
-  const jingleSeconds = (j) => j.sec || Math.round((parseNotes(j).total + 0.6) * 10) / 10;
+  /* Stimmen: jede Aufnahme hat j.voices = { w, m, x }; x = Duett, gilt für beide. Fehlt die gewählte Stimme, läuft die vorhandene. */
+  const voiceOfPron = (p) => p === 'er' ? 'm' : p === 'sie' ? 'w' : '';
+  const voicePref = () => st().jingleVoice || voiceOfPron(S().pron) || 'w';
+  const theirVoice = () => voiceOfPron(P.partnerPron ? P.partnerPron() : '') || voicePref();
+  const jingleFile = (j, v) => !j.voices ? j.file : (j.voices[v || voicePref()] || j.voices.x || j.voices.w || j.voices.m);
+  const jingleSeconds = (j, v) => (j.voices && j.voices[v || voicePref()] && j.secs && j.secs[v || voicePref()]) || j.sec || Math.round((parseNotes(j).total + 0.6) * 10) / 10;
   let fileAudio = null;
-  function playJingle(j, onEnd) {
-    if (j.file) { // fertige Aufnahme (später aus der Jingle-Datenbank)
-      try { if (fileAudio) fileAudio.pause(); fileAudio = new Audio(j.file); fileAudio.onended = () => onEnd && onEnd(); fileAudio.play().catch(() => onEnd && onEnd()); } catch (e) { if (onEnd) onEnd(); }
+  function playJingle(j, onEnd, v) {
+    if (j.file) { // fertige Aufnahme
+      try { if (fileAudio) fileAudio.pause(); fileAudio = new Audio(jingleFile(j, v)); fileAudio.onended = () => onEnd && onEnd(); fileAudio.play().catch(() => onEnd && onEnd()); } catch (e) { if (onEnd) onEnd(); }
       return;
     }
     const c = audio(); if (!c) { L.toast('Dieser Browser kann keinen Ton erzeugen'); if (onEnd) onEnd(); return; }
@@ -77,14 +82,19 @@
     const box = $('jingleBox'); if (!box) return; const s = st();
     const cats = D.jingleCats.filter((c) => !c.adult || s.intim);
     if (!cats.find((c) => c.id === s.jingleCat)) s.jingleCat = cats[0].id;
-    const list = D.jingles.filter((j) => j.cat === s.jingleCat);
+    // einfache Melodien nur noch dort, wo es keine Aufnahme gibt
+    const shown = (cat) => { const all = D.jingles.filter((j) => j.cat === cat); return all.some((j) => j.sung) ? all.filter((j) => j.sung) : all; };
+    const list = shown(s.jingleCat); const v = voicePref();
+    const both = list.some((j) => j.voices && j.voices.w && j.voices.m);
     const joined = P.joined();
-    box.innerHTML = '<div class="row between"><div class="eyebrow" style="margin:0">🎶 Jingle-Box</div><span class="tag">' + D.jingles.filter((j) => cats.find((c) => c.id === j.cat)).length + ' Jingles</span></div>' +
-      '<p class="about" style="font-size:17px;margin:8px 0 10px">Kleine musikalische Liebeserklärungen, drei bis fünf Sekunden. ' + (joined ? 'Ein Tipp und sie klingen in der App von ' + esc(you()) + '.' : 'Mit verbundenen Apps klingen sie direkt beim anderen.') + '</p>' +
+    box.innerHTML = '<div class="row between"><div class="eyebrow" style="margin:0">🎶 Jingle-Box</div><span class="tag">' + cats.reduce((n, c) => n + shown(c.id).length, 0) + ' Jingles</span></div>' +
+      '<p class="about" style="font-size:17px;margin:8px 0 10px">Kleine gesungene Liebeserklärungen, nur ein paar Sekunden lang. ' + (joined ? 'Ein Tipp und sie klingen in der App von ' + esc(you()) + '.' : 'Mit verbundenen Apps klingen sie direkt beim anderen.') + '</p>' +
       '<div class="chips' + (window.__sfJingleOpen ? ' open' : '') + '" id="jingleChips">' + cats.map((c) => '<button type="button" class="' + (c.id === s.jingleCat ? 'on' : '') + '" data-cat="' + c.id + '">' + c.e + ' ' + esc(c.t) + '</button>').join('') + '</div><button type="button" class="pill-btn ghost small" id="jingleMore" style="margin-bottom:12px">' + (window.__sfJingleOpen ? 'Weniger Anlässe' : 'Alle Anlässe') + '</button>' +
-      '<div id="jingleList">' + list.map((j) => '<div class="jingle" data-id="' + j.id + '"><button class="icon-btn" data-play aria-label="Abspielen">▶</button><div class="j-b"><div class="j-t">' + esc(j.title) + (j.sung ? ' <span class="j-sung" aria-label="gesungen">🎤</span>' : '') + ' <small>' + String(jingleSeconds(j)).replace('.', ',') + ' s</small></div><div class="j-x">' + esc(L.fmt(j.text)) + '</div></div><button class="icon-btn" data-send aria-label="' + (joined ? 'An ' + esc(you()) + ' schicken' : 'Teilen') + '">' + (joined ? '💌' : '↗') + '</button></div>').join('') + '</div>' +
+      (both ? '<div class="seg" id="jingleVoice" role="group" aria-label="Stimme"><button type="button" data-v="w"' + (v === 'w' ? ' class="active" aria-pressed="true"' : ' aria-pressed="false"') + '>Frauenstimme</button><button type="button" data-v="m"' + (v === 'm' ? ' class="active" aria-pressed="true"' : ' aria-pressed="false"') + '>Männerstimme</button></div>' : '') +
+      '<div id="jingleList">' + list.map((j) => '<div class="jingle" data-id="' + j.id + '"><button class="icon-btn" data-play aria-label="Abspielen">▶</button><div class="j-b"><div class="j-t">' + esc(j.title) + (j.sung ? ' <span class="j-sung" aria-label="gesungen">🎤</span>' : '') + ' <small>' + String(jingleSeconds(j, v)).replace('.', ',') + ' s</small></div><div class="j-x">' + esc(L.fmt(j.text)) + '</div></div><button class="icon-btn" data-send aria-label="' + (joined ? 'An ' + esc(you()) + ' schicken' : 'Teilen') + '">' + (joined ? '💌' : '↗') + '</button></div>').join('') + '</div>' +
       '<div class="tips-slot" id="jingleTips"></div>';
     box.querySelectorAll('[data-cat]').forEach((b) => b.onclick = () => { s.jingleCat = b.dataset.cat; L.save(); renderJingles(); });
+    box.querySelectorAll('#jingleVoice [data-v]').forEach((b) => b.onclick = () => { s.jingleVoice = b.dataset.v; L.save(); if (fileAudio) fileAudio.pause(); renderJingles(); });
     box.querySelectorAll('.jingle').forEach((row) => {
       const j = jingleById(row.dataset.id);
       row.querySelector('[data-play]').onclick = (e) => { const b = e.currentTarget; b.textContent = '♪'; b.classList.add('on'); L.haptic(6); playJingle(j, () => { b.textContent = '▶'; b.classList.remove('on'); }); };
@@ -96,16 +106,16 @@
   async function sendJingle(j) {
     const text = L.fmt(j.text);
     if (P.joined()) {
-      try { await P.send({ t: 'jingle', jid: j.id, text }); playJingle(j); L.toast('🎶 Jingle unterwegs zu ' + you()); L.spawnHearts(8); }
+      try { await P.send({ t: 'jingle', jid: j.id, text, v: voicePref() }); playJingle(j); L.toast('🎶 Jingle unterwegs zu ' + you()); L.spawnHearts(8); }
       catch (e) { L.toast('Senden fehlgeschlagen – ' + (P.online() ? 'später nochmal' : 'offline')); }
     } else { playJingle(j); L.shareText('🎶 ' + text + '\n— ' + me() + ' ❤'); }
   }
   P.on('jingle', (obj, created) => {
     const j = jingleById(String(obj.jid || '')); const s = st();
-    s.inbox.push({ id: uid('m'), t: 'jingle', jid: j ? j.id : '', text: String(obj.text || (j ? j.title : 'Jingle')).slice(0, 200), at: created || Date.now(), read: false });
+    s.inbox.push({ id: uid('m'), t: 'jingle', jid: j ? j.id : '', text: String(obj.text || (j ? j.title : 'Jingle')).slice(0, 200), v: obj.v === 'm' || obj.v === 'w' ? obj.v : '', at: created || Date.now(), read: false });
     L.toast('🎶 Neuer Jingle von ' + you()); L.haptic(20); return true;
   });
-  P.inboxType('jingle', { icon: '🎶', meta: 'Jingle – antippen zum Abspielen', open: (m) => { const j = jingleById(m.jid); if (j) playJingle(j); L.showView('home'); L.showMessage({ text: m.text, own: true }, '🎶 Von ' + you() + ' für dich'); L.spawnHearts(10); } });
+  P.inboxType('jingle', { icon: '🎶', meta: 'Jingle – antippen zum Abspielen', open: (m) => { const j = jingleById(m.jid); if (j) playJingle(j, null, m.v || theirVoice()); L.showView('home'); L.showMessage({ text: m.text, own: true }, '🎶 Von ' + you() + ' für dich'); L.spawnHearts(10); } });
 
   /* =====================================================================
      2. Kritzel-Gruß: kleines Bild malen / Foto bekritzeln und verschicken
@@ -215,7 +225,7 @@
       (m.text ? '<div class="fp-text">' + esc(m.text) + '</div>' : '') +
       '<div class="row wrap" style="margin-top:12px">' + (m.t === 'jingle' && jingleById(m.jid) ? '<button class="pill-btn small primary" data-play>▶ Abspielen</button>' : '') +
       '<button class="pill-btn small' + (m.t === 'jingle' ? '' : ' primary') + '" data-seen>❤ Gesehen</button><button class="pill-btn small ghost" data-reply>Antworten</button></div>';
-    const pl = c.querySelector('[data-play]'); if (pl) pl.onclick = () => { pl.textContent = '♪ …'; playJingle(jingleById(m.jid), () => { pl.textContent = '▶ Nochmal'; }); L.spawnHearts(8, c); };
+    const pl = c.querySelector('[data-play]'); if (pl) pl.onclick = () => { pl.textContent = '♪ …'; playJingle(jingleById(m.jid), () => { pl.textContent = '▶ Nochmal'; }, m.v || theirVoice()); L.spawnHearts(8, c); };
     c.querySelector('[data-seen]').onclick = () => { m.read = true; L.save(); L.spawnHearts(8, c); P.renderAll(); P.send({ t: 'seen' }).catch(() => {}); };
     c.querySelector('[data-reply]').onclick = () => { m.read = true; L.save(); P.renderAll(); replySheet(); };
   }
@@ -528,7 +538,7 @@
     let kind = 'msg', when = 'now';
     const times = giftTimes();
     const coupons = (S().coupons || []).filter((c) => !c.used && !c.from);
-    const jingles = D.jingles.filter((j) => !D.jingleCats.find((c) => c.id === j.cat && c.adult) || S().intim);
+    const jingles = D.jingles.filter((j) => !D.jingleCats.find((c) => c.id === j.cat && c.adult) || S().intim).filter((j) => j.sung || !D.jingles.some((x) => x.cat === j.cat && x.sung));
     L.openSheet('<h3>🎁 Überraschung senden</h3>' +
       '<div class="field"><label>Im Umschlag</label><div class="chips big" id="gfKind"></div></div>' +
       '<div class="field" id="gfBody"></div>' +
@@ -551,7 +561,7 @@
         let msg = null;
         if (kind === 'msg') { const t = sh.querySelector('#gfText').value.trim(); if (t.length < 2) { L.toast('Schreib ein paar Worte'); return; } msg = { t: 'gift', kind, text: t, open }; }
         else if (kind === 'coupon') { const el = sh.querySelector('#gfCoupon'); const c = el && coupons.find((x) => x.id === el.value); if (!c) { L.toast('Kein Gutschein gewählt'); return; } msg = { t: 'gift', kind, icon: c.icon, title: c.title, desc: c.desc || '', open }; }
-        else if (kind === 'jingle') { const j = jingleById(sh.querySelector('#gfJingle').value); if (!j) return; msg = { t: 'gift', kind, jid: j.id, text: L.fmt(j.text || j.title), open }; }
+        else if (kind === 'jingle') { const j = jingleById(sh.querySelector('#gfJingle').value); if (!j) return; msg = { t: 'gift', kind, jid: j.id, text: L.fmt(j.text || j.title), v: voicePref(), open }; }
         if (!msg) return;
         ok.disabled = true; ok.textContent = '…';
         try { await P.send(msg); L.closeSheet(); L.toast('🎁 Überraschung unterwegs zu ' + you()); L.spawnHearts(12); }
@@ -567,7 +577,7 @@
     const g = { id: uid('g'), kind, at: created || Date.now(), open: Math.max(0, Number(obj.open) || 0), opened: false };
     if (kind === 'msg') g.text = String(obj.text || '').slice(0, 600);
     if (kind === 'coupon') { g.icon = String(obj.icon || '🎁').slice(0, 4); g.title = String(obj.title || 'Gutschein').slice(0, 50); g.desc = String(obj.desc || '').slice(0, 120); }
-    if (kind === 'jingle') { g.jid = String(obj.jid || '').slice(0, 40); g.text = String(obj.text || '').slice(0, 200); }
+    if (kind === 'jingle') { g.jid = String(obj.jid || '').slice(0, 40); g.text = String(obj.text || '').slice(0, 200); g.v = obj.v === 'm' || obj.v === 'w' ? obj.v : ''; }
     if (kind === 'pic') { const img = String(obj.img || ''); if (img.length > 70000 || !PIC_RE.test(img)) return false; g.img = img; g.text = String(obj.text || '').slice(0, 120); }
     s.gifts.push(g); if (s.gifts.length > 12) s.gifts = s.gifts.slice(-12);
     L.toast('🎁 ' + you() + ' hat eine Überraschung für dich'); L.haptic(20); return true;
@@ -576,7 +586,7 @@
     const s = st(); g.opened = true; L.showView('home'); window.scrollTo(0, 0);
     if (g.kind === 'msg') { s.inbox.push({ id: uid('m'), t: 'msg', text: g.text, label: 'Überraschung', at: Date.now(), read: true }); L.showMessage({ text: g.text, own: true }, '🎁 Von ' + you() + ' für dich'); }
     if (g.kind === 'coupon') { S().coupons.push({ id: uid('p'), icon: g.icon, title: g.title, desc: g.desc, used: null, from: you() }); L.showMessage({ text: g.icon + ' ' + g.title + (g.desc ? ' – ' + g.desc : ''), own: true }, '🎟️ Gutschein von ' + you()); }
-    if (g.kind === 'jingle') { const j = jingleById(g.jid); if (j) playJingle(j); L.showMessage({ text: g.text || (j ? j.title : 'Ein Jingle für dich'), own: true }, '🎶 Von ' + you() + ' für dich'); }
+    if (g.kind === 'jingle') { const j = jingleById(g.jid); if (j) playJingle(j, null, g.v || theirVoice()); L.showMessage({ text: g.text || (j ? j.title : 'Ein Jingle für dich'), own: true }, '🎶 Von ' + you() + ' für dich'); }
     if (g.kind === 'pic') { const m = { id: uid('m'), t: 'pic', img: g.img, text: g.text, at: Date.now(), read: true }; s.inbox.push(m); g.img = ''; picSheet(m); }
     s.gifts = s.gifts.filter((x) => !x.opened); L.save();
     P.send({ t: 'seen' }).catch(() => {});
@@ -594,7 +604,15 @@
     const card = $('btnGift') && $('btnGift').closest('.card'); if (card) card.classList.toggle('hidden', !P.joined());
   }
 
-  function render() { renderFromPartner(); renderKlartext(); renderJingles(); giftCheck(); }
+  /* iPhone im Browser: ohne Symbol auf dem Home-Bildschirm räumt Safari die Daten nach einigen Tagen ohne Nutzung weg */
+  function iosHint() {
+    const c = $('iosHint'); if (!c) return; const s = st();
+    if (!P.iosBrowser || !P.iosBrowser() || s.iosHintOff) { c.classList.add('hidden'); c.innerHTML = ''; return; }
+    c.classList.remove('hidden');
+    c.innerHTML = '<div class="row between" style="gap:10px;align-items:center"><div style="font-size:17px">📱 Tippe auf Teilen, dann „Zum Home-Bildschirm“. So bleibt alles gespeichert.</div><button class="icon-btn" data-off aria-label="Hinweis schließen">✕</button></div>';
+    c.querySelector('[data-off]').onclick = () => { s.iosHintOff = true; L.save(); iosHint(); };
+  }
+  function render() { renderFromPartner(); renderKlartext(); renderJingles(); giftCheck(); iosHint(); }
   window.LZN = { render, softStart, fillQr, qrSvg, kritzelSheet, giftSheet, giftCheck, openJingles, playJingle, jingleById, checkinStart, weekKey, greetLink };
   window.addEventListener('hashchange', handleGreet); // App ist schon offen und bekommt einen Liebes-Link
   render(); handleGreet();
