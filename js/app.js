@@ -193,8 +193,15 @@
     setTimeout(() => { fn(); el.style.opacity = 1; }, 300);
   }
   const tipKeyFor = (label) => ({ 'Ein Kuss': 'kiss', 'Eine Umarmung': 'hug', 'Guten Morgen': 'morning', 'Gute Nacht': 'night', 'Frisch gezaubert 😈': 'gen', 'Dein Danke': 'thanks' })[label] || 'message';
+  /* Wer unten eine Kachel antippt, sieht die Botschaftskarte oft nicht: dann holt die App sie ins Bild */
+  let lastTap = 0; document.addEventListener('click', () => { lastTap = Date.now(); }, true);
+  function revealMsg() {
+    if (Date.now() - lastTap > 1500 || !$('view-home').classList.contains('active')) return;
+    const card = $('msgText').closest('.card'); if (!card) return; const r = card.getBoundingClientRect();
+    if (r.top < 60 || r.bottom > window.innerHeight - 90) card.scrollIntoView({ behavior: S.motion === false ? 'auto' : 'smooth', block: 'center' });
+  }
   function showMessage(item, label) {
-    current = item;
+    current = item; revealMsg();
     fade(() => {
       $('msgText').textContent = fmt(item.text);
       $('msgLabel').textContent = label || (item.own ? 'Persönlich für dich' : '');
@@ -251,7 +258,7 @@
     }
   }
   const REASON_LABEL = 'Warum ich dich liebe';
-  function showReason(r) { spawnHearts(6); showMessage({ text: r, own: true }, REASON_LABEL); const h = $('msgText'); if (h && h.scrollIntoView) h.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+  function showReason(r) { spawnHearts(6); showMessage({ text: r, own: true }, REASON_LABEL); }
   /* Gründe, die der Schatz geschickt hat, sammeln sich darunter */
   function renderReasonsFrom() {
     const box = $('reasonFrom'); if (!box) return;
@@ -290,6 +297,7 @@
   $('btnNight').onclick = () => { spawnHearts(5); showMessage({ text: pick(D.goodnight), own: false }, 'Gute Nacht'); };
   $('btnWrite').onclick = () => writeOwn((t) => showMessage({ text: t, own: true }, 'Persönlich für dich'));
   $('btnReasons').onclick = () => { const p = $('reasonPanel'); const open = p.classList.toggle('hidden'); if (!open) { renderReasons(); if (window.LZP) window.LZP.mountTips($('reasonTips'), 'reasons', 'Gründe schenken'); p.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } };
+  $('btnIntimTile').onclick = () => { showView('play'); showSub('play', 'intim'); window.scrollTo(0, 0); };
   $('btnDrawReason').onclick = () => { if (!S.reasons.length) { toast('Füge erst einen Grund hinzu'); return; } showReason(pick(S.reasons)); };
   $('btnAddReason').onclick = () => promptSheet('Neuer Grund', [{ key: 'r', label: 'Warum ich dich liebe …', placeholder: 'z. B. Wie du morgens singst', max: 120 }], 'Hinzufügen', (v) => {
     if (!v.r) return false; S.reasons.push(v.r); save(); renderReasons();

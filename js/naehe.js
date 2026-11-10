@@ -601,7 +601,6 @@
     }
     const busy = !$('giftScreen').classList.contains('hidden') || !$('onboarding').classList.contains('hidden') || !$('matchScreen').classList.contains('hidden');
     if (ready && !busy && S().onboarded) L.showEnvelope({ name: me(), letter: 'Von ' + you() + ' …', hint: you() + ' hat an dich gedacht ❤', button: 'Auspacken ❤', onEnter: () => unwrapGift(ready) });
-    const card = $('btnGift') && $('btnGift').closest('.card'); if (card) card.classList.toggle('hidden', !P.joined());
   }
 
   /* iPhone im Browser: ohne Symbol auf dem Home-Bildschirm räumt Safari die Daten nach einigen Tagen ohne Nutzung weg */
