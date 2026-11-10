@@ -526,3 +526,8 @@ input, textarea, select { font-size:19px; }
 
 /* Gesungene Jingles */
 .j-sung { font-size:17px; }
+
+/* Idee spenden */
+label.check { display:flex; align-items:center; gap:10px; font-size:18px; margin:2px 0 8px; }
+label.check input { width:24px; height:24px; accent-color:var(--accent-dark); }
+.field textarea { min-height:96px; }

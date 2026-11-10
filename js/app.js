@@ -507,7 +507,9 @@
     $('setSender').value = S.sender; $('setReceiver').value = S.receiver; $('setReceiver').disabled = jn;
     $('lblReceiver').textContent = jn ? 'Dein Schatz · aus der verbundenen App' : 'Dein Schatz';
     pronChips($('setPron'), S.pron, (id) => { S.pron = id; save(); if (window.LZP && window.LZP.announce) window.LZP.announce(); });
-    pronChips($('setRPron'), partnerPronId(), jn ? null : (id) => { S.rpron = id; save(); daisyReady = false; });
+    /* Selbst setzen nur, solange der Schatz in der eigenen App nichts angegeben hat */
+    const theirs = jn && window.LZP.partnerPron && window.LZP.partnerPron();
+    pronChips($('setRPron'), partnerPronId(), theirs ? null : (id) => { S.rpron = id; save(); daisyReady = false; });
     emojiGrid($('emojiSender'), S.emojiS, (e) => { S.emojiS = e; save(); renderHeader(); });
     emojiGrid($('emojiReceiver'), S.emojiR, (e) => { S.emojiR = e; save(); renderHeader(); });
     themeGrid($('themeGrid'), S.theme, (t) => { S.theme = t; save(); applyTheme(); });

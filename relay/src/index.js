@@ -46,6 +46,16 @@ const isPair = (s) => typeof s === 'string' && /^[A-Z2-9]{6}$/.test(s);
 const isDeck = (s) => typeof s === 'string' && /^[a-z0-9_-]{1,32}$/.test(s);
 const now = () => Date.now();
 
+/* Idee spenden: anonyme Vorschläge für neue Inhalte. Keine Paar- oder Geräte-Kennung, nur Datum, Art und Text. */
+const IDEA_KINDS = ['frage', 'date', 'botschaft', 'piek', 'thema', 'sonstiges'];
+const IDEA_MIN = 8, IDEA_MAX = 240;
+const IDEA_PER_DAY = 5;       // je Absender-Prüfsumme und Tag
+const IDEA_TOTAL_DAY = 300;   // insgesamt je Tag
+async function shortHash(text) {
+  const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(d).slice(0, 3), (x) => x.toString(16).padStart(2, '0')).join(''); // 24 Bit: reicht zum Bremsen, nicht zum Wiedererkennen
+}
+
 async function auth(env, body) {
   if (!isPair(body.pair) || !isDev(body.dev) || !isTok(body.token)) return null;
   const p = await env.DB.prepare('SELECT * FROM pairs WHERE id = ?').bind(body.pair).first();
@@ -95,6 +105,24 @@ async function handle(req, env) {
     const tok = randomHex(16);
     await env.DB.prepare('UPDATE pairs SET b_dev = ?, b_tok = ?, last_seen = ? WHERE id = ? AND (b_dev IS NULL OR b_dev = ?)').bind(body.dev, tok, t, body.pair, body.dev).run();
     return json({ token: tok }, 200, req, env);
+  }
+
+  /* ---- Idee spenden (ohne Anmeldung) ---- */
+  if (url.pathname === '/idea') {
+    const kind = typeof body.kind === 'string' ? body.kind : '';
+    const text = typeof body.text === 'string' ? body.text.replace(/\s+/g, ' ').trim() : '';
+    if (!IDEA_KINDS.includes(kind) || text.length < IDEA_MIN || text.length > IDEA_MAX) return err('input', 400, req, env);
+    const day = new Date(t).toISOString().slice(0, 10);
+    const who = await shortHash(day + '|' + (req.headers.get('CF-Connecting-IP') || 'local') + '|idee');
+    const total = await env.DB.prepare('SELECT COALESCE(SUM(n), 0) AS n FROM idea_rate WHERE day = ?').bind(day).first();
+    if (total && total.n >= IDEA_TOTAL_DAY) return err('later', 429, req, env);
+    const mine = await env.DB.prepare('SELECT n FROM idea_rate WHERE day = ? AND who = ?').bind(day, who).first();
+    if (mine && mine.n >= IDEA_PER_DAY) return err('limit', 429, req, env);
+    await env.DB.batch([
+      env.DB.prepare('INSERT INTO ideas (day, kind, text, adult, app) VALUES (?, ?, ?, ?, ?)').bind(day, kind, text, body.adult ? 1 : 0, typeof body.app === 'string' ? body.app.slice(0, 12) : null),
+      env.DB.prepare('INSERT INTO idea_rate (day, who, n) VALUES (?, ?, 1) ON CONFLICT(day, who) DO UPDATE SET n = n + 1').bind(day, who)
+    ]);
+    return json({ ok: true }, 200, req, env);
   }
 
   const a = await auth(env, body);
@@ -179,7 +207,8 @@ async function cleanup(env) {
     env.DB.prepare('DELETE FROM pairs WHERE b_dev IS NULL AND created < ?').bind(t - UNJOINED_HOURS * 3600000),
     env.DB.prepare('DELETE FROM pairs WHERE last_seen < ?').bind(t - PAIR_IDLE_DAYS * 86400000),
     env.DB.prepare('DELETE FROM answers WHERE pair_id NOT IN (SELECT id FROM pairs)'),
-    env.DB.prepare('DELETE FROM messages WHERE pair_id NOT IN (SELECT id FROM pairs)')
+    env.DB.prepare('DELETE FROM messages WHERE pair_id NOT IN (SELECT id FROM pairs)'),
+    env.DB.prepare('DELETE FROM idea_rate WHERE day < ?').bind(new Date(t).toISOString().slice(0, 10))
   ]);
 }
 
