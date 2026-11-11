@@ -56,6 +56,45 @@ async function shortHash(text) {
   return Array.from(new Uint8Array(d).slice(0, 3), (x) => x.toString(16).padStart(2, '0')).join(''); // 24 Bit: reicht zum Bremsen, nicht zum Wiedererkennen
 }
 
+/* ---- Mitteilungen aufs Handy: Web Push OHNE Inhalt. Der Dienst stupst das Gerät nur an, die App holt dann wie immer ab.
+   Gespeichert wird je Gerät nur die Push-Adresse des Browsers. Schlüssel: VAPID_PRIVATE (Geheimnis, JWK) und VAPID_PUBLIC. ---- */
+const PUSH_HOSTS = [/^fcm\.googleapis\.com$/, /\.push\.services\.mozilla\.com$/, /\.notify\.windows\.com$/, /\.push\.apple\.com$/];
+function pushEndpointOk(u, env) {
+  if (typeof u !== 'string' || u.length > 1000) return false;
+  let url; try { url = new URL(u); } catch (e) { return false; }
+  if (url.username || url.password) return false;
+  if (env.PUSH_ALLOW_LOCAL === '1' && url.protocol === 'http:' && (url.hostname === '127.0.0.1' || url.hostname === 'localhost')) return true; // nur lokale Tests
+  return url.protocol === 'https:' && !url.port && PUSH_HOSTS.some((re) => re.test(url.hostname));
+}
+const b64u = (buf) => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+const b64uText = (text) => b64u(new TextEncoder().encode(text));
+const pushReady = (env) => !!(env.VAPID_PRIVATE && env.VAPID_PUBLIC);
+let vapidKey = null, vapidKeyFor = '';
+async function vapidHeader(env, endpoint) {
+  if (!pushReady(env)) return null;
+  if (!vapidKey || vapidKeyFor !== env.VAPID_PRIVATE) {
+    vapidKey = await crypto.subtle.importKey('jwk', JSON.parse(env.VAPID_PRIVATE), { name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign']); vapidKeyFor = env.VAPID_PRIVATE;
+  }
+  const head = b64uText(JSON.stringify({ typ: 'JWT', alg: 'ES256' }));
+  const claims = b64uText(JSON.stringify({ aud: new URL(endpoint).origin, exp: Math.floor(Date.now() / 1000) + 12 * 3600, sub: env.VAPID_SUBJECT || 'https://mojambaauto.github.io/schmetterlingsfutter/' }));
+  const sig = await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, vapidKey, new TextEncoder().encode(head + '.' + claims));
+  return 'vapid t=' + head + '.' + claims + '.' + b64u(sig) + ', k=' + env.VAPID_PUBLIC;
+}
+async function pushPartner(env, pairId, toDev) {
+  try {
+    if (!pushReady(env)) return;
+    const sub = await env.DB.prepare('SELECT endpoint, last_push FROM push_subs WHERE pair_id = ? AND dev = ?').bind(pairId, toDev).first();
+    if (!sub || !pushEndpointOk(sub.endpoint, env)) return;
+    const t = now(), gap = Number(env.PUSH_GAP_MS) || 20000;
+    if (sub.last_push && t - sub.last_push < gap) return;
+    const authz = await vapidHeader(env, sub.endpoint); if (!authz) return;
+    await env.DB.prepare('UPDATE push_subs SET last_push = ? WHERE pair_id = ? AND dev = ?').bind(t, pairId, toDev).run();
+    const ctrl = new AbortController(); const to = setTimeout(() => ctrl.abort(), 8000);
+    let res; try { res = await fetch(sub.endpoint, { method: 'POST', headers: { TTL: '86400', Urgency: 'normal', Topic: 'sf', Authorization: authz }, signal: ctrl.signal }); } finally { clearTimeout(to); }
+    if (res.status === 404 || res.status === 410) await env.DB.prepare('DELETE FROM push_subs WHERE pair_id = ? AND dev = ?').bind(pairId, toDev).run();
+  } catch (e) { /* Push ist Zugabe: ein Fehler darf das Senden nie stören */ }
+}
+
 async function auth(env, body) {
   if (!isPair(body.pair) || !isDev(body.dev) || !isTok(body.token)) return null;
   const p = await env.DB.prepare('SELECT * FROM pairs WHERE id = ?').bind(body.pair).first();
@@ -68,11 +107,12 @@ async function auth(env, body) {
   return { pair: p, role, dev: body.dev, other };
 }
 
-async function handle(req, env) {
+async function handle(req, env, ctx) {
   const url = new URL(req.url);
   if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders(req, env) });
   if (req.method === 'GET') {
     if (url.pathname === '/' || url.pathname === '/health') return json({ ok: true, service: 'schmetterlingsfutter-relay', time: now() }, 200, req, env);
+    if (url.pathname === '/push/key') return json({ key: pushReady(env) ? env.VAPID_PUBLIC : '' }, 200, req, env);
     return err('not found', 404, req, env);
   }
   if (req.method !== 'POST') return err('method', 405, req, env);
@@ -142,8 +182,20 @@ async function handle(req, env) {
     await env.DB.batch([
       env.DB.prepare('DELETE FROM messages WHERE pair_id = ?').bind(a.pair.id),
       env.DB.prepare('DELETE FROM answers WHERE pair_id = ?').bind(a.pair.id),
+      env.DB.prepare('DELETE FROM push_subs WHERE pair_id = ?').bind(a.pair.id),
       env.DB.prepare('DELETE FROM pairs WHERE id = ?').bind(a.pair.id)
     ]);
+    return json({ ok: true }, 200, req, env);
+  }
+  /* ---- Mitteilungen: Push-Adresse dieses Geräts merken oder vergessen ---- */
+  if (url.pathname === '/push/sub') {
+    if (!pushEndpointOk(body.endpoint, env)) return err('input', 400, req, env);
+    await env.DB.prepare('INSERT INTO push_subs (pair_id, dev, endpoint, updated, last_push) VALUES (?, ?, ?, ?, 0) ON CONFLICT(pair_id, dev) DO UPDATE SET endpoint = excluded.endpoint, updated = excluded.updated')
+      .bind(a.pair.id, a.dev, body.endpoint, t).run();
+    return json({ ok: true }, 200, req, env);
+  }
+  if (url.pathname === '/push/unsub') {
+    await env.DB.prepare('DELETE FROM push_subs WHERE pair_id = ? AND dev = ?').bind(a.pair.id, a.dev).run();
     return json({ ok: true }, 200, req, env);
   }
   /* ---- Match: eigene Hashes ablegen ---- */
@@ -182,6 +234,8 @@ async function handle(req, env) {
     if (typeof body.body !== 'string' || !body.body || body.body.length > MAX_MSG_BODY) return err('input', 400, req, env);
     await env.DB.prepare('INSERT INTO messages (pair_id, to_dev, body, created) VALUES (?, ?, ?, ?)').bind(a.pair.id, a.other, body.body, t).run();
     await env.DB.prepare('DELETE FROM messages WHERE pair_id = ? AND id NOT IN (SELECT id FROM messages WHERE pair_id = ? ORDER BY id DESC LIMIT ?)').bind(a.pair.id, a.pair.id, MAX_MSGS_PER_PAIR).run();
+    // Anstupsen, außer bei stillen Nachrichten (quiet: Begrüßung, Lesebestätigung und Ähnliches)
+    if (body.quiet !== true && ctx) ctx.waitUntil(pushPartner(env, a.pair.id, a.other));
     return json({ ok: true }, 200, req, env);
   }
   /* ---- Nachrichten abholen (werden erst mit /msg/ack gelöscht) ---- */
@@ -208,13 +262,14 @@ async function cleanup(env) {
     env.DB.prepare('DELETE FROM pairs WHERE last_seen < ?').bind(t - PAIR_IDLE_DAYS * 86400000),
     env.DB.prepare('DELETE FROM answers WHERE pair_id NOT IN (SELECT id FROM pairs)'),
     env.DB.prepare('DELETE FROM messages WHERE pair_id NOT IN (SELECT id FROM pairs)'),
+    env.DB.prepare('DELETE FROM push_subs WHERE pair_id NOT IN (SELECT id FROM pairs)'),
     env.DB.prepare('DELETE FROM idea_rate WHERE day < ?').bind(new Date(t).toISOString().slice(0, 10))
   ]);
 }
 
 export default {
-  async fetch(req, env) {
-    try { return await handle(req, env); }
+  async fetch(req, env, ctx) {
+    try { return await handle(req, env, ctx); }
     catch (e) { return json({ error: 'server', detail: String(e && e.message || e) }, 500, req, env); }
   },
   async scheduled(event, env, ctx) { ctx.waitUntil(cleanup(env)); }

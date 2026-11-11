@@ -55,6 +55,7 @@
     ['Verwaltung', '🎨', 'Farbwelt', 'farbe farben design aussehen dunkel hell', '', spot('settings', 'themeGrid')],
     ['Verwaltung', '💾', 'Daten sichern', 'sichern sicherung export import wiederherstellen neues handy uebertragen loeschen', '', spot('settings', 'btnExport')],
     ['Verwaltung', '🔔', 'Animationen und Vibration', 'animation animationen vibration ausschalten bewegung', '', spot('settings', 'togMotion')],
+    ['Verwaltung', '🔔', 'Mitteilungen aufs Handy', 'push mitteilung mitteilungen benachrichtigung benachrichtigungen sperrbildschirm klingeln hinweis melden geschlossen ton', 'Der Schalter erscheint, sobald eure Apps verbunden sind.', spot('settings', 'pushRow')],
     ['Verwaltung', '📱', 'Auf dem iPhone nutzen', 'iphone apple ios installieren safari bildschirm', 'Öffne die Seite in Safari, tippe auf Teilen und dann „Zum Home-Bildschirm“.', null],
     ['Verwaltung', '💡', 'Idee spenden', 'idee vorschlag feedback verbessern mitmachen', '', () => { if (P()) P().ideaSheet('frage'); }],
     ['Verwaltung', '🚩', 'Etwas melden', 'melden fehler unpassend funktioniert nicht kaputt', '', () => { if (P()) P().reportSheet(''); }],

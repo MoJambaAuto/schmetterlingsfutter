@@ -86,16 +86,18 @@
   }
   async function leavePair(silent) {
     if (paired() && online()) { try { await post('/pair/leave', {}); } catch (e) { /* schon weg */ } }
+    pushLocalOff();
     P().partner = null; P().matches = {}; P().inbox = P().inbox.filter((m) => m.t !== 'match'); L.save(); keys = null;
     if (!silent) { L.toast('Verbindung getrennt'); renderAll(); }
   }
   function pairLink() { const p = P().partner; return location.origin + location.pathname + '?pair=' + fmtCode(p.pair, p.secret); }
 
   /* ---------- Nachrichten ---------- */
+  const QUIET = { hello: 1, seen: 1, matchdone: 1 }; // kein Anstupsen: Begrüßung, Lesebestätigung, Abgleich
   async function send(obj) {
     if (!paired()) throw new Error('Nicht verbunden');
     const body = await encrypt(Object.assign({ at: Date.now() }, obj));
-    const res = await post('/msg/send', { body });
+    const res = await post('/msg/send', QUIET[obj.t] ? { body, quiet: true } : { body });
     // jede Geste an den Schatz ist Futter für den gemeinsamen Schmetterling
     if (window.LZX && obj.t !== 'hello' && obj.t !== 'matchdone') { try { window.LZX.feed(obj.t); } catch (e) {} }
     return res;
@@ -119,7 +121,7 @@
       if (news) { L.save(); renderAll(); }
       else if (r.joined !== undefined) renderAll();
     } catch (e) {
-      if (e.status === 401) { /* Paar wurde vom Partner getrennt */ P().partner = null; L.save(); renderAll(); L.toast(partnerName() + ' hat die Verbindung getrennt'); }
+      if (e.status === 401) { /* Paar wurde vom Partner getrennt */ pushLocalOff(); P().partner = null; L.save(); renderAll(); L.toast(partnerName() + ' hat die Verbindung getrennt'); }
     } finally { pulling = false; }
   }
   async function handleIncoming(obj, created) {
@@ -725,7 +727,79 @@
     const on = paired() && joined();
     const b = $('btnSendPartner'); if (b) { b.classList.toggle('hidden', !on); b.setAttribute('aria-label', 'In die App von ' + partnerName() + ' schicken'); }
   }
-  function renderAll() { renderHomeCards(); renderSettingsCard(); renderSendButtons(); renderInboxBadge(); renderDecks(); if (window.LZN) window.LZN.render(); }
+  function renderAll() { renderHomeCards(); renderSettingsCard(); renderSendButtons(); renderInboxBadge(); renderDecks(); renderPush(); if (window.LZN) window.LZN.render(); }
+
+  /* ---------- Mitteilungen aufs Handy (Web Push ohne Inhalt) ----------
+     Der Dienst stupst das Gerät nur an; was angekommen ist, holt die App wie immer selbst ab und entschlüsselt es. */
+  const pushSupported = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window && (location.protocol === 'https:' || isLocal);
+  let pushKey = null;
+  async function pushServerKey() {
+    if (pushKey) return pushKey; if (!RELAY) return '';
+    try { const r = await fetch(RELAY + '/push/key'); const j = await r.json(); pushKey = (j && j.key) || ''; } catch (e) { return ''; }
+    if (!!pushKey !== !!S().pushAvail) { S().pushAvail = !!pushKey; L.save(); }
+    return pushKey;
+  }
+  async function pushSub(key) {
+    const reg = await navigator.serviceWorker.ready; let sub = await reg.pushManager.getSubscription();
+    if (!sub) {
+      try { sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: unb64u(key) }); }
+      catch (e) { const old = await reg.pushManager.getSubscription(); if (old) await old.unsubscribe(); sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: unb64u(key) }); }
+    }
+    return sub;
+  }
+  async function pushOn() {
+    if (!pushSupported() || !(paired() && joined())) return false;
+    const key = await pushServerKey(); if (!key) { L.toast('Mitteilungen sind gerade nicht erreichbar'); return false; }
+    const perm = await Notification.requestPermission(); if (perm !== 'granted') { renderPush(); return false; }
+    try {
+      const sub = await pushSub(key); await post('/push/sub', { endpoint: sub.endpoint });
+      S().push = true; S().pushEp = sub.endpoint; L.save(); renderPush(); L.toast('🔔 Mitteilungen sind an'); return true;
+    } catch (e) { L.toast('Mitteilungen ließen sich nicht einschalten'); renderPush(); return false; }
+  }
+  function pushLocalOff() {
+    if (S().push || S().pushEp) { S().push = false; delete S().pushEp; }
+    if (pushSupported()) navigator.serviceWorker.getRegistration().then((reg) => reg && reg.pushManager.getSubscription()).then((sub) => sub && sub.unsubscribe()).catch(() => {});
+  }
+  async function pushOff() {
+    pushLocalOff(); L.save(); renderPush();
+    if (paired() && online()) { try { await post('/push/unsub', {}); } catch (e) {} }
+    L.toast('Mitteilungen sind aus');
+  }
+  /* Beim Start: Abo still prüfen. Browser tauschen die Push-Adresse gelegentlich aus. */
+  async function pushCheck() {
+    const key = await pushServerKey(); renderPush();
+    if (!key || !S().push || !pushSupported() || !(paired() && joined()) || Notification.permission !== 'granted') return;
+    try { const sub = await pushSub(key); if (sub.endpoint !== S().pushEp) { await post('/push/sub', { endpoint: sub.endpoint }); S().pushEp = sub.endpoint; L.save(); } } catch (e) {}
+  }
+  /* Name des Schatzes für den Service Worker hinterlegen (er kann den App-Speicher nicht lesen) */
+  let metaLast = null;
+  function metaSync() {
+    if (!('caches' in window)) return; const name = (paired() && joined()) ? partnerName() : '';
+    if (name === metaLast) return; metaLast = name;
+    caches.open('sf-meta').then((c) => name ? c.put('./__meta', new Response(JSON.stringify({ partner: name }), { headers: { 'Content-Type': 'application/json' } })) : c.delete('./__meta')).catch(() => {});
+  }
+  function renderPush() {
+    metaSync();
+    const can = pushSupported() && !!S().pushAvail && paired() && joined();
+    const perm = can ? Notification.permission : 'default';
+    const row = $('pushRow');
+    if (row) {
+      row.classList.toggle('hidden', !can);
+      if (can) { L.setToggle('togPush', !!S().push && perm === 'granted'); $('pushHint').textContent = perm === 'denied' ? 'In den Handy-Einstellungen für diese App erlauben.' : ''; }
+    }
+    const card = $('pushPromo'); if (!card) return;
+    const show = can && perm === 'default' && !S().push && !iosBrowser() && (S().pushSnooze || 0) < Date.now();
+    card.classList.toggle('hidden', !show); if (!show) { card.innerHTML = ''; return; }
+    if (card.firstChild) return;
+    card.innerHTML = '<div class="promo-title">🔔 Sofort sehen, wenn ' + L.esc(partnerName()) + ' dir etwas schickt</div>' +
+      '<div class="row wrap" style="margin-top:14px;justify-content:flex-start"><button class="pill-btn primary" data-on>Mitteilungen einschalten</button><button class="pill-btn ghost" data-later>Später</button></div>';
+    card.querySelector('[data-on]').onclick = () => pushOn();
+    card.querySelector('[data-later]').onclick = () => { S().pushSnooze = Date.now() + 7 * 864e5; L.save(); renderPush(); };
+  }
+  const tp = $('togPush'); if (tp) tp.onclick = () => { if (tp.getAttribute('aria-checked') === 'true') pushOff(); else if ('Notification' in window && Notification.permission === 'denied') L.toast('Erst in den Handy-Einstellungen für diese App erlauben'); else pushOn(); };
+  /* Tipp auf die Mitteilung: Postfach öffnen */
+  async function openFromPush() { try { await pull(true); } catch (e) {} if (unread() || (P().inbox || []).length) inboxSheet(); }
+  if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', (e) => { const d = e.data || {}; if (d.t === 'postfach') openFromPush(); else if (d.t === 'push') pull(true); });
 
   /* ---------- Verdrahtung ---------- */
   const sb = $('btnSendPartner'); if (sb) sb.onclick = async () => {
@@ -744,10 +818,14 @@
   setInterval(() => { if (document.visibilityState === 'visible') pull(); }, 45000);
   $('obFinish').addEventListener('click', () => setTimeout(() => { renderAll(); offerPendingPair(); setTimeout(pairWelcome, 1600); }, 80));
 
-  window.LZP = { P, paired, joined, partnerName, sendOrShare, sendCoupon, send, pull, pairSheet, inboxSheet, playDeck, renderDecks, renderAll, renderGiftRadar, amazonUrl, tips, tipOf, tipsHtml, bindTips, mountTips, leavePair, unread, RELAY, on, inboxType, openMatch, closeMatch, online, pairLink, ideaSheet, reportSheet, iosBrowser, commonSheet, renderCommon, partnerPron: () => (P().partner && P().partner.pron) || '', announce: () => { if (paired() && joined()) send({ t: 'hello', name: S().sender, pron: S().pron || '' }).catch(() => {}); } };
+  window.LZP = { P, paired, joined, partnerName, sendOrShare, sendCoupon, send, pull, pairSheet, inboxSheet, playDeck, renderDecks, renderAll, renderGiftRadar, amazonUrl, tips, tipOf, tipsHtml, bindTips, mountTips, leavePair, unread, RELAY, on, inboxType, openMatch, closeMatch, online, pairLink, ideaSheet, reportSheet, iosBrowser, commonSheet, renderCommon, pushOn, pushOff, pushSupported, renderPush, partnerPron: () => (P().partner && P().partner.pron) || '', announce: () => { if (paired() && joined()) send({ t: 'hello', name: S().sender, pron: S().pron || '' }).catch(() => {}); } };
   renderAll(); handlePairParam();
   if (window.LZF) { window.LZF.renderPiek(); window.LZF.renderGiftRadar && window.LZF.renderGiftRadar(); }
   /* Erst abholen, wenn alle Skripte geladen sind (naehe.js meldet eigene Nachrichtenarten an) */
-  const firstPull = () => { if (S().onboarded) { pull(true); setTimeout(offerPendingPair, 400); } };
+  const firstPull = () => {
+    if (!S().onboarded) return;
+    if (/[?&]postfach=1/.test(location.search)) { try { history.replaceState(null, '', location.pathname); } catch (e) {} openFromPush(); } else pull(true);
+    setTimeout(offerPendingPair, 400); setTimeout(pushCheck, 1200);
+  };
   if (document.readyState === 'complete') setTimeout(firstPull, 0); else window.addEventListener('load', firstPull);
 })();

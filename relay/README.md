@@ -51,3 +51,16 @@ Die App nutzt automatisch `http://localhost:8787`, wenn sie selbst von `localhos
 | `/pair/leave` | Paar samt Daten löschen |
 
 Alle Aufrufe außer `/pair/*` brauchen `pair`, `dev`, `token`.
+
+## Push einrichten (Mitteilungen aufs Handy, ab App 3.18.0)
+
+Der Dienst stupst das Handy des Partners nur an (Web Push ohne Inhalt, VAPID). Gespeichert wird je Gerät die Push-Adresse des Browsers (Tabelle `push_subs`).
+Solange kein Schlüssel hinterlegt ist, liefert `GET /push/key` einen leeren Schlüssel und die App zeigt nichts zu Mitteilungen.
+
+1. Tabelle anlegen: `npx wrangler d1 migrations apply schmetterlingsfutter --remote`
+2. Schlüsselpaar erzeugen: `node relay/scripts/vapid.mjs <Datei außerhalb des Repos>` schreibt den privaten Schlüssel in die Datei und zeigt nur den öffentlichen an.
+3. Privaten Schlüssel als Geheimnis ablegen: `npx wrangler secret put VAPID_PRIVATE < <Datei>`; die Datei danach löschen.
+4. Öffentlichen Schlüssel in `wrangler.jsonc` unter `vars` als `VAPID_PUBLIC` eintragen (optional `VAPID_SUBJECT`), dann `npx wrangler deploy`.
+
+Zusätzliche Wege: `GET /push/key` → `{key}`, `/push/sub {endpoint}`, `/push/unsub`. `/msg/send` nimmt optional `quiet: true` (kein Anstupsen).
+Erlaubt sind nur die Push-Dienste von Google, Mozilla, Microsoft und Apple. Test: `relay/test/push.test.mjs` (Startbefehle im Kopf der Datei).
