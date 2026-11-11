@@ -96,8 +96,10 @@
   const QUIET = { hello: 1, seen: 1, matchdone: 1 }; // kein Anstupsen: Begrüßung, Lesebestätigung, Abgleich
   async function send(obj) {
     if (!paired()) throw new Error('Nicht verbunden');
-    const body = await encrypt(Object.assign({ at: Date.now() }, obj));
+    const at = Date.now();
+    const body = await encrypt(Object.assign({ at }, obj));
     const res = await post('/msg/send', QUIET[obj.t] ? { body, quiet: true } : { body });
+    if (!QUIET[obj.t]) noteSent(obj, at);
     // jede Geste an den Schatz ist Futter für den gemeinsamen Schmetterling
     if (window.LZX && obj.t !== 'hello' && obj.t !== 'matchdone') { try { window.LZX.feed(obj.t); } catch (e) {} }
     return res;
@@ -115,7 +117,10 @@
       for (const m of r.messages || []) {
         ids.push(m.id);
         const obj = await decrypt(m.body); if (!obj) continue;
+        const before = new Set(P().inbox.map((e) => e.id));
         if (await handleIncoming(obj, m.created)) news++;
+        /* Sendezeit merken: damit bestätigt die App später „gesehen“, ohne Inhalte zu wiederholen */
+        if (typeof obj.at === 'number') P().inbox.forEach((e) => { if (!before.has(e.id) && !e.sat) e.sat = obj.at; });
       }
       if (ids.length) await post('/msg/ack', { ids });
       if (news) { L.save(); renderAll(); }
@@ -133,6 +138,7 @@
       if (typeof obj.food === 'number' && window.LZX) { try { window.LZX.theirFood(obj.food); } catch (e) {} }
       if (name && S().receiver !== name) { S().receiver = name; L.renderHeader(); }
       if (first) { try { await send({ t: 'hello', name: S().sender, pron: S().pron || '', reply: true }); } catch (e) {} L.toast('💞 Verbunden mit ' + (name || 'deinem Schatz')); L.spawnHearts(14); }
+      if (Array.isArray(obj.seen)) gotSeen(obj.seen, created);
       return true;
     }
     if (obj.t === 'msg') {
@@ -147,6 +153,14 @@
     }
     if (obj.t === 'match') {
       const deck = D.decks.find((d) => d.id === obj.deck); if (!deck) return false;
+      /* Habe ich diese Runde schon gespielt, ist das keine Einladung, sondern: Ergebnis da */
+      const own = s.matches[deck.id];
+      if (own && own.mode === 'relay' && own.sd && own.sd === obj.sd && !own.expired) {
+        own.stale = true; own.partnerDone = true;
+        s.inbox = s.inbox.filter((m) => !(m.t === 'match' && m.deck === deck.id));
+        s.inbox.push({ id: uid('m'), t: 'match', deck: deck.id, ready: true, text: deck.icon + ' ' + deck.title, at: created || Date.now(), read: false });
+        L.toast('✨ ' + partnerName() + ' hat auch geantwortet: „' + deck.title + '“ – Ergebnis ansehen'); L.haptic(20); return true;
+      }
       if (typeof obj.sd === 'string' && /^[a-z]+_\d{8}$/.test(obj.sd) && obj.sd.indexOf(deck.id + '_') === 0) { s.invites = s.invites || {}; s.invites[deck.id] = { sd: obj.sd, at: created || Date.now() }; }
       s.inbox = s.inbox.filter((m) => !(m.t === 'match' && m.deck === deck.id));
       s.inbox.push({ id: uid('m'), t: 'match', deck: deck.id, text: deck.icon + ' ' + deck.title, at: created || Date.now(), read: false });
@@ -163,6 +177,69 @@
   const on = (type, fn) => { ext[type] = fn; };
   const inboxType = (type, def) => { inboxTypes[type] = def; };
   const unread = () => P().inbox.filter((m) => !m.read).length;
+
+  /* ---------- Gesehen? (3.19.0) ----------
+     Gesendetes merkt sich die App knapp (Art, Zeit, kurzer Text). Liest der Schatz es, schickt seine App die Sendezeit zurück,
+     angehängt an die stille Begrüßung (ältere App-Versionen ignorieren das Feld). Bewusst ohne Uhrzeit des Lesens: kein Druck. */
+  function noteSent(obj, at) {
+    const s = P(); if (!s.outbox) s.outbox = [];
+    s.outbox.push({ at, t: obj.t, deck: obj.deck || '', sd: obj.sd || '', text: String(obj.text || obj.title || '').slice(0, 60), seen: false });
+    if (s.outbox.length > 40) s.outbox = s.outbox.slice(-40);
+    L.save();
+  }
+  function gotSeen(list, created) {
+    const s = P(); if (!s.outbox) return; let msg = false;
+    list.forEach((at) => { const o = s.outbox.find((x) => x.at === at); if (o && !o.seen) { o.seen = true; o.seenAt = created || Date.now(); if (o.t !== 'match') msg = true; } });
+    if (msg) L.toast('❤ ' + partnerName() + ' hat deine Nachricht gesehen');
+  }
+  let seenTimer = null;
+  function flushSeen() {
+    clearTimeout(seenTimer);
+    seenTimer = setTimeout(async () => {
+      if (!paired() || !joined() || !online()) return;
+      const s = P(); const todo = s.inbox.filter((m) => m.read && m.sat && !m.acked); if (!todo.length) return;
+      try { await send({ t: 'hello', name: S().sender, pron: S().pron || '', seen: todo.map((m) => m.sat).slice(-20) }); todo.forEach((m) => { m.acked = true; }); L.save(); } catch (e) { /* nächstes Mal */ }
+    }, 1500);
+  }
+  /* Was gerade zwischen euch läuft: wer ist dran, was wartet, was ist fertig */
+  const sentFor = (deck, sd) => (P().outbox || []).slice().reverse().find((o) => o.t === 'match' && o.deck === deck.id && (!sd || o.sd === sd));
+  function deckStatus(deck) {
+    if (!paired() || !joined()) return null;
+    const s = P(); const rec = s.matches[deck.id]; const iv = (s.invites || {})[deck.id];
+    const today = deck.daily ? deck.id + '_' + L.todayKey().replace(/-/g, '') : null;
+    if (rec && rec.mode === 'relay' && rec.stale && !rec.expired) return { kind: 'ready' };
+    if (iv && iv.sd && Date.now() - iv.at < 12 * 864e5 && !(rec && rec.sd === iv.sd) && (!deck.daily || iv.sd === today)) return { kind: 'turn' };
+    if (rec && rec.mode === 'relay' && rec.matches === null && !rec.expired && Date.now() - Date.parse(rec.date) < 12 * 864e5 && (!deck.daily || rec.date.slice(0, 10) === L.todayKey())) {
+      const o = sentFor(deck, rec.sd); return { kind: 'wait', seen: !!(o && o.seen) };
+    }
+    return null;
+  }
+  function activity() {
+    const out = [];
+    D.decks.forEach((deck) => { if (deck.adult && !S().intim) return; const st = deckStatus(deck); if (st) out.push(Object.assign({ deck }, st)); });
+    const order = { turn: 0, ready: 1, wait: 2 }; out.sort((a, b) => order[a.kind] - order[b.kind]);
+    return out;
+  }
+  function lastSent() {
+    const o = (P().outbox || []).slice().reverse().find((x) => x.t !== 'match');
+    return o && Date.now() - o.at < 7 * 864e5 ? o : null;
+  }
+  function openDeckFromStatus(deck) {
+    const rec = P().matches[deck.id]; const st = deckStatus(deck);
+    if (st && (st.kind === 'ready' || st.kind === 'wait')) { showResults(deck, rec); refreshMatches(deck, rec, true).catch(() => {}); }
+    else playDeck(deck.id);
+  }
+  /* Erkunden: welche Karten eines Spiels schon dran waren */
+  function noteExplored(deck, ids) {
+    const s = P(); if (!s.explored) s.explored = {}; const set = new Set(s.explored[deck.id] || []);
+    ids.forEach((id) => set.add(id)); s.explored[deck.id] = Array.from(set); L.save();
+  }
+  function explored(deck) {
+    const s = P(); if (!s.explored) s.explored = {};
+    if (!s.explored[deck.id]) { const rec = s.matches[deck.id]; if (rec && rec.sd) s.explored[deck.id] = roundItems(deck, rec.sd).map((it) => it.id); }
+    const ids = new Set(deck.items.map((it) => it.id));
+    return (s.explored[deck.id] || []).filter((id) => ids.has(id)).length;
+  }
 
   /* ---------- Senden oder Teilen ---------- */
   function sendOrShare(text, label) {
@@ -222,6 +299,19 @@
   function bindTips(root) {
     root.querySelectorAll('.tip[data-q]').forEach((b) => { b.onclick = (e) => { e.stopPropagation(); window.open(amazonUrl(b.dataset.q, b.dataset.adult === '1'), '_blank', 'noopener'); }; });
   }
+  /* Eigene Suche (3.19.0): für Anlässe und Ideen, die die App nicht kennt. Öffnet die Amazon-Suche im Browser (Werbelink). */
+  function searchFormHtml(ph, val) {
+    return '<form class="own-search" role="search"><input type="search" enterkeyhint="search" maxlength="80" placeholder="' + L.esc(ph || 'Eigene Idee suchen, z. B. Kochkurs') + '" aria-label="Eigene Suche bei Amazon" value="' + L.esc(val || '') + '"><button type="submit" class="pill-btn small" aria-label="Bei Amazon suchen">🔍</button></form>';
+  }
+  function bindSearch(root, adult) {
+    root.querySelectorAll('form.own-search').forEach((f) => { f.onsubmit = (e) => { e.preventDefault(); const q = f.querySelector('input').value.trim(); if (!q) { f.querySelector('input').focus(); return; } window.open(amazonUrl(q, adult), '_blank', 'noopener'); }; });
+  }
+  function searchSheet(prefill) {
+    L.openSheet('<h3>🔍 Selbst suchen</h3><p class="about" style="font-size:17px;margin-bottom:10px">Für alles, wofür die App noch keine Idee hat: Anlass, Hobby, Geschenk.</p>' + searchFormHtml('', prefill) +
+      '<p class="about" style="font-size:16px;color:var(--text-muted);margin-top:10px"><span class="ad-note">Werbelink</span> – öffnet die Amazon-Suche im Browser. Bei einem Kauf erhält der Anbieter eine Provision.</p><div class="row" style="margin-top:12px"><button class="pill-btn ghost" data-cancel>Schließen</button></div>', (sh) => {
+      sh.querySelector('[data-cancel]').onclick = L.closeSheet; bindSearch(sh); const i = sh.querySelector('input'); setTimeout(() => i.focus(), 120);
+    });
+  }
   function mountTips(container, key, title, n) {
     if (!container) return; const items = typeof key === 'string' ? tips(key, n) : key;
     container.innerHTML = tipsHtml(items, title); bindTips(container);
@@ -265,6 +355,7 @@
     if (deck.adult && !S().intim) { L.toast('Erst den Bereich „Zweisamkeit“ unter Mehr einschalten (18+)'); return; }
     const canRelay = !!(paired() && joined() && RELAY);
     const mode = (!forcePass && canRelay) ? 'relay' : 'pass';
+    { let hit = false; P().inbox.forEach((m) => { if (m.t === 'match' && m.deck === deck.id && !m.read) { m.read = true; hit = true; } }); if (hit) { L.save(); renderInboxBadge(); flushSeen(); } }
     const prev = P().matches[deck.id];
     const sd = gameSd(deck, mode);
     game = { deck, mode, step: 0, who: 'me', mine: {}, theirs: {}, prev, sd, items: roundItems(deck, sd) };
@@ -303,6 +394,7 @@
   }
   async function finishAnswers() {
     const g = game; const deck = g.deck;
+    if (g.who === 'me') noteExplored(deck, Object.keys(g.mine));
     if (g.mode === 'pass') {
       if (g.who === 'me') {
         g.who = 'them'; g.step = 0;
@@ -379,8 +471,14 @@
     if (rec.expired) {
       html += '<div class="match-intro"><div class="match-emoji">⏳</div><h2>Antworten abgelaufen</h2><p class="about">Für diese Runde liegen keine Antworten mehr vor. Spielt einfach neu.</p><div class="row" style="margin-top:18px"><button class="pill-btn primary" data-again>Neu spielen</button></div></div>';
     } else if (!rec.partnerDone || rec.matches === null) {
-      html += '<div class="match-intro"><div class="match-emoji">⏳</div><h2>Warte auf ' + name + '</h2><p class="about">Deine Antworten sind da. Sobald ' + name + ' in der eigenen App geantwortet hat, erscheinen hier eure Treffer. ' + name + ' hat eine Einladung bekommen.</p>' +
+      const o = rec.mode === 'relay' ? sentFor(deck, rec.sd) : null;
+      const seenLine = rec.mode === 'relay' ? '<div class="pstat ' + (o && o.seen ? 'seen' : 'sent') + '">' + (o && o.seen ? '👀 ' + name + ' hat die Einladung gesehen' : '📨 Einladung ist bei ' + name + ' unterwegs') + '</div>' : '';
+      html += '<div class="match-intro"><div class="match-emoji">⏳</div><h2>Warte auf ' + name + '</h2>' + seenLine + '<p class="about">Deine Antworten sind da. Sobald ' + name + ' in der eigenen App geantwortet hat, erscheinen hier eure Treffer.</p>' +
         '<div class="row wrap" style="margin-top:18px"><button class="pill-btn primary" data-refresh>Aktualisieren</button><button class="pill-btn" data-share-inv>Erinnerung schicken ↗</button><button class="pill-btn ghost small" data-again>Meine Antworten ändern</button></div></div>';
+      /* Beim Warten nicht leer ausgehen: Links zu dem, was ich selbst mag */
+      const mineTips = (rec.mine || []).map((id) => deck.items.find((it) => it.id === id)).filter((it) => it && tipOf(it)).slice(0, 3).map((it) => ({ icon: it.e, title: tipOf(it), q: tipOf(it) }));
+      if (mineTips.length) html += tipsHtml(mineTips, deck.common ? 'Was du magst' : 'Passend dazu');
+      if (!deck.daily && deck.items.length > roundSize(deck)) html += '<p class="about round-note">' + roundNote(deck) + '</p>';
     } else {
       const yes = rec.matches.map((id) => deck.items.find((it) => it.id === id)).filter(Boolean);
       const open = (rec.open || []).map((id) => deck.items.find((it) => it.id === id)).filter(Boolean);
@@ -396,6 +494,7 @@
       }
       if (!yes.length || deck.talk) html += tipsHtml(tips('match_' + deck.id, 2), deck.talk ? 'Hilft beim Reden' : deck.common ? 'Passend dazu' : 'Für den nächsten Versuch');
       html += '<div class="row wrap" style="margin-top:18px">' + (yes.length ? '<button class="pill-btn primary" data-share-res>' + (deck.common ? 'Teilen ↗' : 'Plan teilen ↗') + '</button>' : '') + (deck.common && commonAll().length ? '<button class="pill-btn" data-common>Alle Gemeinsamkeiten</button>' : '') + (!deck.daily && deck.items.length > roundSize(deck) ? '<button class="pill-btn" data-next>Neue Fragen</button>' : '<button class="pill-btn" data-again>Nochmal spielen</button>') + (rec.mode === 'relay' ? '<button class="pill-btn ghost small" data-refresh>Aktualisieren</button>' : '') + '</div>' +
+        (!deck.daily && deck.items.length > roundSize(deck) ? '<p class="about round-note">' + roundNote(deck) + '</p>' : '') +
         '<p class="about" style="font-size:16px;color:var(--text-muted);margin-top:12px">Stand ' + L.fmtDate(new Date(rec.date)) + (rec.mode === 'relay' ? ' · über die Partner-Verbindung, nur Prüfsummen verglichen' : ' · Handy-weitergeben-Modus') + '. Produktvorschläge sind Werbelinks zur Amazon-Suche.</p>';
     }
     openMatch(html, (sc) => {
@@ -413,6 +512,10 @@
       };
     });
     renderDecks(); renderInboxBadge();
+  }
+  function roundNote(deck) {
+    const tot = deck.items.length, ex = explored(deck), left = Math.max(0, tot - ex);
+    return left ? '🦋 Noch ' + left + ' ungespielte Fragen in „' + L.esc(deck.title) + '“. Nach jeder Runde geht es mit neuen weiter, jeden Montag startet auch von selbst eine neue Runde.' : '🦋 Ihr habt alle ' + tot + ' Fragen gesehen. Die Runden mischen neu, Papillon sammelt schon neue Fragen.';
   }
   function matchItem(it, badge, adult) {
     if (it.q) return '<div class="match-item"><span class="mi-e">' + it.e + '</span><div class="mi-b"><div class="mi-t">' + L.esc(it.t) + '</div><div class="mi-s">' + L.esc(badge) + '</div><div class="mi-q">💬 ' + L.esc(it.q) + '</div><button type="button" class="tip inline" data-soft="' + L.esc(it.t) + '">🕊️ Sanft ansprechen</button></div></div>';
@@ -472,15 +575,19 @@
     D.decks.forEach((deck) => {
       if (deck.talk) return; // läuft unter „Klartext“
       if (deck.adult && !S().intim) return;
-      const rec = P().matches[deck.id]; let state = '';
+      const rec = P().matches[deck.id]; let state = ''; const st = deckStatus(deck); let chip = '';
+      if (st) chip = st.kind === 'turn' ? '<span class="chip-st turn">🎯 Du bist dran – ' + L.esc(partnerName()) + ' wartet</span>' : st.kind === 'ready' ? '<span class="chip-st ready">✨ Ergebnis da</span>' : '<span class="chip-st wait">⏳ Wartet auf ' + L.esc(partnerName()) + (st.seen ? ' · gesehen 👀' : '') + '</span>';
       if (rec) {
         if (deck.daily && rec.date.slice(0, 10) !== L.todayKey()) state = 'Gestern gespielt – heute neu';
         else if (rec.matches === null) state = (rec.stale ? '✨ ' + partnerName() + ' hat geantwortet – antippen' : 'Wartet auf ' + partnerName());
         else state = rec.matches.length + (rec.matches.length === 1 ? ' Treffer' : ' Treffer') + (rec.stale ? ' · neu laden' : '');
       }
-      if (deck.common && !(rec && (rec.matches === null || rec.stale))) { const n = Object.keys((S().common || {})[deck.id] || {}).length; state = n ? n + (n === 1 ? ' Gemeinsamkeit' : ' Gemeinsamkeiten') + ' · weiter entdecken' : ''; }
-      const d = document.createElement('button'); d.type = 'button'; d.className = 'deck' + (deck.adult ? ' adult' : '');
-      d.innerHTML = '<span class="d-ico">' + deck.icon + '</span><div class="d-body"><div class="d-title">' + L.esc(deck.title) + '</div><div class="d-sub">' + L.esc(state || deck.teaser || deck.sub) + '</div></div><span class="d-go">›</span>';
+      if (deck.common && !(rec && (rec.matches === null || rec.stale))) { const n = Object.keys((S().common || {})[deck.id] || {}).length; state = n ? n + (n === 1 ? ' Gemeinsamkeit' : ' Gemeinsamkeiten') : ''; }
+      if (st) state = '';
+      const ex = explored(deck), tot = deck.items.length;
+      const prog = (!deck.daily && !deck.talk && tot > roundSize(deck) && ex) ? '<div class="d-prog" aria-label="' + ex + ' von ' + tot + ' Fragen entdeckt"><i style="width:' + Math.round(Math.min(ex, tot) / tot * 100) + '%"></i></div><div class="d-meta">' + (ex >= tot ? 'Alle ' + tot + ' Fragen entdeckt – Runden mischen neu' : ex + ' von ' + tot + ' Fragen entdeckt' + (rec && Array.isArray(rec.matches) && !st ? ' · neue Fragen bereit ✨' : '')) + '</div>' : '';
+      const d = document.createElement('button'); d.type = 'button'; d.className = 'deck' + (deck.adult ? ' adult' : '') + (st ? ' st-' + st.kind : '');
+      d.innerHTML = '<span class="d-ico">' + deck.icon + '</span><div class="d-body"><div class="d-title">' + L.esc(deck.title) + '</div>' + (chip || '<div class="d-sub">' + L.esc(state || deck.teaser || deck.sub) + '</div>') + prog + '</div><span class="d-go">›</span>';
       d.onclick = () => {
         if (rec && rec.matches === null && rec.mode === 'relay' && !(deck.daily && rec.date.slice(0, 10) !== L.todayKey())) { showResults(deck, rec); refreshMatches(deck, rec, true).catch(() => {}); }
         else if (rec && rec.stale && rec.mode === 'relay') { showResults(deck, rec); refreshMatches(deck, rec, true).catch(() => {}); }
@@ -647,7 +754,7 @@
     items.forEach((m) => {
       const when = new Date(m.at).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
       const def = inboxTypes[m.t];
-      html += '<div class="inbox-item' + (m.read ? '' : ' new') + '" data-id="' + m.id + '"><span class="ii-e">' + (def ? def.icon : m.t === 'coupon' ? '🎟️' : m.t === 'match' ? '🎯' : m.t === 'unknown' ? '❔' : '💌') + '</span><div class="ii-b">' + (def && def.html ? def.html(m) : '') + '<div class="ii-t">' + L.esc(m.text || '') + '</div><div class="ii-m">' + (def ? L.esc(def.meta || '') + ' · ' : m.t === 'match' ? 'Einladung zum Mitspielen · ' : m.t === 'coupon' ? 'Gutschein, liegt bei Wünsche → Gutscheine · ' : (m.label ? L.esc(m.label) + ' · ' : '')) + when + '</div></div><button class="reason-del" aria-label="Löschen" data-del="' + m.id + '">✕</button></div>';
+      html += '<div class="inbox-item' + (m.read ? '' : ' new') + '" data-id="' + m.id + '"><span class="ii-e">' + (def ? def.icon : m.t === 'coupon' ? '🎟️' : m.t === 'match' ? '🎯' : m.t === 'unknown' ? '❔' : '💌') + '</span><div class="ii-b">' + (def && def.html ? def.html(m) : '') + '<div class="ii-t">' + L.esc(m.text || '') + '</div><div class="ii-m">' + (def ? L.esc(def.meta || '') + ' · ' : m.t === 'match' ? (m.ready ? 'Ergebnis da – antippen · ' : 'Einladung zum Mitspielen · ') : m.t === 'coupon' ? 'Gutschein, liegt bei Wünsche → Gutscheine · ' : (m.label ? L.esc(m.label) + ' · ' : '')) + when + '</div></div><button class="reason-del" aria-label="Löschen" data-del="' + m.id + '">✕</button></div>';
     });
     html += '<div class="row" style="margin-top:14px"><button class="pill-btn ghost" data-cancel>Schließen</button></div>';
     L.openSheet(html, (sh) => {
@@ -657,7 +764,7 @@
         const m = s.inbox.find((x) => x.id === el.dataset.id); if (!m) return; m.read = true; L.save(); L.closeSheet();
         if (m.t === 'msg') { L.showView('home'); L.showMessage({ text: m.text, own: true, incoming: true }, 'Von ' + partnerName() + ' für dich'); L.spawnHearts(10); }
         else if (m.t === 'coupon') { L.showView('wishes'); L.showSub('wishes', 'coupons'); }
-        else if (m.t === 'match') { const deck = deckById(m.deck); if (deck) { const rec = s.matches[deck.id]; const iv = (s.invites || {})[deck.id]; if (rec && rec.mode === 'relay' && (!iv || !iv.sd || iv.sd === rec.sd) && (!deck.daily || rec.date.slice(0, 10) === L.todayKey())) { showResults(deck, rec); refreshMatches(deck, rec, true).catch(() => {}); } else playDeck(deck.id); } }
+        else if (m.t === 'match') { const deck = deckById(m.deck); if (deck) { const rec = s.matches[deck.id]; const iv = (s.invites || {})[deck.id]; if (rec && rec.mode === 'relay' && (m.ready || !iv || !iv.sd || iv.sd === rec.sd) && (!deck.daily || rec.date.slice(0, 10) === L.todayKey())) { showResults(deck, rec); refreshMatches(deck, rec, true).catch(() => {}); } else playDeck(deck.id); } }
         else if (inboxTypes[m.t] && inboxTypes[m.t].open) inboxTypes[m.t].open(m);
         renderAll();
       });
@@ -679,10 +786,12 @@
       c.classList.remove('hidden');
       if (!p) c.innerHTML = '<div class="row between"><div><div class="eyebrow" style="margin:0 0 4px">💞 Zu zweit noch besser</div><div style="font-size:18px">Verbinde deine App mit der von ' + L.esc(S().receiver) + ': Botschaften landen direkt dort, Gleichklang-Spiele laufen geheim auf zwei Handys.</div></div></div><div class="row wrap" style="margin-top:12px;justify-content:flex-start"><button class="pill-btn small primary" data-pair>Jetzt verbinden</button><button class="pill-btn small ghost" data-bock>🎯 Worauf Bock heute?</button></div>';
       else if (!p.joined) c.innerHTML = '<div class="eyebrow" style="margin:0 0 4px">⏳ Wartet auf ' + L.esc(S().receiver) + '</div><div style="font-size:18px">Dein Code ist bereit. ' + L.esc(S().receiver) + ' muss den Link öffnen oder den Code eingeben.</div><div class="row wrap" style="margin-top:12px;justify-content:flex-start"><button class="pill-btn small primary" data-pair>Link schicken</button><button class="pill-btn small ghost" data-check>Prüfen</button></div>';
-      else c.innerHTML = '<div class="eyebrow" style="margin:0 0 4px">💞 Verbunden mit ' + L.esc(partnerName()) + '</div><div style="font-size:17px;color:var(--text-soft)">' + (n ? (n === 1 ? 'Eine neue Nachricht wartet im Postfach.' : n + ' neue Nachrichten warten im Postfach.') : 'Botschaften und Gutscheine landen direkt bei ' + L.esc(partnerName()) + '.') + '</div><div class="row wrap" style="margin-top:12px;justify-content:flex-start"><button class="pill-btn small ' + (n ? 'primary' : '') + '" data-inbox>📬 Postfach <span class="badge' + (n ? '' : ' hidden') + '" id="inboxBadge">' + n + '</span></button><button class="pill-btn small" data-bock>🎯 Worauf Bock heute?</button><button class="pill-btn small ghost" data-pair>Verbindung</button></div>';
+      else c.innerHTML = '<div class="eyebrow" style="margin:0 0 4px">💞 Du &amp; ' + L.esc(partnerName()) + '</div>' + activityHtml(n) + '<div class="row wrap" style="margin-top:12px;justify-content:flex-start"><button class="pill-btn small ' + (n ? 'primary' : '') + '" data-inbox>📬 Postfach <span class="badge' + (n ? '' : ' hidden') + '" id="inboxBadge">' + n + '</span></button><button class="pill-btn small" data-bock>🎯 Worauf Bock heute?</button><button class="pill-btn small ghost" data-pair>Verbindung</button></div>';
       const pr = c.querySelector('[data-pair]'); if (pr) pr.onclick = pairSheet;
       const ib = c.querySelector('[data-inbox]'); if (ib) ib.onclick = inboxSheet;
       const bk = c.querySelector('[data-bock]'); if (bk) bk.onclick = () => playDeck('bock');
+      c.querySelectorAll('[data-act]').forEach((b) => { b.onclick = () => { const deck = deckById(b.dataset.act); if (deck) openDeckFromStatus(deck); }; });
+      const mr = c.querySelector('[data-actmore]'); if (mr) mr.onclick = () => { L.showView('play'); L.showSub('play', mr.dataset.actmore); };
       const ck = c.querySelector('[data-check]'); if (ck) ck.onclick = async () => { ck.textContent = '…'; await pull(true); renderAll(); if (!joined()) L.toast('Noch nicht beigetreten'); };
     }
     // Solange die Apps nicht verbunden sind: oben auf der Startseite zeigen, was das Verbinden bringt. „Später“ blendet es für drei Tage aus.
@@ -700,6 +809,32 @@
     }
     renderGiftRadar();
   }
+  /* Startseite: was gerade zwischen euch läuft */
+  function activityHtml(n) {
+    const name = L.esc(partnerName()); const acts = activity(); let html = '';
+    if (n) html += '<div class="act-note">📬 ' + (n === 1 ? 'Eine neue Nachricht wartet im Postfach.' : n + ' neue Nachrichten warten im Postfach.') + '</div>';
+    acts.slice(0, 3).forEach((a) => {
+      const label = a.kind === 'turn' ? '<span class="chip-st turn">🎯 Du bist dran</span>' : a.kind === 'ready' ? '<span class="chip-st ready">✨ Ergebnis da</span>' : '<span class="chip-st wait">⏳ ' + name + ' ist dran' + (a.seen ? ' · gesehen 👀' : '') + '</span>';
+      html += '<button type="button" class="act-row st-' + a.kind + '" data-act="' + a.deck.id + '"><span class="ai">' + a.deck.icon + '</span><span class="ab"><span class="at">' + L.esc(a.deck.title) + '</span>' + label + '</span><span class="d-go">›</span></button>';
+    });
+    if (acts.length > 3) html += '<button type="button" class="pill-btn small ghost" data-actmore="' + (acts[3].deck.common ? 'gemeinsam' : 'match') + '" style="margin-top:6px">+ ' + (acts.length - 3) + ' weitere Spiele</button>';
+    const ls = lastSent();
+    if (ls) html += '<div class="act-note sent ' + (ls.seen ? 'seen' : '') + '">' + (ls.seen ? '❤ ' + name + ' hat deine letzte Nachricht gesehen' : '📨 Deine letzte Nachricht ist zugestellt, noch nicht gesehen') + (ls.text ? ' <i>„' + L.esc(ls.text.length > 34 ? ls.text.slice(0, 34) + '…' : ls.text) + '“</i>' : '') + '</div>';
+    if (!html) html = '<div style="font-size:17px;color:var(--text-soft)">Gerade ist nichts offen. Schick ' + name + ' etwas oder startet ein Spiel – Papillon zeigt euch hier, wer dran ist.</div>';
+    return html;
+  }
+  /* Punkte an „Spielen“ und an den Reitern, wenn dort jemand wartet oder ein Ergebnis da ist */
+  function renderTabDots() {
+    const hot = { match: 0, gemeinsam: 0, klartext: 0, intim: 0 };
+    activity().forEach((a) => { if (a.kind === 'wait') return; const k = a.deck.adult ? 'intim' : a.deck.talk ? 'klartext' : a.deck.common ? 'gemeinsam' : 'match'; hot[k]++; });
+    const any = Object.keys(hot).some((k) => hot[k]);
+    const nb = $('navBadgePlay'); if (nb) nb.classList.toggle('hidden', !any);
+    document.querySelectorAll('#view-play .seg [data-sub]').forEach((b) => {
+      let dot = b.querySelector('.sub-dot'); const on = !!hot[b.dataset.sub];
+      if (on && !dot) { dot = document.createElement('i'); dot.className = 'sub-dot'; dot.setAttribute('aria-hidden', 'true'); b.appendChild(dot); }
+      if (dot) dot.classList.toggle('hidden', !on);
+    });
+  }
   function renderGiftRadar() {
     const g = $('giftRadar'); if (!g || !window.LZF || !window.LZF.occasionsAll) return;
     const list = window.LZF.occasionsAll(); const o = list[0]; const s = S();
@@ -713,7 +848,8 @@
     const items = wishes.slice(0, 1).map((w) => ({ icon: '⭐', title: w.text, q: w.text })).concat(ideas.map((x) => ({ icon: x.icon, title: x.title, q: x.q })));
     html += tipsHtml(items, wishes.length ? 'Aus der Love Map und passende Ideen' : 'Ideen');
     html += '<div class="row wrap" style="margin-top:8px;justify-content:flex-start"><button class="pill-btn small ghost" data-all>Alle Ideen für ' + L.esc(o.title) + '</button><button class="pill-btn small ghost" data-wish>+ Wunsch notieren</button></div>';
-    g.innerHTML = html; bindTips(g);
+    html += searchFormHtml('Etwas anderes suchen …');
+    g.innerHTML = html; bindTips(g); bindSearch(g);
     g.querySelector('[data-all]').onclick = () => window.LZF.giftSheet(o);
     g.querySelector('[data-wish]').onclick = () => $('btnAddWish').click();
   }
@@ -727,7 +863,7 @@
     const on = paired() && joined();
     const b = $('btnSendPartner'); if (b) { b.classList.toggle('hidden', !on); b.setAttribute('aria-label', 'In die App von ' + partnerName() + ' schicken'); }
   }
-  function renderAll() { renderHomeCards(); renderSettingsCard(); renderSendButtons(); renderInboxBadge(); renderDecks(); renderPush(); if (window.LZN) window.LZN.render(); }
+  function renderAll() { flushSeen(); renderTabDots(); renderHomeCards(); renderSettingsCard(); renderSendButtons(); renderInboxBadge(); renderDecks(); renderPush(); if (window.LZN) window.LZN.render(); }
 
   /* ---------- Mitteilungen aufs Handy (Web Push ohne Inhalt) ----------
      Der Dienst stupst das Gerät nur an; was angekommen ist, holt die App wie immer selbst ab und entschlüsselt es. */
@@ -818,7 +954,7 @@
   setInterval(() => { if (document.visibilityState === 'visible') pull(); }, 45000);
   $('obFinish').addEventListener('click', () => setTimeout(() => { renderAll(); offerPendingPair(); setTimeout(pairWelcome, 1600); }, 80));
 
-  window.LZP = { P, paired, joined, partnerName, sendOrShare, sendCoupon, send, pull, pairSheet, inboxSheet, playDeck, renderDecks, renderAll, renderGiftRadar, amazonUrl, tips, tipOf, tipsHtml, bindTips, mountTips, leavePair, unread, RELAY, on, inboxType, openMatch, closeMatch, online, pairLink, ideaSheet, reportSheet, iosBrowser, commonSheet, renderCommon, pushOn, pushOff, pushSupported, renderPush, partnerPron: () => (P().partner && P().partner.pron) || '', announce: () => { if (paired() && joined()) send({ t: 'hello', name: S().sender, pron: S().pron || '' }).catch(() => {}); } };
+  window.LZP = { searchSheet, searchFormHtml, bindSearch, activity, deckStatus, openDeckFromStatus, explored, lastSent, P, paired, joined, partnerName, sendOrShare, sendCoupon, send, pull, pairSheet, inboxSheet, playDeck, renderDecks, renderAll, renderGiftRadar, amazonUrl, tips, tipOf, tipsHtml, bindTips, mountTips, leavePair, unread, RELAY, on, inboxType, openMatch, closeMatch, online, pairLink, ideaSheet, reportSheet, iosBrowser, commonSheet, renderCommon, pushOn, pushOff, pushSupported, renderPush, partnerPron: () => (P().partner && P().partner.pron) || '', announce: () => { if (paired() && joined()) send({ t: 'hello', name: S().sender, pron: S().pron || '' }).catch(() => {}); } };
   renderAll(); handlePairParam();
   if (window.LZF) { window.LZF.renderPiek(); window.LZF.renderGiftRadar && window.LZF.renderGiftRadar(); }
   /* Erst abholen, wenn alle Skripte geladen sind (naehe.js meldet eigene Nachrichtenarten an) */

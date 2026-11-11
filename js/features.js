@@ -101,7 +101,7 @@
     const key = o.id === 'jahrestag' ? 'jahrestag' : o.id === 'geburtstag' ? 'geburtstag' : (D.gifts[o.id] ? o.id : null);
     const ideas = (key ? D.gifts[key] : []).concat(D.gifts.default);
     const wishes = S().wishes.filter((w) => !w.done && (w.cat || 'wunsch') === 'wunsch');
-    let html = '<h3>🎁 Geschenkideen – ' + L.esc(o.title) + '</h3>';
+    let html = '<h3>🎁 Geschenkideen – ' + L.esc(o.title) + '</h3>' + (window.LZP ? window.LZP.searchFormHtml('Eigene Idee suchen …') : '');
     if (wishes.length) {
       html += '<div class="eyebrow">Aus dem Wunschsammler</div>';
       wishes.slice(0, 5).forEach((w) => { html += '<button class="gift-item" data-q="' + L.esc(w.text) + '"><span class="g-ico">⭐</span><span class="g-t">' + L.esc(w.text) + (w.note ? '<span class="g-s">' + L.esc(w.note) + '</span>' : '') + '</span><span>↗</span></button>'; });
@@ -117,6 +117,7 @@
     L.openSheet(html, (sh) => {
       sh.querySelector('[data-cancel]').onclick = L.closeSheet;
       sh.querySelectorAll('[data-q]').forEach((b) => b.onclick = () => window.open(amazonUrl(b.dataset.q), '_blank', 'noopener'));
+      if (window.LZP) window.LZP.bindSearch(sh);
     });
   }
   $('btnAddOccasion').onclick = () => L.promptSheet('Eigener Anlass', [

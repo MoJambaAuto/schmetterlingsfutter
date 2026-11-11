@@ -43,6 +43,7 @@
     ['Zu zweit', '🌼', 'Gänseblümchen-Orakel', 'orakel blume gaensebluemchen liebt zupfen', '', view('play', 'oracle')],
     ['Zu zweit', '🎹', 'Liebeslied-Pad', 'lied komponieren toene klavier aufnehmen melodie spielen', '', spot('play', 'songList', 'music')],
     ['Zu zweit', '🔥', 'Zweisamkeit (18+)', 'zweisamkeit erotik flirt sex intim vorlieben lust leidenschaft', '', view('play', 'intim')],
+    ['Zu zweit', '💞', 'Wer ist dran? Spiele, die auf dich warten', 'dran warten wartet einladung ergebnis gesehen gelesen status partner mitspielen', 'Steht oben auf der Startseite unter „Du & …“.', spot('home', 'partnerCard')],
     ['Jeden Tag', '🦋', 'Flügelschlag des Tages', 'fluegelschlag aufgabe tagesaufgabe aktion heute tun piek', '', spot('home', 'piekCard')],
     ['Jeden Tag', '🙏', 'Dankbarkeits-Notiz', 'danke dankbar dankbarkeit notiz', '', spot('home', 'thanksCard')],
     ['Jeden Tag', '🦋', 'Euer Schmetterling', 'schmetterling futter fuettern raupe ei kokon schwarm punkte belohnung wachsen falter', 'Jede liebe Geste ist Futter. Er wächst für euch beide.', () => { L.showView('home'); const b = document.querySelector('#bflyCard [data-open]'); if (b) b.click(); }],
@@ -51,6 +52,7 @@
     ['Jeden Tag', '🗺️', 'Love Map', 'wunsch wuensche lieblingsdinge groesse traum notieren merken geschenkidee', '', view('wishes', 'wishlist')],
     ['Jeden Tag', '🎟️', 'Liebes-Gutscheine', 'gutschein gutscheine einloesen schenken', '', view('wishes', 'coupons')],
     ['Jeden Tag', '⭐', 'Favoriten', 'favorit favoriten merken gespeichert lieblingsbotschaft', '', spot('home', 'favPanel')],
+    ['Jeden Tag', '🔍', 'Selbst suchen: Geschenk, Anlass, Idee', 'suchen suche amazon kaufen geschenk idee eigene shop produkt anlass bestellen', '', () => { if (P()) P().searchSheet(); }],
     ['Verwaltung', '✏️', 'Namen und Symbole ändern', 'name namen aendern symbol emoji anrede', '', spot('settings', 'setSender')],
     ['Verwaltung', '🎨', 'Farbwelt', 'farbe farben design aussehen dunkel hell', '', spot('settings', 'themeGrid')],
     ['Verwaltung', '💾', 'Daten sichern', 'sichern sicherung export import wiederherstellen neues handy uebertragen loeschen', '', spot('settings', 'btnExport')],
@@ -60,6 +62,7 @@
     ['Verwaltung', '💡', 'Idee spenden', 'idee vorschlag feedback verbessern mitmachen', '', () => { if (P()) P().ideaSheet('frage'); }],
     ['Verwaltung', '🚩', 'Etwas melden', 'melden fehler unpassend funktioniert nicht kaputt', '', () => { if (P()) P().reportSheet(''); }],
     ['Verwaltung', '🔒', 'Datenschutz', 'datenschutz daten privat sicher verschluesselt impressum', '', () => { location.href = 'privacy.html'; }]
+    ['Verwaltung', '🦋', 'Papillon fliegt vorbei: ein- oder ausschalten', 'schmetterling fliegt fliegen anreiz einladung ausschalten abschalten nervt stoert papillon', '', spot('settings', 'togFly')],
   ];
 
   /* ---------- Verstehen: Umlaute glätten, Füllwörter weg, Tippfehler verzeihen ---------- */
@@ -98,10 +101,11 @@
         if (!q) { let g = ''; ITEMS.forEach((it) => { if (it[0] !== g) { g = it[0]; html += '<div class="eyebrow frag-g">' + esc(g) + '</div>'; } html += row(it); }); }
         else {
           const hits = search(q);
-          html = hits.length ? hits.map(row).join('') : '<p class="about" style="margin:6px 0 12px">Dazu finde ich noch nichts.</p>' + (D.ideaBox && P() ? '<button type="button" class="pill-btn" id="fragAsk">💡 Frage an uns schicken</button>' : '');
+          html = hits.length ? hits.map(row).join('') : '<p class="about" style="margin:6px 0 12px">Dazu finde ich in der App noch nichts.</p><div class="row wrap" style="justify-content:flex-start">' + (P() ? '<button type="button" class="pill-btn" id="fragShop">🛒 Bei Amazon nach „' + esc(q.slice(0, 30)) + '“ suchen ↗</button>' : '') + (D.ideaBox && P() ? '<button type="button" class="pill-btn ghost" id="fragAsk">💡 Frage an uns schicken</button>' : '') + '</div>' + (P() ? '<p class="about" style="font-size:16px;color:var(--text-muted);margin-top:8px">Werbelink zur Amazon-Suche.</p>' : '');
         }
         out.innerHTML = html;
         out.querySelectorAll('.frag-row').forEach((b) => b.onclick = () => { const it = ITEMS[Number(b.dataset.i)]; if (!it[5]) return; L.closeSheet(); setTimeout(it[5], 60); });
+        const shop = out.querySelector('#fragShop'); if (shop) shop.onclick = () => window.open(P().amazonUrl(q), '_blank', 'noopener');
         const ask = out.querySelector('#fragAsk'); if (ask) ask.onclick = async () => { ask.disabled = true; try { await fetch(P().RELAY + '/idea', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ kind: 'sonstiges', text: ('FRAGE | ' + q).slice(0, 240), app: D.version }) }); L.toast('Danke! Wir schauen es uns an.'); L.closeSheet(); } catch (e) { ask.disabled = false; L.toast('Keine Verbindung. Versuch es später nochmal.'); } };
       }
       inp.oninput = draw; inp.onkeydown = (e) => { if (e.key === 'Enter') { const first = out.querySelector('.frag-row'); if (first && inp.value.trim()) first.click(); } };

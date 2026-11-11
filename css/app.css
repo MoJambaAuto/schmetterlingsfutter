@@ -624,3 +624,47 @@ a.pill-btn { text-decoration:none; display:inline-flex; align-items:center; just
 /* 3.16.1 Einblendung: antippbar, solange sie sichtbar ist */
 .toast { pointer-events:none; }
 .toast.show { pointer-events:auto; cursor:pointer; }
+
+/* 3.19.0 Zusammen sichtbar: wer ist dran, was wartet, was ist fertig */
+.chip-st { display:inline-block; margin-top:5px; font-size:15px; font-weight:700; line-height:1.3; border-radius:12px; padding:3px 10px; border:1px solid var(--line); color:var(--text-soft); background:var(--glass-2); }
+.chip-st.turn { background:var(--accent-deep); border-color:var(--accent-2); color:#fff; box-shadow:0 0 14px var(--glow); }
+.chip-st.ready { background:rgba(255,214,102,.16); border-color:rgba(255,214,102,.7); color:#ffe08a; }
+.chip-st.wait { color:var(--text-muted); }
+.deck.st-turn { border-color:var(--accent-2); box-shadow:0 0 0 1px var(--accent-2), 0 6px 22px var(--glow); }
+.deck.st-ready { border-color:rgba(255,214,102,.7); }
+[data-motion="on"] .deck.st-turn .d-ico { animation:stPulse 1.8s ease-in-out infinite; }
+@keyframes stPulse { 50% { transform:scale(1.15) rotate(-6deg); } }
+.d-prog { height:5px; border-radius:3px; background:var(--glass-2); margin-top:8px; overflow:hidden; }
+.d-prog i { display:block; height:100%; background:linear-gradient(90deg,var(--accent-2),var(--accent)); border-radius:3px; }
+.d-meta { font-size:15px; color:var(--text-muted); margin-top:4px; }
+.act-row { width:100%; display:flex; gap:10px; align-items:center; text-align:left; color:var(--text); background:var(--glass); border:1px solid var(--line); border-radius:var(--radius-s); padding:10px 12px; margin-top:8px; }
+.act-row.st-turn { border-color:var(--accent-2); }
+.act-row .ai { font-size:26px; flex-shrink:0; }
+.act-row .ab { flex:1; min-width:0; display:flex; flex-direction:column; align-items:flex-start; }
+.act-row .at { font-family:var(--serif); font-size:18px; line-height:1.25; }
+.act-row .d-go { font-size:22px; color:var(--accent-2); }
+.act-note { font-size:16px; color:var(--text-soft); margin-top:8px; line-height:1.4; }
+.act-note.sent { color:var(--text-muted); }
+.act-note.sent.seen { color:var(--accent-2); }
+.act-note i { font-style:normal; color:var(--text-muted); }
+.pstat { display:inline-block; margin:2px 0 12px; font-size:16px; font-weight:700; border-radius:12px; padding:4px 12px; border:1px solid var(--line); color:var(--text-soft); }
+.pstat.seen { color:var(--accent-2); border-color:var(--accent-2); }
+.round-note { font-size:16px; color:var(--text-soft); margin-top:14px; line-height:1.45; }
+#navBadgePlay, #navBadge { width:11px; height:11px; }
+.sub-dot { display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--accent-deep); margin-left:5px; vertical-align:middle; box-shadow:0 0 8px var(--glow); }
+.own-search { display:flex; gap:8px; margin-top:12px; }
+.own-search input { flex:1; min-width:0; font-size:17px; padding:9px 12px; border-radius:14px; border:1px solid var(--line); background:var(--glass-2); color:var(--text); }
+
+/* Papillon fliegt vorbei */
+.fly { position:fixed; right:14px; bottom:96px; z-index:60; display:flex; flex-direction:row-reverse; align-items:flex-end; gap:8px; max-width:calc(100vw - 28px); pointer-events:none; transition:opacity .3s; }
+.fly > * { pointer-events:auto; }
+.fly-b { background:none; border:0; padding:4px; font-size:40px; line-height:1; cursor:pointer; }
+.fly-w { display:inline-block; animation:flap .22s ease-in-out infinite alternate; }
+.fly.landed .fly-w { animation:flap .9s ease-in-out infinite alternate; }
+[data-motion="off"] .fly-w { animation:none; }
+@keyframes flap { from { transform:scaleX(1); } to { transform:scaleX(.45); } }
+.fly-bubble { background:var(--bg1, #2a1430); border:1px solid var(--accent-2); border-radius:18px 18px 4px 18px; padding:12px 14px; max-width:250px; box-shadow:0 10px 30px rgba(0,0,0,.45); opacity:0; transform:translateY(8px) scale(.96); transition:all .35s; visibility:hidden; }
+.fly.landed .fly-bubble { opacity:1; transform:none; visibility:visible; }
+.fly-bubble.gone { opacity:0 !important; }
+.fly-t { font-size:17px; line-height:1.4; color:var(--text); }
+@media (prefers-reduced-motion: reduce) { .fly-w, .fly.landed .fly-w { animation:none; } }
