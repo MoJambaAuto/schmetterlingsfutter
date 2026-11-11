@@ -218,6 +218,7 @@
   function activity() {
     const out = [];
     D.decks.forEach((deck) => { if (deck.adult && !S().intim) return; const st = deckStatus(deck); if (st) out.push(Object.assign({ deck }, st)); });
+    if (window.LZG) { try { window.LZG.activity().forEach((a) => out.push(a)); } catch (e) {} }
     const order = { turn: 0, ready: 1, wait: 2 }; out.sort((a, b) => order[a.kind] - order[b.kind]);
     return out;
   }
@@ -797,6 +798,7 @@
       const pr = c.querySelector('[data-pair]'); if (pr) pr.onclick = pairSheet;
       const ib = c.querySelector('[data-inbox]'); if (ib) ib.onclick = inboxSheet;
       const bk = c.querySelector('[data-bock]'); if (bk) bk.onclick = () => playDeck('bock');
+      c.querySelectorAll('[data-gact]').forEach((b) => { b.onclick = () => { const a = activity()[Number(b.dataset.gact)]; if (a && a.open) a.open(); }; });
       c.querySelectorAll('[data-act]').forEach((b) => { b.onclick = () => { const deck = deckById(b.dataset.act); if (deck) openDeckFromStatus(deck); }; });
       const mr = c.querySelector('[data-actmore]'); if (mr) mr.onclick = () => { L.showView('play'); L.showSub('play', mr.dataset.actmore); };
       const ck = c.querySelector('[data-check]'); if (ck) ck.onclick = async () => { ck.textContent = '…'; await pull(true); renderAll(); if (!joined()) L.toast('Noch nicht beigetreten'); };
@@ -820,11 +822,12 @@
   function activityHtml(n) {
     const name = L.esc(partnerName()); const acts = activity(); let html = '';
     if (n) html += '<div class="act-note">📬 ' + (n === 1 ? 'Eine neue Nachricht wartet im Postfach.' : n + ' neue Nachrichten warten im Postfach.') + '</div>';
-    acts.slice(0, 3).forEach((a) => {
+    acts.slice(0, 3).forEach((a, i) => {
+      if (a.game) { html += '<button type="button" class="act-row st-turn" data-gact="' + i + '"><span class="ai">' + a.icon + '</span><span class="ab"><span class="at">' + L.esc(a.title) + '</span><span class="chip-st turn">🎯 Du bist dran</span></span><span class="d-go">›</span></button>'; return; }
       const label = a.kind === 'turn' ? '<span class="chip-st turn">🎯 Du bist dran</span>' : a.kind === 'ready' ? '<span class="chip-st ready">✨ Ergebnis da</span>' : '<span class="chip-st wait">⏳ ' + name + ' ist dran' + (a.seen ? ' · gesehen 👀' : '') + '</span>';
       html += '<button type="button" class="act-row st-' + a.kind + '" data-act="' + a.deck.id + '"><span class="ai">' + a.deck.icon + '</span><span class="ab"><span class="at">' + L.esc(a.deck.title) + '</span>' + label + '</span><span class="d-go">›</span></button>';
     });
-    if (acts.length > 3) html += '<button type="button" class="pill-btn small ghost" data-actmore="' + (acts[3].deck.common ? 'gemeinsam' : 'match') + '" style="margin-top:6px">+ ' + (acts.length - 3) + ' weitere Spiele</button>';
+    if (acts.length > 3) html += '<button type="button" class="pill-btn small ghost" data-actmore="' + (acts[3].game ? 'spiele' : acts[3].deck.common ? 'gemeinsam' : 'match') + '" style="margin-top:6px">+ ' + (acts.length - 3) + ' weitere Spiele</button>';
     const ls = lastSent();
     if (ls) html += '<div class="act-note sent ' + (ls.seen ? 'seen' : '') + '">' + (ls.seen ? '❤ ' + name + ' hat deine letzte Nachricht gesehen' : '📨 Deine letzte Nachricht ist zugestellt, noch nicht gesehen') + (ls.text ? ' <i>„' + L.esc(ls.text.length > 34 ? ls.text.slice(0, 34) + '…' : ls.text) + '“</i>' : '') + '</div>';
     if (!html) html = '<div style="font-size:17px;color:var(--text-soft)">Gerade ist nichts offen. Schick ' + name + ' etwas oder startet ein Spiel – Papillon zeigt euch hier, wer dran ist.</div>';
@@ -832,8 +835,8 @@
   }
   /* Punkte an „Spielen“ und an den Reitern, wenn dort jemand wartet oder ein Ergebnis da ist */
   function renderTabDots() {
-    const hot = { match: 0, gemeinsam: 0, klartext: 0, intim: 0 };
-    activity().forEach((a) => { if (a.kind === 'wait') return; const k = a.deck.adult ? 'intim' : a.deck.talk ? 'klartext' : a.deck.common ? 'gemeinsam' : 'match'; hot[k]++; });
+    const hot = { spiele: 0, match: 0, gemeinsam: 0, klartext: 0, intim: 0 };
+    activity().forEach((a) => { if (a.kind === 'wait') return; if (a.game) { hot.spiele++; return; } const k = a.deck.adult ? 'intim' : a.deck.talk ? 'klartext' : a.deck.common ? 'gemeinsam' : 'match'; hot[k]++; });
     const any = Object.keys(hot).some((k) => hot[k]);
     const nb = $('navBadgePlay'); if (nb) nb.classList.toggle('hidden', !any);
     document.querySelectorAll('#view-play .seg [data-sub]').forEach((b) => {

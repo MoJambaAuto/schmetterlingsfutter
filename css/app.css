@@ -751,3 +751,38 @@ html.cam-open, html.cam-open body { overflow:hidden; }
 .party-big { font-size:56px; }
 @keyframes partyIn { from { transform:scale(.6); opacity:0; } to { transform:none; opacity:1; } }
 .party-b { position:absolute; left:50%; top:50%; font-size:34px; z-index:1; pointer-events:none; }
+
+/* 3.24.0 Spiele zu zweit */
+.hub-h { margin:18px 0 8px; }
+.hub-soon .chips { display:flex; flex-wrap:wrap; gap:6px; }
+.chip.soon { display:inline-block; font-size:15px; font-weight:700; color:var(--text-soft); border:1.5px dashed var(--line); border-radius:16px; padding:7px 12px; opacity:.85; }
+.lg-row { position:relative; }
+.lg-lie { display:flex; align-items:center; gap:6px; font-size:15px; color:var(--text-soft); margin-top:6px; }
+.lg-lie input { width:18px; height:18px; accent-color:var(--accent-deep); }
+.lg-pick { display:block; width:100%; text-align:left; font-size:18px; line-height:1.4; color:var(--text); background:var(--glass); border:1.5px solid var(--line); border-radius:var(--radius-s); padding:12px 14px; margin-bottom:8px; }
+.lg-pick.true { border-color:rgba(126,240,168,.6); }
+.lg-pick.lie { border-color:#ff8a8a; background:rgba(255,100,120,.12); }
+.lg-pick.lie::before { content:'🤥 '; }
+.lg-pick.picked { box-shadow:0 0 0 2px var(--accent-2); }
+.lg-res { font-size:18px; text-align:center; margin:8px 0; }
+.lg-score { text-align:center; font-size:16px; font-weight:700; color:var(--accent-2); }
+.story { font-family:var(--serif); font-size:20px; line-height:1.6; background:var(--glass); border:1px solid var(--line); border-radius:var(--radius-s); padding:14px 16px; }
+.st-me { color:var(--text); }
+.st-them { color:var(--accent-2); }
+.st-count { font-size:15px; color:var(--text-muted); margin-top:6px; }
+.jg-hint { display:flex; gap:10px; align-items:flex-start; font-size:18px; line-height:1.4; background:var(--glass); border:1px solid var(--line); border-radius:var(--radius-s); padding:12px 14px; margin-bottom:8px; }
+.jg-hint span { flex-shrink:0; width:28px; height:28px; border-radius:50%; background:var(--accent-deep); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:15px; }
+.jg-hint.locked { color:var(--text-muted); border-style:dashed; }
+.fg-duel { display:flex; align-items:center; justify-content:center; gap:16px; margin:10px 0; }
+.fg-duel > div:not(.vs) { text-align:center; min-width:90px; background:var(--glass); border:1px solid var(--line); border-radius:var(--radius-s); padding:10px; }
+.fg-duel span { display:block; font-size:15px; color:var(--text-soft); }
+.fg-duel b { font-family:var(--serif); font-size:34px; font-weight:400; }
+.fg-duel .vs { font-size:14px; color:var(--text-muted); text-transform:uppercase; letter-spacing:2px; }
+.fg-week { text-align:center; font-size:16px; font-weight:700; color:var(--accent-2); }
+.fang { position:fixed; inset:0; z-index:85; background:radial-gradient(ellipse at 50% 120%, #4f7a3a 0%, #2b4d2a 35%, #1a2f22 70%, #0f1a14 100%); touch-action:none; }
+.fang canvas { display:block; }
+.fg-hud { position:absolute; top:calc(12px + env(safe-area-inset-top)); left:0; right:0; display:flex; justify-content:center; gap:22px; pointer-events:none; }
+.fg-hud span { font-family:var(--serif); font-size:30px; color:#fff; background:rgba(0,0,0,.35); border-radius:16px; padding:4px 16px; min-width:64px; text-align:center; }
+.fg-pts::before { content:'🦋 '; font-size:22px; }
+.fg-time::before { content:'⏱ '; font-size:22px; }
+.fg-x { position:absolute; top:calc(12px + env(safe-area-inset-top)); left:12px; }

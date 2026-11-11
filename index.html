@@ -146,7 +146,8 @@
     <!-- ===== Orakel ===== -->
     <section class="view" id="view-play" aria-labelledby="nav-play">
       <div class="seg" role="tablist" data-seg="play">
-        <button role="tab" data-sub="match" class="active" aria-selected="true">🎯 Gleichklang</button>
+        <button role="tab" data-sub="spiele" class="active" aria-selected="true">🎲 Spiele</button>
+        <button role="tab" data-sub="match" aria-selected="false">🎯 Gleichklang</button>
         <button role="tab" data-sub="gemeinsam" aria-selected="false">🤝 Gemeinsam</button>
         <button role="tab" data-sub="klartext" aria-selected="false">💬 Klartext</button>
         <button role="tab" data-sub="music" aria-selected="false">🎵 Musik</button>
@@ -166,7 +167,12 @@
         <div class="card soft hidden" id="commonBox"></div>
         <div id="commonList" style="width:100%"></div>
       </div>
-      <div class="sub active" id="sub-match">
+      <div class="sub active" id="sub-spiele">
+        <div class="view-title">Spiele zu zweit</div>
+        <div class="view-sub">Gegeneinander, miteinander, jeden Tag</div>
+        <div id="spieleList" style="width:100%"></div>
+      </div>
+      <div class="sub" id="sub-match">
         <div class="view-title">Gleichklang</div>
         <div class="view-sub">Ihr antwortet getrennt – sichtbar wird nur, was beide wollen</div>
         <div id="deckList" style="width:100%"></div>
@@ -480,6 +486,7 @@
 <script src="js/kamera.js"></script>
 <script src="js/daten.js"></script>
 <script src="js/koppeln.js"></script>
+<script src="js/spiele.js"></script>
 <script src="js/stats.js"></script>
 </body>
 </html>

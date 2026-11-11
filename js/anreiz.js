@@ -22,6 +22,7 @@
     const p = P(); const name = p ? p.partnerName() : S().receiver;
     if (p && p.joined()) {
       const a = p.activity().find((x) => x.kind !== 'wait');
+      if (a && a.game) return { key: 'act_' + a.id, text: name + ' wartet bei „' + a.title + '“ auf dich!', go: 'Los', run: a.open };
       if (a) return { key: 'act_' + a.deck.id, text: a.kind === 'turn' ? name + ' wartet bei „' + a.deck.title + '“ auf dich!' : 'Euer Ergebnis bei „' + a.deck.title + '“ ist da ✨', go: 'Ansehen', run: () => p.openDeckFromStatus(a.deck) };
     }
     /* Noch nicht verbunden: daran erinnert Papillon zuerst (jedes zweite Mal) */
@@ -40,6 +41,11 @@
       if (text) pool.push({ key: 'deck_' + deck.id, text, go: 'Los', run: () => p && p.playDeck(deck.id) });
     });
     if (window.LZK) pool.push({ key: 'kamera', text: 'Ein Selfie mit Schmetterlingen für ' + name + '? 📸', go: 'Los', run: () => window.LZK.open() });
+    if (window.LZG) {
+      pool.push({ key: 'g_fang', text: 'Schon Schmetterlinge gefangen heute? Wer schafft mehr? 🦋', go: 'Los', run: () => window.LZG.fangOpen() });
+      pool.push({ key: 'g_luege', text: 'Zwei Wahrheiten, eine Lüge – kann ' + name + ' dich durchschauen? 🕵️', go: 'Los', run: () => window.LZG.luegeNew() });
+      pool.push({ key: 'g_story', text: 'Schreibt zusammen eine verrückte Geschichte 📖', go: 'Los', run: () => window.LZG.storyNew() });
+    }
     pool.push({ key: 'oracle', text: 'Zupf mal am Gänseblümchen-Orakel 🌼', go: 'Los', run: () => { L.showView('play'); L.showSub('play', 'oracle'); } });
     pool.push({ key: 'klartext', text: 'Etwas Wichtiges sanft ansprechen? Klartext hilft 🕊️', go: 'Ansehen', run: () => { L.showView('play'); L.showSub('play', 'klartext'); } });
     pool.push({ key: 'music', text: 'Ein Lied für ' + name + '? 🎵', go: 'Los', run: () => { L.showView('play'); L.showSub('play', 'music'); } });

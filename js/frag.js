@@ -15,6 +15,11 @@
 
   /* ---------- Was es alles gibt: [Gruppe, Symbol, Titel, Suchwörter, Antwort (nur wo nötig), Sprung] ---------- */
   const ITEMS = [
+    ['Zu zweit', '🎲', 'Spiele zu zweit: alle Spiele auf einen Blick', 'spiele spiel spielen duell gegeneinander miteinander zocken langweilig', '', view('play', 'spiele')],
+    ['Zu zweit', '🕵️', 'Zwei Wahrheiten, eine Lüge', 'luege lüge wahrheit wahrheiten raten durchschauen flunkern', '', () => { if (window.LZG) window.LZG.luegeNew(); }],
+    ['Zu zweit', '📖', 'Satz für Satz: gemeinsame Geschichte', 'geschichte erzaehlen erzählen schreiben story satz märchen', '', () => { if (window.LZG) window.LZG.storyNew(); }],
+    ['Zu zweit', '🦋', 'Schmetterlinge fangen: Tagesduell', 'fangen schmetterlinge jagen reaktion highscore punkte duell schnell', '', () => { if (window.LZG) window.LZG.fangOpen(); }],
+    ['Zu zweit', '🗺️', 'Schnitzeljagd: Überraschung verstecken', 'schnitzeljagd verstecken suchen hinweise schatzsuche ueberraschung überraschung', '', () => { if (window.LZG) window.LZG.jagdNew(); }],
     ['Zu zweit', '📷', 'Handys verbinden: Code scannen oder zeigen', 'verbinden koppeln kopplung partner qr code scannen scanner kamera einladen einladung beitreten verbindung', '', () => { if (window.LZP) window.LZP.pairSheet(); }],
     ['Zu zweit', '📅', 'Unsere Daten: Jahrestag, Kennenlernen, erster Kuss, Hochzeitstag, Geburtstage', 'jahrestag datum kennengelernt kennenlernen kuss erster hochzeit hochzeitstag geburtstag geburtsdatum zusammen seit wann daten abgleichen', 'Gemeinsame Daten stehen bei verbundenen Apps automatisch bei euch beiden gleich drin.', () => { if (window.LZD) window.LZD.sheet('anniversary'); }],
     ['Schicken', '📸', 'Schmetterlings-Kamera: Selfie, Foto oder Video mit Schmetterlingen', 'kamera foto selfie video bild aufnehmen filter effekt schmetterling fluegel krone verwandlung ar', '', () => { if (window.LZK) window.LZK.open(); }],
