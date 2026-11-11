@@ -584,3 +584,9 @@ a.pill-btn { text-decoration:none; display:inline-flex; align-items:center; just
 .swarm-i { width:auto; font-size:46px; }
 .swarm-i small { hyphens:manual; overflow-wrap:anywhere; }
 .bfly-pic svg, .bfly-big svg { filter:drop-shadow(0 2px 8px rgba(0,0,0,.35)); }
+
+/* 3.12.0 Verbinden-Hinweis */
+.promo-title { font-family:var(--serif); font-size:23px; margin-bottom:10px; }
+.promo-list { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; }
+.promo-list li { display:flex; gap:10px; align-items:flex-start; font-size:18px; line-height:1.4; color:var(--text); }
+.promo-list li span { flex:none; width:26px; text-align:center; }

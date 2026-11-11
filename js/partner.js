@@ -538,6 +538,18 @@
   }
   /* iPhone, Seite im Browser statt als Symbol auf dem Home-Bildschirm: dort hat die App einen eigenen Speicher */
   function iosBrowser() { let test = false; try { test = sessionStorage.getItem('sfIos') === '1'; } catch (e) {} /* nur zum Testen am PC */ return test || (/iphone|ipad|ipod/i.test(navigator.userAgent) && !navigator.standalone && !(window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)); }
+  /* Was das Verbinden bringt, in drei Zeilen */
+  function pairBenefits() {
+    return '<ul class="promo-list"><li><span>💌</span>Botschaften, Jingles und Überraschungen landen direkt bei ' + L.esc(S().receiver) + '</li><li><span>🎯</span>Spiele laufen geheim auf zwei Handys</li><li><span>🦋</span>Euer Schmetterling wächst gemeinsam</li></ul>';
+  }
+  /* Direkt nach der Einrichtung einmal anbieten */
+  function pairWelcome() {
+    if (!RELAY || paired() || P().pendingPair) return;
+    L.openSheet('<h3>💞 Verbindet eure Handys</h3>' + pairBenefits() + '<div class="row wrap" style="margin-top:16px"><button class="pill-btn primary" data-go>Jetzt verbinden</button><button class="pill-btn ghost" data-cancel>Später</button></div>', (sh) => {
+      sh.querySelector('[data-cancel]').onclick = L.closeSheet;
+      sh.querySelector('[data-go]').onclick = () => { L.closeSheet(); setTimeout(pairSheet, 80); };
+    });
+  }
   function offerPendingPair() {
     const code = P().pendingPair; if (!code || paired()) return;
     if (iosBrowser()) {
@@ -597,6 +609,19 @@
       const bk = c.querySelector('[data-bock]'); if (bk) bk.onclick = () => playDeck('bock');
       const ck = c.querySelector('[data-check]'); if (ck) ck.onclick = async () => { ck.textContent = '…'; await pull(true); renderAll(); if (!joined()) L.toast('Noch nicht beigetreten'); };
     }
+    // Solange die Apps nicht verbunden sind: oben auf der Startseite zeigen, was das Verbinden bringt. „Später“ blendet es für drei Tage aus.
+    const pp = $('pairPromo');
+    if (pp) {
+      const snoozed = (S().pairSnooze || 0) > Date.now();
+      if (!RELAY || !S().onboarded || (p && p.joined) || snoozed) { pp.classList.add('hidden'); pp.innerHTML = ''; }
+      else {
+        pp.classList.remove('hidden'); c.classList.add('hidden');
+        pp.innerHTML = '<div class="promo-title">💞 ' + (p ? 'Fast verbunden' : 'Verbindet eure Handys') + '</div>' + pairBenefits() +
+          '<div class="row wrap" style="margin-top:14px;justify-content:flex-start"><button class="pill-btn primary" data-pair>' + (p ? 'Link nochmal schicken' : 'Jetzt verbinden') + '</button><button class="pill-btn ghost" data-later>Später</button></div>';
+        pp.querySelector('[data-pair]').onclick = pairSheet;
+        pp.querySelector('[data-later]').onclick = () => { S().pairSnooze = Date.now() + 3 * 864e5; L.save(); renderHomeCards(); };
+      }
+    }
     renderGiftRadar();
   }
   function renderGiftRadar() {
@@ -643,7 +668,7 @@
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') pull(true); });
   window.addEventListener('focus', () => pull());
   setInterval(() => { if (document.visibilityState === 'visible') pull(); }, 45000);
-  $('obFinish').addEventListener('click', () => setTimeout(() => { renderAll(); offerPendingPair(); }, 80));
+  $('obFinish').addEventListener('click', () => setTimeout(() => { renderAll(); offerPendingPair(); setTimeout(pairWelcome, 1600); }, 80));
 
   window.LZP = { P, paired, joined, partnerName, sendOrShare, sendCoupon, send, pull, pairSheet, inboxSheet, playDeck, renderDecks, renderAll, renderGiftRadar, amazonUrl, tips, tipsHtml, bindTips, mountTips, leavePair, unread, RELAY, on, inboxType, openMatch, closeMatch, online, pairLink, ideaSheet, reportSheet, iosBrowser, partnerPron: () => (P().partner && P().partner.pron) || '', announce: () => { if (paired() && joined()) send({ t: 'hello', name: S().sender, pron: S().pron || '' }).catch(() => {}); } };
   renderAll(); handlePairParam();
