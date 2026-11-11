@@ -1,0 +1,119 @@
+/* Schmetterlingsfutter – „Frag Papillon“: Suche, die Fragen versteht und direkt zur Funktion springt.
+   Läuft ganz im Gerät, ohne Internet und ohne KI-Dienst. Findet sie nichts, kann man die Frage freiwillig als Idee spenden. */
+(function () {
+  'use strict';
+  const D = window.LUZIFER_DATA, L = window.LZ; if (!D || !L) return;
+  const $ = (id) => document.getElementById(id), esc = L.esc;
+  const P = () => window.LZP, N = () => window.LZN, X = () => window.LZX;
+
+  /* ---------- Sprünge ---------- */
+  const tap = (id) => () => { L.showView('home'); const b = $(id); if (b) b.click(); };
+  const view = (v, sub) => () => { L.showView(v); if (sub) L.showSub(v, sub); window.scrollTo(0, 0); };
+  const spot = (v, id, sub) => () => { L.showView(v); if (sub) L.showSub(v, sub); setTimeout(() => { const e = $(id); if (e) e.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 120); };
+  const klartext = (word) => () => { L.showView('play'); L.showSub('play', 'klartext'); if (N()) N().render(); setTimeout(() => { const el = Array.from(document.querySelectorAll('#klartextList > *')).find((x) => x.textContent.indexOf(word) >= 0); if (el) (el.querySelector('button') || el).click(); }, 150); };
+  const deck = (re) => () => { const d = (D.decks || []).find((x) => re.test(x.id) || re.test(x.title || '')); if (d && P()) P().playDeck(d.id); else view('play', 'match')(); };
+
+  /* ---------- Was es alles gibt: [Gruppe, Symbol, Titel, Suchwörter, Antwort (nur wo nötig), Sprung] ---------- */
+  const ITEMS = [
+    ['Botschaften', '💌', 'Neue Botschaft', 'botschaft nachricht liebesbotschaft text sagen herz tippen neu', '', tap('btnNext')],
+    ['Botschaften', '💋', 'Ein Kuss', 'kuss kuessen bussi', '', tap('btnKiss')],
+    ['Botschaften', '🤗', 'Kuscheln', 'kuscheln umarmung umarmen druecken', '', tap('btnHug')],
+    ['Botschaften', '☀️', 'Guten Morgen', 'morgen morgens aufwachen frueh gruss', '', tap('btnMorning')],
+    ['Botschaften', '🌙', 'Gute Nacht', 'nacht schlafen abend traeumen', '', tap('btnNight')],
+    ['Botschaften', '✨', 'Spruch zaubern', 'spruch generator zaubern zufall frech witzig', '', tap('btnGen')],
+    ['Botschaften', '✍️', 'Selbst schreiben', 'eigene botschaft schreiben selbst text verfassen eigener', '', tap('btnWrite')],
+    ['Botschaften', '🪶', 'Liebesgedicht', 'gedicht reim reimen poesie dichten vers', '', tap('btnPoem')],
+    ['Botschaften', '🌹', 'Warum ich dich liebe', 'gruende grund liebe warum liste sammlung', '', tap('btnReasons')],
+    ['Schicken', '🎁', 'Überraschung senden', 'ueberraschung umschlag geschenk spaeter zeit planen versenden auspacken', '', tap('btnGift')],
+    ['Schicken', '🎨', 'Kritzel-Gruß', 'malen zeichnen bild foto kritzeln stempel selfie kamera', '', tap('btnKritzel')],
+    ['Schicken', '🎶', 'Jingle schicken', 'jingle lied musik singen song ton melodie stimme frauenstimme maennerstimme umschalten', 'In der Jingle-Box wählst du oben zwischen Frauenstimme und Männerstimme.', tap('btnJingle')],
+    ['Schicken', '📡', 'Nah dran', 'qr code nfc sticker link naehe scannen', '', tap('btnNah')],
+    ['Schicken', '🖼️', 'Als Bild teilen', 'teilen instagram facebook whatsapp status story social bild karte posten tiktok', 'Tippe an einer Botschaft auf ↗ und wähle „Als Bild teilen“.', spot('home', 'msgText')],
+    ['Zu zweit', '💞', 'Handys verbinden', 'verbinden koppeln partner code paar link einladen zweites handy app verbindung', '', () => { if (P()) P().pairSheet(); }],
+    ['Zu zweit', '📬', 'Postfach', 'postfach nachrichten eingang erhalten bekommen angekommen', '', () => { if (P()) P().inboxSheet(); }],
+    ['Zu zweit', '🎯', 'Worauf habt ihr heute Bock?', 'spiel spielen bock lust heute abend gleichklang unternehmen', '', deck(/bock/i)],
+    ['Zu zweit', '🗓️', 'Date-Ideen', 'date dates ideen ausgehen verabredung ausflug', '', deck(/date/i)],
+    ['Zu zweit', '🌦️', 'Wetterbericht der Woche', 'wetter wetterbericht woche stimmung beziehung rueckblick', '', () => { if (N()) N().checkinStart(); }],
+    ['Zu zweit', '🗝️', 'Unausgesprochen', 'reden thema ansprechen unausgesprochen problem sorgen', '', deck(/reden/i)],
+    ['Zu zweit', '🕊️', 'Sag’s sanft', 'vorwurf streit formulieren sanft kritik aerger wut sauer', '', () => { if (N()) N().softStart(''); }],
+    ['Zu zweit', '⏳', 'Zwiegespräch', 'zwiegespraech timer reden zuhoeren gespraech aussprache', '', klartext('Zwiegespräch')],
+    ['Zu zweit', '🏳️', 'Weiße Fahne', 'streit frieden versoehnen entschuldigen pause sorry vertragen', '', klartext('Weiße Fahne')],
+    ['Zu zweit', '🃏', 'Gesprächskarte ziehen', 'frage fragen karte gespraech kennenlernen tiefer', '', klartext('Gesprächskarte')],
+    ['Zu zweit', '🌼', 'Gänseblümchen-Orakel', 'orakel blume gaensebluemchen liebt zupfen', '', view('play', 'oracle')],
+    ['Zu zweit', '🎹', 'Liebeslied-Pad', 'lied komponieren toene klavier aufnehmen melodie spielen', '', spot('play', 'songList', 'music')],
+    ['Zu zweit', '🔥', 'Zweisamkeit (18+)', 'zweisamkeit erotik flirt sex intim vorlieben lust leidenschaft', '', view('play', 'intim')],
+    ['Jeden Tag', '🦋', 'Flügelschlag des Tages', 'fluegelschlag aufgabe tagesaufgabe aktion heute tun piek', '', spot('home', 'piekCard')],
+    ['Jeden Tag', '🙏', 'Dankbarkeits-Notiz', 'danke dankbar dankbarkeit notiz', '', spot('home', 'thanksCard')],
+    ['Jeden Tag', '🦋', 'Euer Schmetterling', 'schmetterling futter fuettern raupe ei kokon schwarm punkte belohnung wachsen falter', 'Jede liebe Geste ist Futter. Er wächst für euch beide.', () => { L.showView('home'); const b = document.querySelector('#bflyCard [data-open]'); if (b) b.click(); }],
+    ['Jeden Tag', '📅', 'Unsere Zeit', 'jahrestag tage zusammen meilenstein zaehler seit wann', '', view('time', 'days')],
+    ['Jeden Tag', '💘', 'Anlässe und Erinnerungen', 'anlass anlaesse geburtstag valentinstag kalender erinnerung termin weihnachten geschenk', '', view('time', 'occasions')],
+    ['Jeden Tag', '🗺️', 'Love Map', 'wunsch wuensche lieblingsdinge groesse traum notieren merken geschenkidee', '', view('wishes', 'wishlist')],
+    ['Jeden Tag', '🎟️', 'Liebes-Gutscheine', 'gutschein gutscheine einloesen schenken', '', view('wishes', 'coupons')],
+    ['Jeden Tag', '⭐', 'Favoriten', 'favorit favoriten merken gespeichert lieblingsbotschaft', '', spot('home', 'favPanel')],
+    ['Verwaltung', '✏️', 'Namen und Symbole ändern', 'name namen aendern symbol emoji anrede', '', spot('settings', 'setSender')],
+    ['Verwaltung', '🎨', 'Farbwelt', 'farbe farben design aussehen dunkel hell', '', spot('settings', 'themeGrid')],
+    ['Verwaltung', '💾', 'Daten sichern', 'sichern sicherung export import wiederherstellen neues handy uebertragen loeschen', '', spot('settings', 'btnExport')],
+    ['Verwaltung', '🔔', 'Animationen und Vibration', 'animation animationen vibration ausschalten bewegung', '', spot('settings', 'togMotion')],
+    ['Verwaltung', '📱', 'Auf dem iPhone nutzen', 'iphone apple ios installieren safari bildschirm', 'Öffne die Seite in Safari, tippe auf Teilen und dann „Zum Home-Bildschirm“.', null],
+    ['Verwaltung', '💡', 'Idee spenden', 'idee vorschlag feedback verbessern mitmachen', '', () => { if (P()) P().ideaSheet('frage'); }],
+    ['Verwaltung', '🚩', 'Etwas melden', 'melden fehler unpassend funktioniert nicht kaputt', '', () => { if (P()) P().reportSheet(''); }],
+    ['Verwaltung', '🔒', 'Datenschutz', 'datenschutz daten privat sicher verschluesselt impressum', '', () => { location.href = 'privacy.html'; }]
+  ];
+
+  /* ---------- Verstehen: Umlaute glätten, Füllwörter weg, Tippfehler verzeihen ---------- */
+  const norm = (s) => String(s).toLowerCase().replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss').replace(/[^a-z0-9]+/g, ' ').trim();
+  const STOP = new Set('wie kann ich wo ist sind der die das ein eine einen mein meine meinen meinem meiner was und zu fuer mit man mache machen finde finden geht gibt es den dem im in an auf bitte moechte will soll kannst du mir uns wir ihr sich nicht oder aber auch noch mal etwas'.split(' '));
+  function lev1(a, b) { // Abstand höchstens 1?
+    if (Math.abs(a.length - b.length) > 1) return false; let i = 0, j = 0, d = 0;
+    while (i < a.length && j < b.length) { if (a[i] === b[j]) { i++; j++; continue; } if (++d > 1) return false; if (a.length > b.length) i++; else if (b.length > a.length) j++; else { i++; j++; } }
+    return d + (a.length - i) + (b.length - j) <= 1;
+  }
+  const INDEX = ITEMS.map((it) => ({ it, t: norm(it[2]).split(' '), k: norm(it[3]).split(' ') }));
+  function search(q) {
+    const words = norm(q).split(' ').filter((w) => w.length > 1 && !STOP.has(w)); if (!words.length) return [];
+    return INDEX.map((e) => {
+      let score = 0;
+      words.forEach((w) => {
+        let best = 0;
+        e.t.concat(e.k).forEach((x, i) => {
+          const title = i < e.t.length ? 1 : 0; let s = 0;
+          if (x === w) s = 3; else if (x.length >= 3 && w.length >= 3 && (x.indexOf(w) === 0 || w.indexOf(x) === 0)) s = 2; else if (w.length >= 5 && lev1(w, x)) s = 1.5; else if (w.length >= 4 && x.indexOf(w) > 0) s = 1;
+          if (s) best = Math.max(best, s + title * 0.5);
+        });
+        score += best;
+      });
+      return { it: e.it, score };
+    }).filter((r) => r.score >= 1.5).sort((a, b) => b.score - a.score).slice(0, 6).map((r) => r.it);
+  }
+
+  /* ---------- Oberfläche ---------- */
+  const row = (it) => '<button type="button" class="frag-row" data-i="' + ITEMS.indexOf(it) + '"><span class="frag-e">' + it[1] + '</span><span class="frag-b"><span class="frag-t">' + esc(it[2]) + '</span>' + (it[4] ? '<span class="frag-a">' + esc(it[4]) + '</span>' : '') + '</span>' + (it[5] ? '<span class="frag-go" aria-hidden="true">›</span>' : '') + '</button>';
+  function open() {
+    L.openSheet('<h3>🦋 Frag Papillon</h3><div class="field" style="margin-bottom:10px"><input id="fragQ" type="search" autocomplete="off" enterkeyhint="search" placeholder="Was möchtest du tun?" aria-label="Was möchtest du tun?"></div><div id="fragOut"></div><div class="row" style="margin-top:12px"><button class="pill-btn ghost" data-cancel>Schließen</button></div>', (sh) => {
+      const inp = sh.querySelector('#fragQ'), out = sh.querySelector('#fragOut');
+      function draw() {
+        const q = inp.value.trim(); let html = '';
+        if (!q) { let g = ''; ITEMS.forEach((it) => { if (it[0] !== g) { g = it[0]; html += '<div class="eyebrow frag-g">' + esc(g) + '</div>'; } html += row(it); }); }
+        else {
+          const hits = search(q);
+          html = hits.length ? hits.map(row).join('') : '<p class="about" style="margin:6px 0 12px">Dazu finde ich noch nichts.</p>' + (D.ideaBox && P() ? '<button type="button" class="pill-btn" id="fragAsk">💡 Frage an uns schicken</button>' : '');
+        }
+        out.innerHTML = html;
+        out.querySelectorAll('.frag-row').forEach((b) => b.onclick = () => { const it = ITEMS[Number(b.dataset.i)]; if (!it[5]) return; L.closeSheet(); setTimeout(it[5], 60); });
+        const ask = out.querySelector('#fragAsk'); if (ask) ask.onclick = async () => { ask.disabled = true; try { await fetch(P().RELAY + '/idea', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ kind: 'sonstiges', text: ('FRAGE | ' + q).slice(0, 240), app: D.version }) }); L.toast('Danke! Wir schauen es uns an.'); L.closeSheet(); } catch (e) { ask.disabled = false; L.toast('Keine Verbindung. Versuch es später nochmal.'); } };
+      }
+      inp.oninput = draw; inp.onkeydown = (e) => { if (e.key === 'Enter') { const first = out.querySelector('.frag-row'); if (first && inp.value.trim()) first.click(); } };
+      sh.querySelector('[data-cancel]').onclick = L.closeSheet;
+      draw();
+    });
+  }
+
+  /* feste Suchleiste oben, auf jeder Seite erreichbar */
+  const app = $('app');
+  if (app && !$('fragBar')) {
+    const bar = document.createElement('div'); bar.className = 'frag-bar'; bar.innerHTML = '<button type="button" id="fragBar"><span aria-hidden="true">🔍</span> Frag Papillon</button>';
+    app.insertBefore(bar, app.querySelector('header'));
+    $('fragBar').onclick = open;
+  }
+  window.LZQ = { open, search: (q) => search(q).map((it) => it[2]) };
+})();

@@ -294,7 +294,11 @@
     return D.pieks[hash(key + '|piek|' + s.sender) % D.pieks.length];
   }
   function renderPiek() {
-    const s = S(); const key = L.todayKey(); const p = todaysPiek(); const done = !!s.piekDone[key];
+    const s = S(); const key = L.todayKey(); const p = todaysPiek(); const idx = D.pieks.indexOf(p);
+    // erledigt gilt je Aufgabe: kommt eine neue (neuer Tag oder „Etwas anderes“), ist sie wieder offen
+    if (!s.piekDoneIdx) s.piekDoneIdx = {};
+    if (s.piekDone[key] === true && !s.piekDoneIdx[key]) s.piekDoneIdx[key] = [idx]; // Übernahme aus älteren Versionen
+    const done = (s.piekDoneIdx[key] || []).indexOf(idx) >= 0;
     $('piekText').textContent = L.fmt(p.t); $('piekCat').textContent = D.piekCats[p.c] || '';
     $('piekCard').classList.toggle('done', done);
     $('btnPiekDone').textContent = done ? 'Erledigt ✓ – stark!' : 'Erledigt ✓'; $('btnPiekDone').disabled = done;
@@ -304,8 +308,11 @@
     if (window.LZP) { window.LZP.mountTips($('piekTips'), 'piek_' + p.c, 'Hilft dabei'); window.LZP.mountTips($('thanksTips'), 'thanks', 'Danke mit etwas Kleinem'); }
   }
   $('btnPiekDone').onclick = () => {
-    const s = S(); const key = L.todayKey(); if (s.piekDone[key]) return;
-    s.piekDone[key] = true; s.piekCount++; L.save(); renderPiek(); L.spawnHearts(10, $('piekCard')); L.haptic(15);
+    const s = S(); const key = L.todayKey(); const idx = D.pieks.indexOf(todaysPiek());
+    if (!s.piekDoneIdx) s.piekDoneIdx = {}; const list = s.piekDoneIdx[key] || (s.piekDoneIdx[key] = []); if (list.indexOf(idx) >= 0) return;
+    list.push(idx); s.piekDone[key] = true; s.piekCount++;
+    Object.keys(s.piekDoneIdx).sort().slice(0, -14).forEach((k) => delete s.piekDoneIdx[k]);
+    L.save(); renderPiek(); L.spawnHearts(10, $('piekCard')); L.haptic(15);
     L.toast(L.pick(['Papillon schlägt begeistert mit den Flügeln. 🦋', 'So geht Liebe im Alltag. ✓', 'Erledigt. Schmetterlinge gefüttert. 🦋', 'Kein Wort zu ' + s.receiver + '. Einfach gemacht. Stark.']));
   };
   $('btnPiekOther').onclick = () => {
@@ -362,6 +369,11 @@
   document.querySelector('.seg[data-seg="wishes"] [data-sub="thanks"]').addEventListener('click', renderThanks);
   $('nav-wishes').addEventListener('click', renderThanks);
   $('nav-home').addEventListener('click', renderPiek);
+  // App bleibt oft tagelang offen: bei Rückkehr und bei Tageswechsel neu zeichnen
+  let piekDay = L.todayKey();
+  const piekFresh = () => { piekDay = L.todayKey(); renderPiek(); renderOccasionChip(); };
+  setInterval(() => { if (L.todayKey() !== piekDay) piekFresh(); }, 60000);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') piekFresh(); });
   // Nach Onboarding/Umschlag den Chip aktualisieren
   $('obFinish').addEventListener('click', () => setTimeout(() => { renderOccasionChip(); renderPiek(); }, 50));
 })();
