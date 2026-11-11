@@ -1,0 +1,336 @@
+/* Papillon in der Heide – kleines 3D-Spiel (Three.js r160, lazy geladen).
+   Fliegen mit virtuellem Stick, Schmetterlinge antippen zum Fangen. Runde 150 s.
+   Ergebnis in S.heide = { best, runden, summe, arten:{id:anzahl}, letzte:{pts,datum,arten} }.
+   Schnittstelle für andere Bausteine: window.LZH = { open, ARTEN, stand } */
+(function () {
+  'use strict';
+  const L = window.LZ; if (!L) return;
+  const C = (k) => window.LZS && window.LZS.count(k);
+  const ROUND = 150, WORLD = 95, N_BF = 26;
+  const ARTEN = [
+    { id: 'kohl', name: 'Kohlweißling', col: 0xf4f1e8, pts: 1, w: 30, sz: 0.8 },
+    { id: 'zitrone', name: 'Zitronenfalter', col: 0xe8e05a, pts: 1, w: 30, sz: 0.85 },
+    { id: 'blau', name: 'Bläuling', col: 0x6fa8ff, pts: 2, w: 18, sz: 0.65 },
+    { id: 'fuchs', name: 'Kleiner Fuchs', col: 0xff7a2e, pts: 2, w: 16, sz: 0.9 },
+    { id: 'pfau', name: 'Tagpfauenauge', col: 0xc2283b, pts: 3, w: 10, sz: 1.0 },
+    { id: 'admiral', name: 'Admiral', col: 0x4a2f55, pts: 3, w: 8, sz: 1.0 },
+    { id: 'schwalbe', name: 'Schwalbenschwanz', col: 0xf2c94c, pts: 5, w: 4, sz: 1.2 },
+    { id: 'gold', name: 'Goldener Falter', col: 0xffd700, pts: 10, w: 0, sz: 1.25, gold: true }
+  ];
+  const AW = ARTEN.reduce((a, s) => a + s.w, 0);
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const stand = () => { const S = L.S; if (!S.heide) S.heide = { best: 0, runden: 0, summe: 0, arten: {} }; if (!S.heide.arten) S.heide.arten = {}; return S.heide; };
+
+  /* ---------- einmalig: Stil ---------- */
+  function css() {
+    if (document.getElementById('heide-css')) return;
+    const s = document.createElement('style'); s.id = 'heide-css';
+    s.textContent = '.heide{position:fixed;inset:0;z-index:9000;background:#bfe3f2;touch-action:none;user-select:none;-webkit-user-select:none;overflow:hidden}' +
+      '.heide canvas{display:block;width:100%;height:100%}' +
+      '.hd-hud{position:absolute;top:calc(10px + env(safe-area-inset-top));left:0;right:0;display:flex;justify-content:center;gap:10px;pointer-events:none}' +
+      '.hd-hud span{font-family:var(--serif,serif);font-size:24px;color:#fff;background:rgba(40,20,60,.42);border-radius:14px;padding:3px 12px;min-width:56px;text-align:center}' +
+      '.hd-x{position:absolute;top:calc(10px + env(safe-area-inset-top));right:10px;width:44px;height:44px;border-radius:22px;border:0;background:rgba(40,20,60,.42);color:#fff;font-size:20px}' +
+      '.hd-toast{position:absolute;top:calc(64px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);color:#fff;background:rgba(40,20,60,.55);border-radius:14px;padding:6px 14px;font:700 17px Lato,sans-serif;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap}' +
+      '.hd-toast.on{opacity:1}.hd-toast.gold{background:rgba(160,110,0,.75)}' +
+      '.hd-stick{position:absolute;width:120px;height:120px;margin:-60px 0 0 -60px;border-radius:60px;background:rgba(255,255,255,.18);border:2px solid rgba(255,255,255,.5);pointer-events:none;display:none}' +
+      '.hd-stick i{position:absolute;left:35px;top:35px;width:50px;height:50px;border-radius:25px;background:rgba(255,255,255,.75)}' +
+      '.hd-hint{position:absolute;bottom:calc(18px + env(safe-area-inset-bottom));left:0;right:0;text-align:center;color:#fff;font:700 16px Lato,sans-serif;text-shadow:0 1px 4px rgba(0,0,0,.5);pointer-events:none;transition:opacity 1s}' +
+      '.hd-load{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#5a3d6e;font:700 18px Lato,sans-serif}' +
+      '.hd-arten{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:8px 0}.hd-arten span{background:var(--glass,#eee);border:1px solid var(--line,#ddd);border-radius:12px;padding:4px 10px;font-size:15px}' +
+      '.hd-arten span.no{opacity:.4}';
+    document.head.appendChild(s);
+  }
+
+  /* ---------- Three.js nur bei Bedarf laden ---------- */
+  let threeP = null;
+  function loadThree() {
+    if (window.THREE) return Promise.resolve();
+    if (threeP) return threeP;
+    threeP = new Promise((ok, no) => { const sc = document.createElement('script'); sc.src = 'js/vendor/three.min.js'; sc.onload = ok; sc.onerror = () => { threeP = null; no(new Error('three')); }; document.head.appendChild(sc); });
+    return threeP;
+  }
+
+  /* ---------- Startbildschirm ---------- */
+  function open() {
+    css(); const h = stand(); const n = Object.keys(h.arten).length;
+    const chips = ARTEN.map((a) => '<span class="' + (h.arten[a.id] ? '' : 'no') + '">' + (a.gold ? '🌟 ' : '🦋 ') + esc(a.name) + '</span>').join('');
+    L.openSheet('<h3>🦋 Papillon in der Heide</h3><p class="about" style="font-size:17px;margin-bottom:8px">Fliegt mit Papillon durch die Heide und fangt Schmetterlinge: Links ziehen zum Fliegen, Schmetterling antippen zum Fangen. Seltene Arten zählen mehr, 🌟 goldene 10 Punkte. Eine Runde dauert 2½ Minuten.</p>' +
+      '<p class="about" style="font-size:16px;margin:0 0 6px">💞 Zu zweit: Einer fliegt, der andere hält Ausschau und sagt an. Danach tauschen!</p>' +
+      '<div class="fg-week">Bestwert: ' + (h.best || 0) + ' · Arten entdeckt: ' + n + '/' + ARTEN.length + '</div><div class="hd-arten">' + chips + '</div>' +
+      '<div class="row" style="margin-top:10px"><button class="pill-btn ghost" data-cancel>Schließen</button><button class="pill-btn primary" data-go>Los fliegen!</button></div>', (sh) => {
+      sh.querySelector('[data-cancel]').onclick = L.closeSheet;
+      sh.querySelector('[data-go]').onclick = () => { L.closeSheet(); setTimeout(play, 100); };
+    });
+  }
+
+  /* ---------- Landschaft ---------- */
+  const hgt = (x, z) => 2.2 * Math.sin(x * 0.045) * Math.cos(z * 0.05) + 1.3 * Math.sin(x * 0.11 + 1.3) * Math.sin(z * 0.09 + 0.4) + 0.5 * Math.sin((x + z) * 0.21);
+  function rng(seed) { let s = seed >>> 0; return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; }
+
+  function play() {
+    css();
+    const root = document.createElement('div'); root.className = 'heide';
+    root.innerHTML = '<div class="hd-load">Die Heide blüht auf … 🌸</div>';
+    document.body.appendChild(root); document.documentElement.classList.add('cam-open');
+    loadThree().then(() => build(root)).catch(() => { root.remove(); document.documentElement.classList.remove('cam-open'); L.openSheet('<h3>Hoppla</h3><p class="about">Das Spiel konnte nicht geladen werden. Bitte einmal mit Internet öffnen, danach geht es auch offline.</p><div class="row"><button class="pill-btn primary" data-cancel>OK</button></div>', (sh) => { sh.querySelector('[data-cancel]').onclick = L.closeSheet; }); });
+  }
+
+  function build(root) {
+    const T = window.THREE; root.innerHTML = '';
+    C('game_play:heide');
+    let pr = Math.min(1.5, window.devicePixelRatio || 1);
+    let renderer;
+    try { renderer = new T.WebGLRenderer({ antialias: false, powerPreference: 'low-power' }); } catch (e) { root.remove(); document.documentElement.classList.remove('cam-open'); L.openSheet('<h3>Hoppla</h3><p class="about">Dieses Handy kann leider keine 3D-Grafik anzeigen.</p><div class="row"><button class="pill-btn primary" data-cancel>OK</button></div>', (sh) => { sh.querySelector('[data-cancel]').onclick = L.closeSheet; }); return; }
+    renderer.setPixelRatio(pr); renderer.setSize(root.clientWidth, root.clientHeight);
+    root.appendChild(renderer.domElement);
+    root.insertAdjacentHTML('beforeend', '<div class="hd-hud"><span class="hd-pts">🦋 0</span><span class="hd-time">⏱ 2:30</span></div><button type="button" class="hd-x" aria-label="Runde beenden">✕</button><div class="hd-toast"></div><div class="hd-stick"><i></i></div><div class="hd-hint">👈 Links ziehen zum Fliegen · Schmetterling antippen zum Fangen</div>');
+    const $ = (s) => root.querySelector(s);
+
+    const scene = new T.Scene();
+    const SKY = 0xbfe3f2; scene.background = new T.Color(SKY); scene.fog = new T.Fog(SKY, 35, 110);
+    const cam = new T.PerspectiveCamera(62, root.clientWidth / root.clientHeight, 0.5, 140);
+    scene.add(new T.HemisphereLight(0xfff4e0, 0x6b5a7a, 1.1));
+    const sun = new T.DirectionalLight(0xffffff, 1.4); sun.position.set(30, 50, 20); scene.add(sun);
+    const R = rng(4711);
+    const disposables = [];
+    const keep = (o) => { disposables.push(o); return o; };
+
+    /* Boden: flach schattiert, Farben je Dreieck (Heidekraut lila / Gras grün / Sandweg) */
+    {
+      const g = new T.PlaneGeometry(230, 230, 56, 56).toNonIndexed(); g.rotateX(-Math.PI / 2);
+      const p = g.attributes.position, col = new Float32Array(p.count * 3);
+      for (let i = 0; i < p.count; i++) p.setY(i, hgt(p.getX(i), p.getZ(i)));
+      const cA = new T.Color(0x9a6aa8), cB = new T.Color(0x7d9a4e), cC = new T.Color(0xd9c38f), c = new T.Color();
+      for (let i = 0; i < p.count; i += 3) {
+        const x = (p.getX(i) + p.getX(i + 1) + p.getX(i + 2)) / 3, z = (p.getZ(i) + p.getZ(i + 1) + p.getZ(i + 2)) / 3;
+        const path = Math.abs(z - 18 * Math.sin(x * 0.04)) < 2.6; const m = Math.sin(x * 0.07) * Math.cos(z * 0.06) + 0.35 * Math.sin(x * 0.3 + z * 0.2);
+        c.copy(path ? cC : m > -0.1 ? cA : cB).offsetHSL(0, 0, (R() - 0.5) * 0.06);
+        for (let k = 0; k < 3; k++) col.set([c.r, c.g, c.b], (i + k) * 3);
+      }
+      g.setAttribute('color', new T.BufferAttribute(col, 3)); g.computeVertexNormals();
+      scene.add(new T.Mesh(keep(g), keep(new T.MeshLambertMaterial({ vertexColors: true, flatShading: true }))));
+    }
+    /* Deko als InstancedMesh: wenige Draw-Calls */
+    const dummy = new T.Object3D();
+    function scatter(geo, color, n, place, jitter) {
+      const m = new T.InstancedMesh(keep(geo), keep(new T.MeshLambertMaterial({ flatShading: true })), n);
+      const c = new T.Color();
+      for (let i = 0; i < n; i++) { place(dummy, i); dummy.updateMatrix(); m.setMatrixAt(i, dummy.matrix); c.set(color).offsetHSL((R() - 0.5) * jitter, 0, (R() - 0.5) * 0.12); m.setColorAt(i, c); }
+      scene.add(m); return m;
+    }
+    const spot = (o, min) => { let x, z; do { x = (R() - 0.5) * 210; z = (R() - 0.5) * 210; } while (Math.hypot(x, z) < (min || 0)); o.position.set(x, hgt(x, z), z); return o; };
+    scatter(new T.IcosahedronGeometry(1, 0), 0xb05fb5, 420, (o) => { spot(o, 4); const s = 0.6 + R() * 0.9; o.scale.set(s * 1.3, s * 0.7, s * 1.3); o.rotation.set(0, R() * 6, 0); o.position.y += 0.2; }, 0.08);
+    scatter(new T.ConeGeometry(0.9, 3.4, 6), 0x3f6b3a, 70, (o) => { spot(o, 8); const s = 0.7 + R() * 0.8; o.scale.set(s, s, s); o.position.y += 1.6 * s; o.rotation.set(0, R() * 6, 0); }, 0.03);
+    const trees = []; for (let i = 0; i < 38; i++) { const o = spot(new T.Object3D(), 10); trees.push({ x: o.position.x, y: o.position.y, z: o.position.z, s: 0.8 + R() * 0.6 }); }
+    scatter(new T.CylinderGeometry(0.22, 0.3, 6, 5), 0xf0ece2, trees.length, (o, i) => { const t = trees[i]; o.position.set(t.x, t.y + 3 * t.s, t.z); o.scale.setScalar(t.s); }, 0);
+    scatter(new T.IcosahedronGeometry(2.2, 0), 0x8cc152, trees.length, (o, i) => { const t = trees[i]; o.position.set(t.x, t.y + 6.6 * t.s, t.z); o.scale.set(t.s, t.s * 1.35, t.s); o.rotation.set(R(), R(), 0); }, 0.06);
+    scatter(new T.DodecahedronGeometry(0.8, 0), 0x9a958c, 30, (o) => { spot(o, 6); const s = 0.6 + R() * 1.2; o.scale.set(s, s * 0.6, s); o.rotation.set(R(), R(), R()); }, 0.02);
+    /* Blumen-Tupfer (Punkte, 1 Draw-Call) */
+    {
+      const n = 900, pos = new Float32Array(n * 3), col = new Float32Array(n * 3), c = new T.Color(), pal = [0xffffff, 0xffe066, 0xff9ecb, 0xd08bff];
+      for (let i = 0; i < n; i++) { const x = (R() - 0.5) * 210, z = (R() - 0.5) * 210; pos.set([x, hgt(x, z) + 0.35, z], i * 3); c.set(pal[i % 4]); col.set([c.r, c.g, c.b], i * 3); }
+      const g = new T.BufferGeometry(); g.setAttribute('position', new T.BufferAttribute(pos, 3)); g.setAttribute('color', new T.BufferAttribute(col, 3));
+      scene.add(new T.Points(keep(g), keep(new T.PointsMaterial({ size: 0.35, vertexColors: true }))));
+    }
+
+    /* Flügel-Geometrie (rechter Flügel, zeigt nach +x); innen dunkler = Muster */
+    const wingGeo = keep(new T.BufferGeometry());
+    {
+      const rim = [[0, 0.25], [0.55, 0.85], [1.1, 0.75], [1.05, 0.15], [0.75, -0.25], [0.85, -0.7], [0.4, -0.85], [0, -0.3]];
+      const pos = [], col = [];
+      for (let i = 0; i < rim.length - 1; i++) {
+        pos.push(0, 0, 0, rim[i][0], 0, -rim[i][1], rim[i + 1][0], 0, -rim[i + 1][1]);
+        col.push(0.55, 0.55, 0.55, 1, 1, 1, 1, 1, 1);
+      }
+      wingGeo.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); wingGeo.setAttribute('color', new T.Float32BufferAttribute(col, 3)); wingGeo.computeVertexNormals();
+    }
+    const wingMat = keep(new T.MeshLambertMaterial({ vertexColors: true, side: T.DoubleSide }));
+
+    /* Papillon (Spielfigur) */
+    const pap = new T.Group();
+    const papMat = keep(new T.MeshLambertMaterial({ vertexColors: true, side: T.DoubleSide, color: 0xff7eb6, emissive: 0x3a0a20 }));
+    const wR = new T.Mesh(wingGeo, papMat), wL = new T.Mesh(wingGeo, papMat); wL.scale.x = -1;
+    const bodyMat = keep(new T.MeshLambertMaterial({ color: 0x3b2546 }));
+    const body = new T.Mesh(keep(new T.CylinderGeometry(0.13, 0.09, 1.3, 6)), bodyMat); body.rotation.x = Math.PI / 2;
+    const head = new T.Mesh(keep(new T.IcosahedronGeometry(0.2, 1)), bodyMat); head.position.z = -0.75;
+    pap.add(wR, wL, body, head); pap.scale.setScalar(1.6); scene.add(pap);
+    const shadow = new T.Mesh(keep(new T.CircleGeometry(1.3, 12)), keep(new T.MeshBasicMaterial({ color: 0x2a1a33, transparent: true, opacity: 0.25, depthWrite: false })));
+    shadow.rotation.x = -Math.PI / 2; scene.add(shadow);
+
+    /* Schmetterlinge: ein InstancedMesh für alle Flügel + eins für Körper */
+    const wings = new T.InstancedMesh(wingGeo, wingMat, N_BF * 2); wings.instanceMatrix.setUsage(T.DynamicDrawUsage); scene.add(wings);
+    const bodies = new T.InstancedMesh(keep(new T.CylinderGeometry(0.07, 0.05, 0.9, 5).rotateX(Math.PI / 2)), keep(new T.MeshLambertMaterial({ color: 0x2b2030 })), N_BF);
+    bodies.instanceMatrix.setUsage(T.DynamicDrawUsage); scene.add(bodies);
+    const spark = new T.Points(keep(new T.BufferGeometry()), keep(new T.PointsMaterial({ color: 0xfff2a0, size: 0.45, transparent: true, opacity: 0.9, depthWrite: false })));
+    const SP = 24; spark.geometry.setAttribute('position', new T.BufferAttribute(new Float32Array(SP * 3), 3)); spark.frustumCulled = false; scene.add(spark);
+
+    const player = { x: 0, z: 0, yaw: 0, vx: 0, vz: 0 };
+    let camYaw = 0;
+    const bfs = [];
+    const pickArt = (goldChance) => { if (Math.random() < goldChance) return ARTEN[ARTEN.length - 1]; let r = Math.random() * AW; for (const a of ARTEN) { if ((r -= a.w) < 0) return a; } return ARTEN[0]; };
+    const colTmp = new T.Color();
+    function spawn(i, art, near) {
+      let x, z; do { const a = Math.random() * Math.PI * 2, d = near ? 14 + Math.random() * 30 : 8 + Math.random() * 80; x = player.x + Math.cos(a) * d; z = player.z + Math.sin(a) * d; } while (Math.hypot(x, z) > WORLD);
+      const b = { art, hx: x, hz: z, x, z, y: hgt(x, z) + 1.5, ph: Math.random() * 10, f: 9 + Math.random() * 5, yaw: 0, caught: -1, flee: 0 };
+      bfs[i] = b; colTmp.set(art.col); wings.setColorAt(i * 2, colTmp); wings.setColorAt(i * 2 + 1, colTmp);
+      if (wings.instanceColor) wings.instanceColor.needsUpdate = true;
+    }
+    for (let i = 0; i < N_BF; i++) spawn(i, i === 0 ? ARTEN[ARTEN.length - 1] : pickArt(0.03), false);
+
+    /* Steuerung */
+    const stick = { id: null, ox: 0, oy: 0, x: 0, y: 0, t0: 0, moved: false }, keys = {};
+    const stickEl = $('.hd-stick'), knob = stickEl.firstChild;
+    const cv = renderer.domElement;
+    cv.addEventListener('pointerdown', (e) => {
+      if (over) return;
+      const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+      if (stick.id === null && x < r.width * 0.45 && y > r.height * 0.3) {
+        stick.id = e.pointerId; stick.ox = x; stick.oy = y; stick.x = stick.y = 0; stick.t0 = performance.now(); stick.moved = false;
+        stickEl.style.display = 'block'; stickEl.style.left = x + 'px'; stickEl.style.top = y + 'px'; knob.style.transform = '';
+        try { cv.setPointerCapture(e.pointerId); } catch (er) {}
+        hideHint(); return;
+      }
+      tryCatch(x, y);
+    });
+    cv.addEventListener('pointermove', (e) => {
+      if (e.pointerId !== stick.id) return;
+      const r = cv.getBoundingClientRect(); let dx = e.clientX - r.left - stick.ox, dy = e.clientY - r.top - stick.oy;
+      const d = Math.hypot(dx, dy), m = 50; if (d > 8) stick.moved = true; if (d > m) { dx *= m / d; dy *= m / d; }
+      stick.x = dx / m; stick.y = dy / m; knob.style.transform = 'translate(' + dx + 'px,' + dy + 'px)';
+    });
+    const stickUp = (e) => {
+      if (e.pointerId !== stick.id) return;
+      if (!stick.moved && performance.now() - stick.t0 < 250) tryCatch(stick.ox, stick.oy); // kurzer Tipp links = auch Fangen
+      stick.id = null; stick.x = stick.y = 0; stickEl.style.display = 'none';
+    };
+    cv.addEventListener('pointerup', stickUp); cv.addEventListener('pointercancel', stickUp);
+    const kd = (e) => { keys[e.key.toLowerCase()] = e.type === 'keydown'; }; window.addEventListener('keydown', kd); window.addEventListener('keyup', kd);
+    let hinted = false; function hideHint() { if (hinted) return; hinted = true; const h = $('.hd-hint'); h.style.opacity = '0'; }
+
+    /* Fangen per Antippen: nächster Schmetterling am Tippunkt, nicht zu weit weg */
+    const v3 = new T.Vector3();
+    let pts = 0, caughtN = 0; const caughtArten = {};
+    function tryCatch(sx, sy) {
+      const w = cv.clientWidth, h = cv.clientHeight; let best = -1, bd = 1e9;
+      for (let i = 0; i < N_BF; i++) {
+        const b = bfs[i]; if (b.caught >= 0) continue; const dist = Math.hypot(b.x - player.x, b.z - player.z); if (dist > 16) continue;
+        v3.set(b.x, b.y, b.z).project(cam); if (v3.z > 1) continue;
+        const px = (v3.x + 1) / 2 * w, py = (1 - v3.y) / 2 * h; const d = Math.hypot(px - sx, py - sy);
+        const lim = 46 + 260 / Math.max(3, dist); if (d < lim && d < bd) { bd = d; best = i; }
+      }
+      if (best < 0) { L.haptic && L.haptic(4); return; }
+      const b = bfs[best]; b.caught = 0; pts += b.art.pts; caughtN++; caughtArten[b.art.id] = (caughtArten[b.art.id] || 0) + 1;
+      $('.hd-pts').textContent = '🦋 ' + pts; L.haptic && L.haptic(b.art.gold ? 40 : 10); flap = 1;
+      const isNew = !stand().arten[b.art.id] && caughtArten[b.art.id] === 1;
+      toast((b.art.gold ? '🌟 ' : '🦋 ') + b.art.name + ' +' + b.art.pts + (isNew ? ' · neue Art!' : ''), b.art.gold);
+    }
+    let toastT = 0; function toast(t, gold) { const el = $('.hd-toast'); el.textContent = t; el.className = 'hd-toast on' + (gold ? ' gold' : ''); clearTimeout(toastT); toastT = setTimeout(() => { el.className = 'hd-toast'; }, 1400); }
+
+    /* Schleife */
+    let over = false, paused = false, raf = 0, last = performance.now(), left = ROUND, flap = 0, clock = 0, slow = 0, fpsT = 0, fpsN = 0;
+    const fmt = (s) => { s = Math.max(0, Math.ceil(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+    const lerpAng = (a, b, t) => { let d = ((b - a + Math.PI) % (Math.PI * 2)) - Math.PI; if (d < -Math.PI) d += Math.PI * 2; return a + d * t; };
+    function frame(now) {
+      raf = requestAnimationFrame(frame);
+      const dt = Math.min(0.05, (now - last) / 1000); last = now; clock += dt;
+      left -= dt; if (left <= 0) return finish();
+      /* Leistung: wenn das Handy ruckelt, Auflösung senken */
+      fpsT += dt; fpsN++; if (fpsT > 2) { const avg = fpsT / fpsN; if (avg > 0.024 && pr > 0.75) { pr = Math.max(0.75, pr - 0.25); renderer.setPixelRatio(pr); renderer.setSize(root.clientWidth, root.clientHeight); } fpsT = fpsN = 0; }
+      /* Bewegung relativ zur Kamera */
+      let ix = stick.x, iy = stick.y;
+      if (keys.a || keys.arrowleft) ix -= 1; if (keys.d || keys.arrowright) ix += 1; if (keys.w || keys.arrowup) iy -= 1; if (keys.s || keys.arrowdown) iy += 1;
+      const mag = Math.min(1, Math.hypot(ix, iy)); const sp = 11;
+      if (mag > 0.05) {
+        const fx = Math.sin(camYaw), fz = Math.cos(camYaw); // Kamera schaut Richtung -f
+        const mx = (-fx * -iy + fz * ix), mz = (-fz * -iy - fx * ix);
+        const ml = Math.hypot(mx, mz) || 1; player.vx += ((mx / ml) * sp * mag - player.vx) * Math.min(1, dt * 5); player.vz += ((mz / ml) * sp * mag - player.vz) * Math.min(1, dt * 5);
+        player.yaw = lerpAng(player.yaw, Math.atan2(-player.vx, -player.vz), Math.min(1, dt * 8));
+      } else { player.vx *= Math.max(0, 1 - dt * 4); player.vz *= Math.max(0, 1 - dt * 4); }
+      player.x += player.vx * dt; player.z += player.vz * dt;
+      const pd = Math.hypot(player.x, player.z); if (pd > WORLD) { player.x *= WORLD / pd; player.z *= WORLD / pd; }
+      const gy = hgt(player.x, player.z), py = gy + 2.4 + Math.sin(clock * 2.2) * 0.25;
+      pap.position.set(player.x, py, player.z); pap.rotation.set(0, player.yaw, 0);
+      flap = Math.max(0, flap - dt * 2); const fa = Math.sin(clock * (9 + flap * 14)) * (0.55 + flap * 0.3) + 0.25;
+      wR.rotation.z = fa; wL.rotation.z = -fa;
+      shadow.position.set(player.x, gy + 0.08, player.z);
+      /* Kamera folgt sanft von hinten */
+      const moving = Math.hypot(player.vx, player.vz) > 2;
+      if (moving) camYaw = lerpAng(camYaw, player.yaw, Math.min(1, dt * 1.6));
+      const cx = player.x + Math.sin(camYaw) * 9, cz = player.z + Math.cos(camYaw) * 9;
+      const cy = Math.max(hgt(cx, cz) + 1.5, py + 3.6);
+      cam.position.set(cx, cy, cz); cam.lookAt(player.x, py + 0.8, player.z);
+      /* Schmetterlinge */
+      const sArr = spark.geometry.attributes.position.array; let sk = 0;
+      for (let i = 0; i < N_BF; i++) {
+        const b = bfs[i]; const t = clock + b.ph; let s = b.art.sz, wa;
+        if (b.caught >= 0) {
+          b.caught += dt; const k = Math.min(1, b.caught / 0.45);
+          b.x += (player.x - b.x) * k * 0.3; b.z += (player.z - b.z) * k * 0.3; b.y += (py - b.y) * k * 0.3; s *= 1 - k; wa = Math.sin(t * 30);
+          if (k >= 1) { spawn(i, pickArt(0.06), true); continue; }
+        } else {
+          const dx = b.x - player.x, dz = b.z - player.z, d = Math.hypot(dx, dz) || 1;
+          const scare = b.art.gold ? 9 : 6; if (d < scare) b.flee = Math.min(1, b.flee + dt * 3); else b.flee = Math.max(0, b.flee - dt);
+          const tx = b.hx + Math.sin(t * 0.37) * 6 + (dx / d) * b.flee * 10, tz = b.hz + Math.cos(t * 0.29) * 6 + (dz / d) * b.flee * 10;
+          const spd = b.art.gold ? 2.4 : 1.6; const ox = b.x, oz = b.z;
+          b.x += (tx - b.x) * Math.min(1, dt * spd * 0.5); b.z += (tz - b.z) * Math.min(1, dt * spd * 0.5);
+          if (b.flee > 0.5) { b.hx += (dx / d) * dt * 3; b.hz += (dz / d) * dt * 3; }
+          const hd = Math.hypot(b.hx, b.hz); if (hd > WORLD) { b.hx *= WORLD / hd; b.hz *= WORLD / hd; }
+          b.y = hgt(b.x, b.z) + 1.3 + Math.sin(t * 1.3) * 0.6 + b.flee * 0.8;
+          if (Math.abs(b.x - ox) + Math.abs(b.z - oz) > 1e-4) b.yaw = lerpAng(b.yaw, Math.atan2(-(b.x - ox), -(b.z - oz)), Math.min(1, dt * 6));
+          wa = Math.sin(t * b.f) * 0.7 + 0.2;
+          if (b.art.gold && sk < SP) { for (let q = 0; q < 6 && sk < SP; q++, sk++) { const a = t * 2 + q; sArr[sk * 3] = b.x + Math.cos(a) * 0.9; sArr[sk * 3 + 1] = b.y + Math.sin(a * 1.7) * 0.5; sArr[sk * 3 + 2] = b.z + Math.sin(a) * 0.9; } }
+        }
+        dummy.position.set(b.x, b.y, b.z); dummy.rotation.set(0, b.yaw, wa, 'YZX'); dummy.scale.set(s, s, s); dummy.updateMatrix(); wings.setMatrixAt(i * 2, dummy.matrix);
+        dummy.rotation.set(0, b.yaw, -wa, 'YZX'); dummy.scale.set(-s, s, s); dummy.updateMatrix(); wings.setMatrixAt(i * 2 + 1, dummy.matrix);
+        dummy.rotation.set(0, b.yaw, 0, 'YZX'); dummy.scale.set(s, s, s); dummy.updateMatrix(); bodies.setMatrixAt(i, dummy.matrix);
+      }
+      for (; sk < SP; sk++) sArr[sk * 3 + 1] = -999;
+      spark.geometry.attributes.position.needsUpdate = true; wings.instanceMatrix.needsUpdate = true; bodies.instanceMatrix.needsUpdate = true;
+      $('.hd-time').textContent = '⏱ ' + fmt(left);
+      renderer.render(scene, cam);
+    }
+    /* Pause bei Tab-/App-Wechsel (Akku) */
+    function vis() {
+      if (over) return;
+      if (document.hidden) { paused = true; cancelAnimationFrame(raf); }
+      else if (paused) { paused = false; last = performance.now(); raf = requestAnimationFrame(frame); }
+    }
+    document.addEventListener('visibilitychange', vis);
+    const resize = () => { renderer.setSize(root.clientWidth, root.clientHeight); cam.aspect = root.clientWidth / root.clientHeight; cam.updateProjectionMatrix(); };
+    window.addEventListener('resize', resize);
+    $('.hd-x').onclick = () => finish();
+
+    function cleanup() {
+      over = true; cancelAnimationFrame(raf); clearTimeout(toastT);
+      document.removeEventListener('visibilitychange', vis); window.removeEventListener('resize', resize);
+      window.removeEventListener('keydown', kd); window.removeEventListener('keyup', kd);
+      wings.dispose(); bodies.dispose(); disposables.forEach((d) => { try { d.dispose(); } catch (e) {} });
+      scene.traverse((o) => { if (o.isInstancedMesh) o.dispose(); });
+      renderer.dispose(); try { renderer.forceContextLoss(); } catch (e) {}
+      root.remove(); document.documentElement.classList.remove('cam-open');
+    }
+    function finish() {
+      if (over) return; cleanup();
+      const h = stand(), neu = Object.keys(caughtArten).filter((k) => !h.arten[k]);
+      Object.keys(caughtArten).forEach((k) => { h.arten[k] = (h.arten[k] || 0) + caughtArten[k]; });
+      const rekord = pts > (h.best || 0); if (rekord) h.best = pts;
+      h.runden = (h.runden || 0) + 1; h.summe = (h.summe || 0) + pts;
+      h.letzte = { pts, datum: new Date().toISOString().slice(0, 10), arten: caughtArten };
+      L.save(); C('game_done:heide');
+      if (window.LZG && window.LZG.renderHub) { try { window.LZG.renderHub(); } catch (e) {} }
+      const list = ARTEN.filter((a) => caughtArten[a.id]).map((a) => '<span>' + (a.gold ? '🌟 ' : '🦋 ') + esc(a.name) + ' ×' + caughtArten[a.id] + '</span>').join('') || '<span class="no">Diesmal keiner – nächstes Mal!</span>';
+      L.openSheet('<h3>🦋 ' + pts + ' Punkte</h3>' + (rekord && h.runden > 1 ? '<p class="about">🏆 Neuer Bestwert!</p>' : '') +
+        '<p class="about" style="margin:4px 0">' + caughtN + ' Schmetterlinge gefangen' + (neu.length ? ' · ' + neu.length + ' neue Art' + (neu.length > 1 ? 'en' : '') + ' entdeckt!' : '') + '</p><div class="hd-arten">' + list + '</div>' +
+        '<div class="fg-week">Bestwert: ' + h.best + ' · Arten: ' + Object.keys(h.arten).length + '/' + ARTEN.length + '</div>' +
+        '<p class="about" style="text-align:center;margin:8px 0 0">💞 Jetzt das Handy weitergeben – wer fängt mehr?</p>' +
+        '<div class="row" style="margin-top:10px"><button class="pill-btn ghost" data-cancel>Fertig</button><button class="pill-btn primary" data-again>Nochmal</button></div>', (sh) => {
+        sh.querySelector('[data-cancel]').onclick = L.closeSheet;
+        sh.querySelector('[data-again]').onclick = () => { L.closeSheet(); setTimeout(play, 100); };
+      });
+    }
+    resize(); raf = requestAnimationFrame(frame);
+    window.LZH._dbg = { bfs, player, cam, catchAt: tryCatch, cv };
+  }
+
+  window.LZH = { open, play, ARTEN, stand };
+})();

@@ -356,6 +356,7 @@
     box.appendChild(tile('🔥', 'Worauf habt ihr heute Bock?', 'Jeden Tag neu', () => P().playDeck('bock')));
     box.appendChild(tile('🌼', 'Gänseblümchen-Orakel', 'Zupfen, bis die Antwort kommt', () => L.showSub('play', 'oracle')));
     box.appendChild(tile('🎵', 'Musik', 'Lieder füreinander', () => L.showSub('play', 'music')));
+    box.appendChild(tile('🌸', 'Papillon in der Heide', '3D-Ausflug: Schmetterlinge fangen' + (L.S.heide && L.S.heide.best ? ' · Bestwert ' + L.S.heide.best : ''), () => { if (window.LZH) return window.LZH.open(); const sc = document.createElement('script'); sc.src = 'js/heide.js'; sc.onload = () => window.LZH && window.LZH.open(); document.head.appendChild(sc); }));
     const soon = document.createElement('div'); soon.className = 'hub-soon';
     soon.innerHTML = '<div class="eyebrow hub-h">✨ Bald</div><div class="chips">' + ['🙋 Wer würde eher …?', '🧠 Wie gut kennst du mich?', '🎨 Malen & Raten', '🎟️ Wochen-Bingo', '🌸 Euer Schmetterlingsgarten'].map((x) => '<span class="chip soon">' + x + '</span>').join('') + '</div>';
     box.appendChild(soon);
