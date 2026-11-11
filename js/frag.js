@@ -15,6 +15,12 @@
 
   /* ---------- Was es alles gibt: [Gruppe, Symbol, Titel, Suchwörter, Antwort (nur wo nötig), Sprung] ---------- */
   const ITEMS = [
+    ['Zu zweit', '🦋', 'Wanderzug (Backgammon)', 'backgammon wanderzug brettspiel wuerfel würfel steine tric trac puff', '', () => { if (window.LZG2) window.LZG2.newGame('wanderzug'); }],
+    ['Zu zweit', '🌼', 'Wiese durchsuchen (wie Schiffe versenken)', 'schiffe versenken verstecken suchen wiese raster treffer', '', () => { if (window.LZG2) window.LZG2.newGame('wiese'); }],
+    ['Zu zweit', '🐛', 'Raupe rät (Wortraten)', 'galgenmaennchen galgenmännchen hangman wort raten buchstaben raupe', '', () => { if (window.LZG2) window.LZG2.newGame('raupe'); }],
+    ['Zu zweit', '🎲', 'Würfelwiese (Würfelspiel)', 'kniffel yahtzee wuerfel würfel wuerfelspiel würfelspiel paschen', '', () => { if (window.LZG2) window.LZG2.newGame('wuerfel'); }],
+    ['Zu zweit', '🌸', 'Blumenbeete (wie Käsekästchen)', 'kaesekaestchen käsekästchen kästchen linien zaun beete', '', () => { if (window.LZG2) window.LZG2.newGame('beete'); }],
+    ['Zu zweit', '🎁', 'Liebesdienst als Einsatz', 'einsatz preis wette gewinnen verlieren liebesdienst gutschein', 'Vor jedem Duell wählbar: Wer verliert, schickt den Liebesdienst als Gutschein.', view('play', 'spiele')],
     ['Zu zweit', '🎲', 'Spiele zu zweit: alle Spiele auf einen Blick', 'spiele spiel spielen duell gegeneinander miteinander zocken langweilig', '', view('play', 'spiele')],
     ['Zu zweit', '🕵️', 'Zwei Wahrheiten, eine Lüge', 'luege lüge wahrheit wahrheiten raten durchschauen flunkern', '', () => { if (window.LZG) window.LZG.luegeNew(); }],
     ['Zu zweit', '📖', 'Satz für Satz: gemeinsame Geschichte', 'geschichte erzaehlen erzählen schreiben story satz märchen', '', () => { if (window.LZG) window.LZG.storyNew(); }],

@@ -38,22 +38,44 @@
     fang: { icon: '🦋', title: 'Schmetterlinge fangen' }
   };
 
+  /* ---------- Liebesdienst als Einsatz (gleiche Liste wie spiele2.js) ---------- */
+  function prizeHtml() {
+    const all = (window.LZG2 && window.LZG2.PRIZES) || ['10 Minuten Nackenmassage', 'Frühstück ans Bett', 'Heute den Abwasch übernehmen', 'Ein Lied vorsingen'];
+    const pick = all.slice().sort(() => Math.random() - 0.5).slice(0, 4);
+    return '<div class="field"><label>Einsatz: Wer verliert, schenkt …</label><div class="chips" id="pzChips"><button type="button" data-p="" class="on">Ohne Einsatz</button>' + pick.map((p) => '<button type="button" data-p="' + esc(p) + '">' + esc(p) + '</button>').join('') + '<button type="button" data-own>✏️ Eigener</button></div><input id="pzOwn" class="hidden" maxlength="60" placeholder="z. B. Pizza ausgeben" autocomplete="off"></div>';
+  }
+  function prizeBind(sh) {
+    let prize = ''; const own = sh.querySelector('#pzOwn');
+    sh.querySelectorAll('#pzChips button').forEach((b) => b.onclick = () => { sh.querySelectorAll('#pzChips button').forEach((x) => x.classList.toggle('on', x === b)); if (b.hasAttribute('data-own')) { own.classList.remove('hidden'); own.focus(); prize = null; } else { own.classList.add('hidden'); prize = b.dataset.p; } });
+    return () => (prize === null ? own.value.trim() : prize);
+  }
+  function payHtml(g, iLost) {
+    const pz = g.data.prize; if (!pz) return '';
+    if (!iLost) return '<p class="g2-prize">🎁 Den Einsatz schuldet dir ' + esc(you()) + ': <b>' + esc(pz) + '</b> 😉</p>';
+    return '<p class="g2-prize">🎁 Dein Einsatz: <b>' + esc(pz) + '</b></p>' + (g.data.paid ? '<p class="about">✓ Gutschein ist verschickt.</p>' : '<button type="button" class="pill-btn primary" data-pay>🎟️ Als Gutschein an ' + esc(you()) + ' schicken</button>');
+  }
+  function payBind(sh, g, title) {
+    const b = sh.querySelector('[data-pay]'); if (!b) return;
+    b.onclick = async () => { b.disabled = true; try { await P().sendCoupon({ icon: '🏆', title: g.data.prize, desc: 'Gewonnen bei ' + title }); g.data.paid = true; L.save(); b.textContent = '✓ Verschickt'; C('game_paid:' + g.kind); } catch (e) { b.disabled = false; } };
+  }
+
   /* ======================= Zwei Wahrheiten, eine Lüge ======================= */
   function luegeNew() {
     if (needPair()) return;
     L.openSheet('<h3>🕵️ Zwei Wahrheiten, eine Lüge</h3><p class="about" style="font-size:17px;margin-bottom:10px">Schreib drei Sätze über dich. Zwei stimmen, einer ist geflunkert. ' + esc(you()) + ' muss die Lüge finden.</p>' +
       [1, 2, 3].map((i) => '<div class="field lg-row"><label for="lg' + i + '">Satz ' + i + '</label><input id="lg' + i + '" maxlength="110" autocomplete="off" placeholder="' + ['z. B. Ich war schon mal auf einem Kamel.', 'z. B. Ich kann pfeifen wie ein Vogel.', 'z. B. Ich habe als Kind Schnecken gesammelt.'][i - 1] + '"><label class="lg-lie"><input type="radio" name="lgLie" value="' + (i - 1) + '"' + (i === 3 ? ' checked' : '') + '> Das ist die Lüge</label></div>').join('') +
-      '<div class="row" style="margin-top:8px"><button class="pill-btn ghost" data-cancel>Abbrechen</button><button class="pill-btn primary" data-go>Rätsel schicken 🕵️</button></div>', (sh) => {
-      sh.querySelector('[data-cancel]').onclick = L.closeSheet;
+      prizeHtml() + '<div class="row" style="margin-top:8px"><button class="pill-btn ghost" data-cancel>Abbrechen</button><button class="pill-btn primary" data-go>Rätsel schicken 🕵️</button></div>', (sh) => {
+      sh.querySelector('[data-cancel]').onclick = L.closeSheet; const getPrize = prizeBind(sh);
       sh.querySelector('[data-go]').onclick = async (e) => {
         const items = [1, 2, 3].map((i) => sh.querySelector('#lg' + i).value.trim());
         if (items.some((x) => x.length < 3)) { L.toast('Bitte alle drei Sätze ausfüllen'); return; }
         const lie = Number(sh.querySelector('input[name="lgLie"]:checked').value);
         /* Reihenfolge mischen, damit die Position nichts verrät */
         const order = [0, 1, 2].sort(() => Math.random() - 0.5); const shuffled = order.map((i) => items[i]); const lieAt = order.indexOf(lie);
-        const g = { id: uid('g'), kind: 'luege', mine: true, turn: 'them', created: Date.now(), updated: Date.now(), data: { items: shuffled, lie: lieAt } };
+        const prize = getPrize();
+        const g = { id: uid('g'), kind: 'luege', mine: true, turn: 'them', created: Date.now(), updated: Date.now(), data: { items: shuffled, lie: lieAt, prize } };
         e.currentTarget.disabled = true;
-        try { await send({ g: 'luege', id: g.id, op: 'new', items: shuffled, lie: lieAt }); games()[g.id] = g; L.save(); L.closeSheet(); L.toast('🕵️ Rätsel ist bei ' + you()); C('game_new:luege'); renderHub(); P().renderAll(); }
+        try { await send({ g: 'luege', id: g.id, op: 'new', items: shuffled, lie: lieAt, prize }); games()[g.id] = g; L.save(); L.closeSheet(); L.toast('🕵️ Rätsel ist bei ' + you()); C('game_new:luege'); renderHub(); P().renderAll(); }
         catch (err) { e.currentTarget.disabled = false; L.toast('Senden fehlgeschlagen – später nochmal'); }
       };
     });
@@ -70,7 +92,8 @@
         sh.querySelectorAll('.lg-pick').forEach((x) => { x.disabled = true; const i = Number(x.dataset.i); x.classList.add(i === g.data.lie ? 'lie' : 'true'); if (i === pick) x.classList.add('picked'); });
         const res = document.createElement('div'); res.className = 'lg-res';
         res.innerHTML = ok ? '<b>🕵️ Erwischt!</b> Du hast ' + esc(you()) + ' durchschaut.' : '<b>😄 Reingelegt!</b> ' + esc(you()) + ' hat dich an der Nase herumgeführt.';
-        sh.querySelector('.row').before(res); L.haptic(ok ? 25 : 10); if (ok) L.spawnHearts(8);
+        res.innerHTML += payHtml(g, !ok);
+        sh.querySelector('.row').before(res); payBind(res, g, 'Zwei Wahrheiten, eine Lüge'); L.haptic(ok ? 25 : 10); if (ok) L.spawnHearts(8);
         g.turn = 'done'; g.updated = Date.now(); g.data.pick = pick; const sc = score('luege'); if (ok) sc.me++; else sc.them++; L.save();
         try { await send({ g: 'luege', id: g.id, op: 'guess', pick }); } catch (e) {}
         C('game_done:luege'); renderHub(); P().renderAll();
@@ -84,9 +107,11 @@
     L.openSheet('<h3>🕵️ Zwei Wahrheiten, eine Lüge</h3>' +
       g.data.items.map((t, i) => '<div class="lg-pick ' + (done || g.mine ? (i === g.data.lie ? 'lie' : 'true') : '') + (done && i === g.data.pick ? ' picked' : '') + '">' + esc(t) + '</div>').join('') +
       '<p class="about" style="font-size:17px;margin:10px 0">' + (done ? (g.data.pick === g.data.lie ? (g.mine ? '🕵️ ' + esc(you()) + ' hat dich durchschaut.' : '🕵️ Du hast es erkannt.') : (g.mine ? '😄 ' + esc(you()) + ' ist darauf reingefallen.' : '😄 Da hat ' + esc(you()) + ' dich reingelegt.')) : '⏳ ' + esc(you()) + ' rätselt noch.') + '</p>' +
+      (done ? payHtml(g, g.mine ? g.data.pick === g.data.lie : g.data.pick !== g.data.lie) : (g.data.prize ? '<p class="g2-prize">🎁 Einsatz: <b>' + esc(g.data.prize) + '</b></p>' : '')) +
       '<div class="lg-score">Durchschaut: Du ' + sc.me + ' · ' + esc(you()) + ' ' + sc.them + '</div>' +
       '<div class="row" style="margin-top:12px"><button class="pill-btn ghost" data-cancel>Schließen</button><button class="pill-btn primary" data-again>Neues Rätsel</button></div>', (sh) => {
       sh.querySelector('[data-cancel]').onclick = L.closeSheet; sh.querySelector('[data-again]').onclick = () => { L.closeSheet(); setTimeout(luegeNew, 80); };
+      payBind(sh, g, 'Zwei Wahrheiten, eine Lüge');
     });
   }
 
@@ -278,12 +303,12 @@
     let g = gs[obj.id];
     if (kind === 'luege') {
       if (obj.op === 'new' && Array.isArray(obj.items) && obj.items.length === 3 && Number.isInteger(obj.lie) && !g) {
-        g = gs[obj.id] = { id: obj.id, kind, mine: false, turn: 'me', created: created || Date.now(), updated: Date.now(), data: { items: obj.items.map((x) => String(x).slice(0, 120)), lie: Math.max(0, Math.min(2, obj.lie)) } };
+        g = gs[obj.id] = { id: obj.id, kind, mine: false, turn: 'me', created: created || Date.now(), updated: Date.now(), data: { items: obj.items.map((x) => String(x).slice(0, 120)), lie: Math.max(0, Math.min(2, obj.lie)), prize: String(obj.prize || '').slice(0, 60) } };
         inboxNote(g, '🕵️ ' + name + ' hat dir ein Lügen-Rätsel geschickt'); L.toast('🕵️ ' + name + ': Zwei Wahrheiten, eine Lüge – rätsel mit!'); L.save(); renderHub(); return true;
       }
       if (obj.op === 'guess' && g && g.mine && Number.isInteger(obj.pick)) {
         g.turn = 'done'; g.updated = Date.now(); g.data.pick = obj.pick; const ok = obj.pick === g.data.lie; const sc = score('luege'); if (ok) sc.them++; else sc.me++;
-        inboxNote(g, ok ? '🕵️ ' + name + ' hat deine Lüge entlarvt' : '😄 ' + name + ' ist auf deine Lüge reingefallen');
+        inboxNote(g, ok ? '🕵️ ' + name + ' hat deine Lüge entlarvt' + (g.data.prize ? ' – Einsatz: ' + g.data.prize : '') : '😄 ' + name + ' ist auf deine Lüge reingefallen');
         L.toast(ok ? '🕵️ ' + name + ' hat dich durchschaut!' : '😄 Reingelegt! ' + name + ' hat dir geglaubt.'); L.save(); renderHub(); return true;
       }
       return false;

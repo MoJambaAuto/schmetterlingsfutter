@@ -1,5 +1,5 @@
 /* Schmetterlingsfutter Service Worker – App-Shell offline verfügbar machen. */
-const CACHE = 'schmetterlingsfutter-v3.25.0';
+const CACHE = 'schmetterlingsfutter-v3.25.1';
 const ASSETS = [
   './', './index.html', './privacy.html', './manifest.webmanifest',
   './css/app.css', './js/data.js', './js/data2.js', './js/vendor/qrcode.js', './js/app.js', './js/features.js', './js/partner.js', './js/naehe.js', './js/extra.js', './js/frag.js', './js/anreiz.js', './js/kamera.js', './js/daten.js', './js/koppeln.js', './js/spiele.js', './js/spiele2.js', './js/stats.js',
