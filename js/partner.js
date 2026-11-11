@@ -95,7 +95,10 @@
   async function send(obj) {
     if (!paired()) throw new Error('Nicht verbunden');
     const body = await encrypt(Object.assign({ at: Date.now() }, obj));
-    return post('/msg/send', { body });
+    const res = await post('/msg/send', { body });
+    // jede Geste an den Schatz ist Futter für den gemeinsamen Schmetterling
+    if (window.LZX && obj.t !== 'hello' && obj.t !== 'matchdone') { try { window.LZX.feed(obj.t); } catch (e) {} }
+    return res;
   }
   let pulling = false, lastPull = 0;
   async function pull(force) {
@@ -125,6 +128,7 @@
       const first = !p.name;
       if (name) p.name = name;
       if (typeof obj.pron === 'string') p.pron = obj.pron.slice(0, 20);
+      if (typeof obj.food === 'number' && window.LZX) { try { window.LZX.theirFood(obj.food); } catch (e) {} }
       if (name && S().receiver !== name) { S().receiver = name; L.renderHeader(); }
       if (first) { try { await send({ t: 'hello', name: S().sender, pron: S().pron || '', reply: true }); } catch (e) {} L.toast('💞 Verbunden mit ' + (name || 'deinem Schatz')); L.spawnHearts(14); }
       return true;
@@ -160,12 +164,13 @@
 
   /* ---------- Senden oder Teilen ---------- */
   function sendOrShare(text, label) {
-    if (!paired() || !joined()) return L.shareText(text + '\n— ' + S().sender + ' ❤');
+    const on = paired() && joined();
     L.openSheet('<h3>Wohin damit?</h3><p class="about" style="margin-bottom:14px;font-size:17px">' + L.esc(text.length > 160 ? text.slice(0, 160) + '…' : text) + '</p>' +
-      '<div class="row wrap"><button class="pill-btn primary" data-app>💌 In die App von ' + L.esc(partnerName()) + '</button><button class="pill-btn" data-share>↗ WhatsApp &amp; Co.</button><button class="pill-btn ghost" data-cancel>Abbrechen</button></div>', (sh) => {
+      '<div class="row wrap">' + (on ? '<button class="pill-btn primary" data-app>💌 In die App von ' + L.esc(partnerName()) + '</button>' : '') + '<button class="pill-btn' + (on ? '' : ' primary') + '" data-card>🖼️ Als Bild teilen</button><button class="pill-btn" data-share>↗ Als Text teilen</button><button class="pill-btn ghost" data-cancel>Abbrechen</button></div>', (sh) => {
       sh.querySelector('[data-cancel]').onclick = L.closeSheet;
       sh.querySelector('[data-share]').onclick = () => { L.closeSheet(); L.shareText(text + '\n— ' + S().sender + ' ❤'); };
-      sh.querySelector('[data-app]').onclick = async () => {
+      sh.querySelector('[data-card]').onclick = () => { L.closeSheet(); if (window.LZX) window.LZX.shareCard({ text, label: label || '', sig: S().sender }); else L.shareText(text + '\n— ' + S().sender + ' ❤'); };
+      const ab = sh.querySelector('[data-app]'); if (ab) ab.onclick = async () => {
         L.closeSheet();
         try { await send({ t: 'msg', text, label: label || '' }); L.toast('Zugestellt 💌 – liegt gleich bei ' + partnerName()); L.spawnHearts(8); }
         catch (e) { L.toast('Senden fehlgeschlagen – ' + (online() ? 'später nochmal' : 'offline')); }

@@ -224,8 +224,9 @@
       (m.t === 'pic' && m.img ? '<img class="pic-big" src="' + m.img + '" alt="Kritzel-Gruß">' : '') +
       (m.text ? '<div class="fp-text">' + esc(m.text) + '</div>' : '') +
       '<div class="row wrap" style="margin-top:12px">' + (m.t === 'jingle' && jingleById(m.jid) ? '<button class="pill-btn small primary" data-play>▶ Abspielen</button>' : '') +
-      '<button class="pill-btn small' + (m.t === 'jingle' ? '' : ' primary') + '" data-seen>❤ Gesehen</button><button class="pill-btn small ghost" data-reply>Antworten</button></div>';
+      '<button class="pill-btn small' + (m.t === 'jingle' ? '' : ' primary') + '" data-seen>❤ Gesehen</button><button class="pill-btn small ghost" data-reply>Antworten</button>' + (m.t !== 'jingle' && window.LZX ? '<button class="pill-btn small ghost" data-fpshare>🖼️ Teilen</button>' : '') + '</div>';
     const pl = c.querySelector('[data-play]'); if (pl) pl.onclick = () => { pl.textContent = '♪ …'; playJingle(jingleById(m.jid), () => { pl.textContent = '▶ Nochmal'; }, m.v || theirVoice()); L.spawnHearts(8, c); };
+    const fs = c.querySelector('[data-fpshare]'); if (fs) fs.onclick = () => { if (m.t === 'pic' && m.img) window.LZX.sharePic(m.img); else window.LZX.shareCard({ text: m.text, label: m.label || 'Für mich', sig: you() }); };
     c.querySelector('[data-seen]').onclick = () => { m.read = true; L.save(); L.spawnHearts(8, c); P.renderAll(); P.send({ t: 'seen' }).catch(() => {}); };
     c.querySelector('[data-reply]').onclick = () => { m.read = true; L.save(); P.renderAll(); replySheet(); };
   }

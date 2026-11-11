@@ -546,3 +546,33 @@ label.check input { width:24px; height:24px; accent-color:var(--accent-dark); }
 button.reason-text { background:transparent; border:0; padding:0; text-align:left; font-family:inherit; cursor:pointer; }
 .reason-item { align-items:center; }
 .reason-item .icon-btn { flex:none; }
+
+/* 3.11.0 Schmetterling, Gedicht, Futter */
+.bfly { display:flex; align-items:center; gap:14px; width:100%; background:transparent; border:0; padding:0; text-align:left; color:var(--text); font-family:inherit; cursor:pointer; }
+.bfly-pic { font-size:54px; line-height:1; width:68px; text-align:center; flex:none; }
+.bfly.froh .bfly-pic { animation:bflyFloat 2.6s ease-in-out infinite; }
+.bfly.schlaf .bfly-pic { opacity:.55; }
+.bfly-b { flex:1; min-width:0; display:flex; flex-direction:column; }
+.bfly-t { font-family:var(--serif); font-size:21px; }
+.bfly-s, .bfly-n { font-size:16px; color:var(--text-soft); }
+.bfly .progress { margin:8px 0 4px; height:8px; border-radius:4px; }
+.bfly-big { font-size:96px; line-height:1.1; text-align:center; margin:4px 0 8px; }
+.bfly-party { text-align:center; }
+.fly { display:inline-block; }
+.swarm { display:flex; flex-wrap:wrap; gap:10px; }
+.swarm-i { display:flex; flex-direction:column; align-items:center; width:92px; font-size:40px; }
+.swarm-i small { font-size:16px; color:var(--text-soft); text-align:center; line-height:1.25; }
+.futter-dots { display:flex; gap:8px; }
+.futter-dots i { width:22px; height:22px; border-radius:50%; border:2px solid var(--accent-2); }
+.futter-dots i.on { background:var(--accent-2); }
+.futter-pop { position:fixed; left:50%; bottom:110px; transform:translateX(-50%); z-index:60; background:var(--accent-dark); color:#fff; font-weight:700; font-size:19px; padding:8px 16px; border-radius:20px; pointer-events:none; animation:futterPop 1.7s ease forwards; }
+@keyframes futterPop { 0% { opacity:0; transform:translate(-50%,10px) scale(.8); } 15% { opacity:1; transform:translate(-50%,0) scale(1.08); } 70% { opacity:1; transform:translate(-50%,-26px) scale(1); } 100% { opacity:0; transform:translate(-50%,-60px) scale(1); } }
+@keyframes bflyFloat { 0%,100% { transform:translateY(0) rotate(-4deg); } 50% { transform:translateY(-6px) rotate(5deg); } }
+[data-motion="off"] .bfly.froh .bfly-pic { animation:none; }
+.poem { display:flex; flex-direction:column; gap:10px; margin:4px 0 16px; }
+.poem-part { display:flex; align-items:center; gap:10px; width:100%; text-align:left; background:var(--glass); border:1.5px solid var(--line-soft); border-radius:16px; padding:12px 14px; color:var(--text); font-family:var(--serif); font-style:italic; font-size:19px; line-height:1.5; cursor:pointer; }
+.poem-part span { flex:1; }
+.poem-part i { font-style:normal; font-size:22px; color:var(--accent-2); flex:none; }
+a.pill-btn { text-decoration:none; display:inline-flex; align-items:center; justify-content:center; }
+#pmTrait button.on, #pmMood button.on { background:var(--accent-dark); border-color:var(--accent-dark); color:#fff; }
+.msg-text, .fp-text, #sheet .about { white-space:pre-line; }
