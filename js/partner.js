@@ -192,9 +192,25 @@
   }
   function tips(key, n) {
     const ad = ADULT_KEYS.test(key);
-    const arr = (D.tips[key] || []).filter((t) => t.q); const out = arr.map((t) => (ad ? Object.assign({ adult: true }, t) : t));
-    for (let i = out.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [out[i], out[j]] = [out[j], out[i]]; }
-    return out.slice(0, n || 2);
+    const arr = (D.tips[key] || []).filter((t) => t.q); const all = arr.map((t) => (ad ? Object.assign({ adult: true }, t) : t));
+    n = Math.min(n || 2, all.length); if (!n) return [];
+    /* Reihum statt gewürfelt: jedes Gerät hat seine eigene feste Reihenfolge, ein Zeiger je Funktion rückt bei jedem Zeigen weiter.
+       So wiederholt sich ein Vorschlag erst, wenn alle anderen dran waren. */
+    const s = S(); if (!s.tipSeed) s.tipSeed = 1 + Math.floor(Math.random() * 1e9); if (!s.tipRot) s.tipRot = {};
+    let seed = s.tipSeed; for (const ch of key) seed = (Math.imul(seed, 31) + ch.charCodeAt(0)) >>> 0;
+    const idx = all.map((_, i) => i);
+    for (let i = idx.length - 1; i > 0; i--) { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; const j = seed % (i + 1); const t = idx[i]; idx[i] = idx[j]; idx[j] = t; }
+    const start = (s.tipRot[key] || 0) % all.length; const out = [];
+    for (let k = 0; k < n; k++) out.push(all[idx[(start + k) % all.length]]);
+    s.tipRot[key] = (start + n) % all.length; clearTimeout(tipSave); tipSave = setTimeout(() => L.save(), 800);
+    return out;
+  }
+  let tipSave = null;
+  /* Karten dürfen mehrere Suchbegriffe haben. Gewählt wird je Kalenderwoche, damit beide Handys dasselbe sehen. */
+  function tipOf(it, week) {
+    const t = it && it.tip; if (!t) return ''; if (!Array.isArray(t)) return t; if (!t.length) return '';
+    let h = 0; for (const ch of String(it.id || '')) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+    return t[((week === undefined ? weekNum() : week) + h) % t.length];
   }
   function tipsHtml(items, title) {
     if (!items.length) return '';
@@ -398,7 +414,7 @@
   }
   function matchItem(it, badge, adult) {
     if (it.q) return '<div class="match-item"><span class="mi-e">' + it.e + '</span><div class="mi-b"><div class="mi-t">' + L.esc(it.t) + '</div><div class="mi-s">' + L.esc(badge) + '</div><div class="mi-q">💬 ' + L.esc(it.q) + '</div><button type="button" class="tip inline" data-soft="' + L.esc(it.t) + '">🕊️ Sanft ansprechen</button></div></div>';
-    return'<div class="match-item"><span class="mi-e">' + it.e + '</span><div class="mi-b"><div class="mi-t">' + L.esc(it.t) + '</div><div class="mi-s">' + badge + (it.tip ? ' · <button type="button" class="tip inline" data-q="' + L.esc(it.tip) + '"' + (adult ? ' data-adult="1"' : '') + '>🛒 ' + L.esc(it.tip) + ' ↗</button>' : '') + '</div></div></div>';
+    return'<div class="match-item"><span class="mi-e">' + it.e + '</span><div class="mi-b"><div class="mi-t">' + L.esc(it.t) + '</div><div class="mi-s">' + badge + (tipOf(it) ? ' · <button type="button" class="tip inline" data-q="' + L.esc(tipOf(it)) + '"' + (adult ? ' data-adult="1"' : '') + '>🛒 ' + L.esc(tipOf(it)) + ' ↗</button>' : '') + '</div></div></div>';
   }
   /* ---------- Gemeinsam: was beide mögen oder beide ausprobieren würden, wächst zu einer Sammlung ---------- */
   function noteCommon(deck, rec) {
@@ -423,7 +439,7 @@
     box.innerHTML = '<div class="row between"><div class="eyebrow" style="margin:0">Das verbindet euch</div><span class="tag">' + all.length + '</span></div>' +
       '<div class="match-item" style="margin-top:12px"><span class="mi-e">' + x.it.e + '</span><div class="mi-b"><div class="mi-t">' + L.esc(x.it.t) + '</div><div class="mi-s">Impuls der Woche</div></div></div>' +
       '<div class="row wrap" style="justify-content:flex-start;gap:10px"><button class="pill-btn small primary" data-sug>Vorschlagen ↗</button><button class="pill-btn small" data-all>Alle ansehen</button></div>' +
-      (x.it.tip ? tipsHtml([{ icon: '🛒', title: x.it.tip, q: x.it.tip }], 'Passend dazu') : '');
+      (tipOf(x.it) ? tipsHtml([{ icon: '🛒', title: tipOf(x.it), q: tipOf(x.it) }], 'Passend dazu') : '');
     box.querySelector('[data-sug]').onclick = () => suggestCommon(x); box.querySelector('[data-all]').onclick = commonSheet; bindTips(box);
   }
   function commonSheet() {
@@ -432,7 +448,7 @@
       if (x.deck !== last) { html += '<div class="eyebrow" style="margin:14px 0 8px">' + x.deck.icon + ' ' + L.esc(x.deck.title) + '</div>'; last = x.deck; }
       if (x.it.tip) ads = true;
       html += '<div class="match-item" data-i="' + i + '"><span class="mi-e">' + x.it.e + '</span><div class="mi-b"><div class="mi-t">' + L.esc(x.it.t) + '</div><div class="mi-s">' + (x.st === 'yes' ? 'Mögt ihr beide' : 'Zum Entdecken') + '</div>' +
-        '<div class="row wrap" style="justify-content:flex-start;gap:8px;margin-top:8px"><button class="pill-btn small" data-sug>Vorschlagen ↗</button>' + (x.it.tip ? '<button type="button" class="tip inline" data-q="' + L.esc(x.it.tip) + '">🛒 ' + L.esc(x.it.tip) + ' ↗</button>' : '') + '<button class="pill-btn small ghost" data-rm aria-label="Entfernen">✕</button></div></div></div>';
+        '<div class="row wrap" style="justify-content:flex-start;gap:8px;margin-top:8px"><button class="pill-btn small" data-sug>Vorschlagen ↗</button>' + (tipOf(x.it) ? '<button type="button" class="tip inline" data-q="' + L.esc(tipOf(x.it)) + '">🛒 ' + L.esc(tipOf(x.it)) + ' ↗</button>' : '') + '<button class="pill-btn small ghost" data-rm aria-label="Entfernen">✕</button></div></div></div>';
     });
     if (!all.length) html += '<p class="about">Spielt eine Runde, dann füllt sich diese Liste.</p>';
     html += (ads ? '<p class="about" style="font-size:16px;color:var(--text-muted);margin-top:10px">🛒 Werbelink zur Amazon-Suche.</p>' : '') + '<div class="row" style="margin-top:14px"><button class="pill-btn ghost" data-cancel>Schließen</button></div>';
@@ -728,7 +744,7 @@
   setInterval(() => { if (document.visibilityState === 'visible') pull(); }, 45000);
   $('obFinish').addEventListener('click', () => setTimeout(() => { renderAll(); offerPendingPair(); setTimeout(pairWelcome, 1600); }, 80));
 
-  window.LZP = { P, paired, joined, partnerName, sendOrShare, sendCoupon, send, pull, pairSheet, inboxSheet, playDeck, renderDecks, renderAll, renderGiftRadar, amazonUrl, tips, tipsHtml, bindTips, mountTips, leavePair, unread, RELAY, on, inboxType, openMatch, closeMatch, online, pairLink, ideaSheet, reportSheet, iosBrowser, commonSheet, renderCommon, partnerPron: () => (P().partner && P().partner.pron) || '', announce: () => { if (paired() && joined()) send({ t: 'hello', name: S().sender, pron: S().pron || '' }).catch(() => {}); } };
+  window.LZP = { P, paired, joined, partnerName, sendOrShare, sendCoupon, send, pull, pairSheet, inboxSheet, playDeck, renderDecks, renderAll, renderGiftRadar, amazonUrl, tips, tipOf, tipsHtml, bindTips, mountTips, leavePair, unread, RELAY, on, inboxType, openMatch, closeMatch, online, pairLink, ideaSheet, reportSheet, iosBrowser, commonSheet, renderCommon, partnerPron: () => (P().partner && P().partner.pron) || '', announce: () => { if (paired() && joined()) send({ t: 'hello', name: S().sender, pron: S().pron || '' }).catch(() => {}); } };
   renderAll(); handlePairParam();
   if (window.LZF) { window.LZF.renderPiek(); window.LZF.renderGiftRadar && window.LZF.renderGiftRadar(); }
   /* Erst abholen, wenn alle Skripte geladen sind (naehe.js meldet eigene Nachrichtenarten an) */

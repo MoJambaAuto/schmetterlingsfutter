@@ -3,7 +3,7 @@
 (function () {
   'use strict';
   const D = window.LUZIFER_DATA;
-  D.version = '3.16.1';
+  D.version = '3.17.0';
 
   /* Ideen-Briefkasten: eingeschaltet seit 10.11.2026 (Vermittlungsdienst kennt die Adresse /idea) */
   D.ideaBox = true;
@@ -560,4 +560,66 @@
   D.tips.match_kultur = [{"icon":"🔐","title":"Escape-Spiel für zu Hause","q":"Escape Room Spiel Zuhause"},{"icon":"🎟️","title":"Erlebnisgutschein","q":"Erlebnisgutschein für zwei"}];
   D.tips.match_reisen = [{"icon":"🗺️","title":"Rubbelkarte für Ausflüge","q":"Rubbel Landkarte Deutschland Ausflüge"},{"icon":"🧳","title":"Kurztrip-Gutschein","q":"Kurzurlaub Gutschein Paar"}];
   D.tips.match_genuss = [{"icon":"📖","title":"Kochbuch für zwei","q":"Kochbuch für zwei"},{"icon":"🍫","title":"Schokolade zum Probieren","q":"Schokolade Probierset"}];
+
+  /* ---- Mehr Auswahl bei den Werbelinks (3.17.0): zusätzliche Vorschläge je Funktion, Zeilen [Symbol, Titel, Suchbegriff].
+     Die App zeigt sie reihum, damit nicht immer dasselbe verlinkt ist. ---- */
+  const moreTips = {
+    kiss: [["🍓","Früchte in Schokolade","Schokofrüchte Geschenk"],["💋","Kussmund-Tasse","Tasse Kussmund"],["🌹","Rose, die bleibt","Infinity Rose Geschenk"],["🍬","Herz-Pralinen","Pralinen Herz Geschenk"]],
+    hug: [["🧦","Kuschelsocken für zwei","Kuschelsocken Paar Set"],["🔥","Wärmflasche mit Bezug","Wärmflasche Plüsch"],["☕","Heiße Schokolade","Trinkschokolade Geschenkset"],["🛋️","Kuschelkissen","Kuschelkissen groß"]],
+    morning: [["🍯","Frühstücks-Set","Frühstück Geschenkset Marmelade Honig"],["🥞","Herz-Pfannkuchen","Pancake Form Herz"],["🫖","Teekanne für zwei","Teekanne mit Stövchen"],["⏰","Lichtwecker","Lichtwecker Sonnenaufgang"]],
+    night: [["🕯️","Kerzen fürs Schlafzimmer","LED Kerzen Timer"],["🧴","Kissenspray","Kissenspray Lavendel"],["📖","Gute-Nacht-Geschichten","Gute Nacht Geschichten Erwachsene"],["🛏️","Kuschelbettwäsche","Bettwäsche Flanell 200x200"]],
+    message: [["🖋️","Schönes Briefpapier","Briefpapier Set mit Umschlägen"],["📮","Postkarten-Set","Postkarten Liebe Set"],["🪧","Leuchtkasten für Botschaften","Lightbox Buchstaben"],["🧲","Wörter für den Kühlschrank","Kühlschrankmagnete Wörter deutsch"]],
+    reasons: [["🃏","Karten „Ich liebe dich, weil“","Ich liebe dich weil Karten"],["📸","Box für Erinnerungen","Erinnerungsbox Fotos"],["💌","Briefe für später","Briefe öffnen wenn Buch"],["🖼️","Bilderrahmen für euch zwei","Bilderrahmen Collage Paar"]],
+    gen: [["🎲","Würfel für Date-Ideen","Date Würfel Paare"],["😂","Witziges für euch zwei","lustiges Geschenk Paar"],["☕","Freche Tasse","Tasse Spruch lustig Liebe"],["📦","Überraschungsbox","Date Box Paare"]],
+    oracle: [["🌻","Samen für eine Blumenwiese","Blumenwiese Samen Geschenk"],["🌸","Trockenblumen-Strauß","Trockenblumen Strauß"],["🪴","Herzblatt-Pflanze","Herzblatt Pflanze"],["🔮","Orakelkarten","Orakelkarten Liebe"]],
+    song: [["🎧","Kopfhörer-Splitter für zwei","Kopfhörer Splitter Klinke"],["🎤","Karaoke-Mikrofon","Karaoke Mikrofon Bluetooth"],["🪕","Kalimba","Kalimba Anfänger"],["💿","Plattenspieler","Plattenspieler"]],
+    time: [["🗓️","Kalender mit euren Fotos","Fotokalender Gutschein"],["⏳","Zeitkapsel","Zeitkapsel Paar"],["📍","Karte eurer Orte","Weltkarte Pinnwand Kork"],["📷","Sofortbildkamera","Sofortbildkamera"]],
+    milestone: [["🍾","Etwas zum Anstoßen","Sekt Geschenkset"],["🕯️","Kerze mit Datum","Kerze personalisiert Jahrestag"],["🖼️","Poster „Wo alles begann“","Poster wo alles begann Karte personalisiert"],["🔑","Schlüsselanhänger für zwei","Schlüsselanhänger Paar Gravur"]],
+    thanks: [["🫖","Tee-Auswahl","Tee Geschenkset"],["🧼","Kleine Auszeit","Wellness Geschenkset klein"],["🍪","Kekse zum Verschenken","Kekse Geschenkdose"],["💐","Trockenblumen","Trockenblumen Strauß klein"]],
+    piek_aufmerksamkeit: [["🍫","Lieblingsschokolade","Schokolade Geschenk"],["🔋","Powerbank für unterwegs","Powerbank klein"],["🧣","Etwas Warmes","Schal weich"],["📓","Kleines Notizbuch","Notizbuch A6 schön"]],
+    piek_unaufgefordert: [["🧽","Putz-Set","Putzset Geschenk"],["🥡","Vorratsdosen","Vorratsdosen Set Glas"],["🛒","Einkaufstasche zum Falten","Einkaufstasche faltbar"],["🥘","Schmortopf","Bräter Gusseisen"]],
+    piek_dankbar: [["📝","Dankeskarten","Dankeskarten Set"],["🫙","Glas für schöne Momente","Glücksmomente Glas"],["📔","Tagebuch „Ein Satz am Tag“","Tagebuch ein Satz pro Tag"],["🌷","Blumen ohne Anlass","Blumenstrauß Geschenk"]],
+    piek_frage: [["🎲","Erzählwürfel","Erzählwürfel Erwachsene"],["📖","Buch mit Fragen für zwei","Fragen für Paare Buch"],["🍷","Tischkarten mit Fragen","Tischgespräche Karten"],["🧠","Quiz über euch","Paar Quiz Spiel"]],
+    piek_neu: [["🧗","Gutschein für etwas Neues","Erlebnisgutschein für zwei"],["🍳","Kochbuch Weltküche","Kochbuch Weltküche"],["🎨","Malset für zwei","Malen nach Zahlen Paar"],["🧩","Rätselspiel","Exit Spiel"]],
+    lovemap: [["🧠","Quiz „Wie gut kennst du mich?“","Paar Quiz wie gut kennst du mich"],["📓","Notizbuch für Geschenkideen","Notizbuch klein"],["💬","Gesprächskarten","Gesprächskarten Paare"],["🗺️","Buch mit Zielen für zwei","Bucket List Buch Paare"]],
+    coupon: [["✂️","Gutscheine zum Selbstgestalten","Gutschein Karten blanko"],["🎁","Geschenkbox","Geschenkbox klein mit Deckel"],["🧖","Wellness-Set","Wellness Geschenkset"],["🍽️","Dinner zu Hause","Candle Light Dinner Set"]],
+    coupon_massage: [["🪨","Massagesteine","Hot Stone Massage Set"],["🧴","Massagebalsam","Massagebalsam"],["🎵","Musik dazu","Bluetooth Lautsprecher klein"],["💆","Wärmekissen für den Nacken","Nackenkissen Wärme"]],
+    coupon_fruehstueck: [["🥚","Eierbecher für zwei","Eierbecher Set 2"],["🧇","Waffeleisen","Waffeleisen Herz"],["🍊","Saftpresse","Zitruspresse"],["🍯","Frühstücks-Set","Frühstück Geschenkset Marmelade Honig"]],
+    coupon_film: [["🥤","Kino-Becher","Popcorn Becher Set"],["📽️","Mini-Beamer","Mini Beamer"],["🍫","Naschbox","Süßigkeiten Box Filmabend"],["🛋️","Sofa-Tablett","Sofatablett"]],
+    coupon_essen: [["🍷","Weingläser","Weingläser Set 2"],["🍝","Nudelmaschine","Nudelmaschine"],["🧂","Gewürz-Set","Gewürze Geschenkset"],["👩‍🍳","Schürzen für zwei","Schürze Paar Set"]],
+    coupon_wellness: [["🕯️","Duftkerzen","Duftkerzen Set"],["🧼","Badekugeln","Badekugeln Set"],["💆","Gesichtsmasken","Gesichtsmasken Set"],["🎵","Lautsprecher fürs Bad","Bluetooth Lautsprecher wasserdicht"]],
+    coupon_spaziergang: [["🧤","Handschuhe für zwei","Partnerhandschuhe"],["☂️","Großer Schirm","Regenschirm groß Paar"],["🥾","Warme Socken","Wandersocken Merino"],["🧺","Picknickdecke","Picknickdecke wasserdicht"],["🔦","Lampe für Abendrunden","Taschenlampe klein hell"]],
+    coupon_tag: [["🗺️","Ausflugsführer","Ausflugsziele Deutschland Buch"],["🎒","Tagesrucksack","Rucksack klein Tagesausflug"],["📷","Sofortbildkamera","Sofortbildkamera"],["🧩","Stadtrallye","Stadtrallye Box"],["🧺","Picknickkorb","Picknickkorb für 2"]],
+    coupon_ausschlafen: [["🛏️","Kuschelbettwäsche","Bettwäsche Flanell 200x200"],["🥐","Frühstückstablett","Frühstückstablett Bett"],["🌙","Verdunklungsvorhang","Verdunklungsvorhang"],["🎧","Ohrstöpsel","Ohrstöpsel Schlafen"],["☕","Thermoskanne fürs Bett","Thermoskanne 1 Liter"]],
+    intim_flirt: [["🌹","Rosenblätter","Rosenblätter Deko"],["🕯️","Kerzenlicht","LED Kerzen Timer"],["🧴","Massageöl","Massageöl Paar"],["🥂","Sektgläser","Sektgläser Set 2"]],
+    intim_question: [["📔","Paar-Tagebuch","Paar Tagebuch Fragen"],["🎲","Gesprächsspiel für Paare","Spiel für Paare Fragen"],["📖","Buch über Nähe","Buch Nähe Beziehung Paare"],["💬","Karten für tiefe Gespräche","Gesprächskarten Paare"]],
+    intim_date: [["🕯️","Massagekerze","Massagekerze"],["🛁","Badezusatz für zwei","Badezusatz Rosen Kerzen Set"],["🎭","Augenbinde","Augenbinde Satin"],["🥂","Etwas zum Anstoßen","Sekt Geschenkset"]],
+    intim_wish: [["🎟️","Gutscheine für Paare","Gutscheinbuch für Paare"],["🪶","Federkitzler","Federkitzler Massage"],["📖","Buch mit Ideen für zwei","Kamasutra Buch Paare"],["🕯️","Massagekerze","Massagekerze"]],
+    match_bock: [["🍿","Popcornmaschine","Popcornmaschine"],["🎨","Malset für zwei","Malen nach Zahlen Paar"],["☕","Thermosbecher","Thermosbecher to go"],["🧩","Puzzle","Puzzle 1000 Teile Erwachsene"]],
+    match_dates: [["🔐","Escape-Spiel für zu Hause","Escape Room Spiel Zuhause"],["🗺️","Rubbelkarte für Ausflüge","Rubbel Landkarte Deutschland Ausflüge"],["🧺","Picknickkorb","Picknickkorb für 2"],["📸","Sofortbildkamera","Sofortbildkamera"]],
+    match_vorlieben: [["🕯️","Massagekerze","Massagekerze"],["🎲","Erotik-Würfel","Erotik Würfel Paare"],["🎭","Augenbinde","Augenbinde Satin"],["📖","Buch mit Ideen","Kamasutra Buch Paare"]],
+    partner: [["🔋","Powerbank","Powerbank klein"],["📲","Handyhalter fürs Bett","Handyhalterung Bett"],["🎧","Kopfhörer","Kopfhörer Bluetooth"],["🖼️","Digitaler Bilderrahmen","Digitaler Bilderrahmen WLAN"]],
+    match_hobby: [["🧩","Puzzle","Puzzle 1000 Teile Erwachsene"],["🎨","Malset für zwei","Malen nach Zahlen Paar"],["🥾","Wanderführer","Wanderführer Deutschland"],["🧶","Bastelset","Bastelset Erwachsene"]],
+    match_musik: [["💿","Plattenspieler","Plattenspieler"],["🎧","Kopfhörer-Splitter","Kopfhörer Splitter Klinke"],["🪕","Ukulele","Ukulele Set Anfänger"],["🎟️","Ohrstöpsel fürs Konzert","Ohrstöpsel Konzert"]],
+    match_film: [["📽️","Mini-Beamer","Mini Beamer"],["🥤","Kino-Becher","Popcorn Becher Set"],["🧠","Film-Quiz","Film Quiz Spiel"],["🛋️","Sofa-Tablett","Sofatablett"]],
+    match_kultur: [["🧠","Quiz für zwei","Quiz Spiel Erwachsene"],["🗺️","Stadtführer","Reiseführer Deutschland Städte"],["🍸","Cocktail-Set","Cocktail Set Zuhause"],["🃏","Partyspiel","Partyspiel Erwachsene"]],
+    match_reisen: [["🎒","Tagesrucksack","Rucksack klein Tagesausflug"],["📔","Reisetagebuch","Reise Tagebuch Paar"],["🧺","Picknickdecke","Picknickdecke wasserdicht"],["🌍","Rubbel-Weltkarte","Rubbel Weltkarte"]],
+    match_genuss: [["🍝","Nudelmaschine","Nudelmaschine"],["🧀","Käsebrett","Käsebrett Set"],["🍕","Pizzastein","Pizzastein Backofen"],["🧂","Gewürz-Set","Gewürze Geschenkset"]]
+  };
+  Object.keys(moreTips).forEach((k) => { const have = D.tips[k] || (D.tips[k] = []); moreTips[k].forEach((t) => { if (!have.some((h) => h.q === t[2])) have.push({ icon: t[0], title: t[1], q: t[2] }); }); });
+  const moreTips2 = {
+    klartext: [["🎲","Erzählwürfel","Erzählwürfel Erwachsene"],["📖","Buch mit Fragen für zwei","Fragen für Paare Buch"],["⏳","Sanduhr für Redezeiten","Sanduhr 10 Minuten"]],
+    match_reden: [["📔","Paar-Tagebuch","Paar Tagebuch Fragen"],["⏳","Sanduhr für Redezeiten","Sanduhr 10 Minuten"],["🫖","Tee für ein ruhiges Gespräch","Tee Geschenkset für zwei"],["🕯️","Kerze für den Tisch","Duftkerze Geschenk"]],
+    checkin: [["🗓️","Wochenplaner für zwei","Wochenplaner Paar"],["🫙","Glas für schöne Momente","Glücksmomente Glas"],["💬","Gesprächskarten","Gesprächskarten Paare"],["🫖","Tee für zwei","Tee Geschenkset für zwei"]],
+    peace: [["💌","Karte „Es tut mir leid“","Karte Entschuldigung"],["🧸","Etwas zum Drücken","Kuscheltier Herz"],["🕯️","Kerze für den Abend","Duftkerze Geschenk"]],
+    zwiegespraech: [["🫖","Tee für zwei","Tee Geschenkset für zwei"],["🧣","Decke für die Couch","Kuscheldecke XXL Paar"],["💬","Gesprächskarten","Gesprächskarten Paare"],["📔","Paar-Tagebuch","Paar Tagebuch Fragen"]],
+    vergessen: [["🍫","Pralinen zur Rettung","Pralinen Geschenk"],["🎟️","Erlebnis zum Nachholen","Erlebnisgutschein für zwei"],["💌","Schöne Karte","Glückwunschkarte Set"]],
+    jingle: [["🎤","Karaoke-Mikrofon","Karaoke Mikrofon Bluetooth"],["🎧","Kopfhörer-Splitter für zwei","Kopfhörer Splitter Klinke"],["🪕","Kalimba","Kalimba Anfänger"],["💿","Plattenspieler","Plattenspieler"]],
+    kritzel: [["🖍️","Stifte, die Spaß machen","Fineliner Set bunt"],["🧲","Magnetleiste für Bilder","Fotoseil Magnete"],["📒","Skizzenbuch","Skizzenbuch A5"],["🖼️","Rahmen zum Wechseln","Bilderrahmen zum Aufklappen"]],
+    nfc: [["🏷️","NFC-Karten","NFC Karten NTAG215"],["🧲","NFC-Magnete für den Kühlschrank","NFC Tag Magnet"],["🪙","NFC-Münzen","NFC Münze NTAG215"],["📿","NFC-Armband","NFC Armband NTAG215"]]
+  };
+  Object.keys(moreTips2).forEach((k) => { const have = D.tips[k] || (D.tips[k] = []); moreTips2[k].forEach((t) => { if (!have.some((h) => h.q === t[2])) have.push({ icon: t[0], title: t[1], q: t[2] }); }); });
+  /* Karten: weitere Suchbegriffe je Karte, die App wechselt wöchentlich */
+  const moreCardTips = {"bock":{"spazieren":["Regenschirm groß Paar","Partnerhandschuhe"],"kochen":["Schürze Paar Set","Gewürze Geschenkset"],"serie":["Popcornmaschine","Sofatablett"],"spiele":["Kartenspiel für 2","Kooperatives Spiel 2 Personen"],"sport":["Trinkflasche Sport","Fitnessbänder Set"],"freunde":["Kartenspiel Party","Snackschalen Set"],"kuscheln":["Kuscheldecke XXL Paar","Wärmflasche Plüsch"],"natur":["Picknickkorb für 2","Fernglas kompakt"],"kino":["Popcorn Becher Set","Mini Beamer"],"wellness":["Badekugeln Set","Duftkerzen Set"],"musik":["Ohrstöpsel Konzert","Bluetooth Lautsprecher klein"],"bar":["Weingläser Set 2","Cocktailbuch"],"kreativ":["Aquarell Set Anfänger","Bastelset Erwachsene"],"fruehstueck":["Waffeleisen Herz","Eierbecher Set 2"],"lesen":["Lesezeichen Set","Lesekissen"],"massage":["Massagekerze","Hot Stone Massage Set"],"tanzen":["Paartanz lernen Buch","Discokugel LED klein"],"puzzle":["Puzzlematte","Rätselbuch Erwachsene"],"sauna":["Sauna Aufguss Set","Bademantel Paar Set"],"grillen":["Grillbesteck Set","Feuerschale klein"],"backen":["Ausstechformen Set","Backmatte Silikon"],"fotos":["Sofortbildkamera","Bilderrahmen Collage Paar"],"ausschlafen":["Verdunklungsvorhang","Frühstückstablett Bett"],"fruehsex":["Massageöl Paar","LED Kerzen Timer"]}};
+  D.decks.forEach((deck) => { const m = moreCardTips[deck.id]; if (!m) return; deck.items.forEach((it) => { if (it.tip && m[it.id]) it.tip = [].concat(it.tip, m[it.id]); }); });
 })();
