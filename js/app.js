@@ -192,7 +192,7 @@
     const el = $('msgText'); el.style.opacity = 0;
     setTimeout(() => { fn(); el.style.opacity = 1; }, 300);
   }
-  const tipKeyFor = (label) => ({ 'Ein Kuss': 'kiss', 'Eine Umarmung': 'hug', 'Guten Morgen': 'morning', 'Gute Nacht': 'night', 'Frisch gezaubert 😈': 'gen', 'Dein Danke': 'thanks' })[label] || 'message';
+  const tipKeyFor = (label) => ({ 'Ein Kuss': 'kiss', 'Eine Umarmung': 'hug', 'Guten Morgen': 'morning', 'Gute Nacht': 'night', 'Frisch gezaubert ✨': 'gen', 'Dein Danke': 'thanks' })[label] || 'message';
   /* Wer unten eine Kachel antippt, sieht die Botschaftskarte oft nicht: dann holt die App sie ins Bild */
   let lastTap = 0; document.addEventListener('click', () => { lastTap = Date.now(); }, true);
   function revealMsg() {

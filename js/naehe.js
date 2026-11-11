@@ -139,7 +139,7 @@
   function kritzelSheet() {
     const joined = P.joined();
     const colors = ['#ffffff', '#ff85a1', '#ffd166', '#7ee8dc', '#b39dff'];
-    const stamps = ['❤️', '😘', '🦋', '😈', '⭐', '🌹'];
+    const stamps = ['❤️', '😘', '🦋', '💋', '⭐', '🌹'];
     L.openSheet('<h3>🎨 Kritzel-Gruß</h3>' +
       '<canvas class="kritzel" id="kzCanvas" width="320" height="320" aria-label="Malfläche"></canvas>' +
       '<div class="kz-tools">' + colors.map((c, i) => '<button type="button" class="kz-c' + (i === 1 ? ' on' : '') + '" data-c="' + c + '" style="background:' + c + '" aria-label="Farbe"></button>').join('') +
@@ -180,7 +180,7 @@
       });
       sh.querySelector('[data-cancel]').onclick = L.closeSheet;
       P.bindTips(sh);
-      const grab = () => { if (!dirty) { L.toast('Erst etwas malen oder stempeln 😈'); return null; } const u = encodeCanvas(cv); if (!u) L.toast('Bild zu groß – bitte weniger Details'); return u; };
+      const grab = () => { if (!dirty) { L.toast('Erst etwas malen oder stempeln 🎨'); return null; } const u = encodeCanvas(cv); if (!u) L.toast('Bild zu groß – bitte weniger Details'); return u; };
       const text = () => sh.querySelector('#kzText').value.trim();
       sh.querySelector('[data-share]').onclick = () => { const u = grab(); if (u) shareImage(u, (text() ? text() + ' — ' : '') + me() + ' ❤'); };
       const gb = sh.querySelector('[data-gift]'); if (gb) gb.onclick = async () => {
@@ -415,7 +415,7 @@
         box.innerHTML = b.opts.map((o) => '<button type="button" data-st="' + o.id + '"' + (o.id === b.id ? ' class="on"' : '') + '>' + esc(o.label) + '</button>').join('');
         box.querySelectorAll('button').forEach((x) => x.onclick = () => { style = x.dataset.st; upd(); });
         const low = (val('#ssSit') + ' ' + val('#ssWish')).toLowerCase(); const hit = !b.harsh && K.warnWords.find((w) => new RegExp('(^|[^a-zäöüß])' + w + '([^a-zäöüß]|$)').test(low));
-        sh.querySelector('#ssWarn').textContent = b.harsh ? '😈 Das war zu scharf zum Verschicken. Das Teufelchen hat entschärft.' : hit ? '😈 „' + hit + '“ klingt nach Angriff. Nimm lieber den einen konkreten Moment.' : '';
+        sh.querySelector('#ssWarn').textContent = b.harsh ? '🦋 Das war zu scharf zum Verschicken. Papillon hat entschärft.' : hit ? '🦋 „' + hit + '“ klingt nach Angriff. Nimm lieber den einen konkreten Moment.' : '';
       };
       sh.querySelectorAll('#ssFeel button').forEach((b) => b.onclick = () => { feel = b.dataset.f; sh.querySelectorAll('#ssFeel button').forEach((x) => x.classList.toggle('on', x === b)); upd(); });
       sh.querySelector('#ssSit').addEventListener('input', upd); sh.querySelector('#ssWish').addEventListener('input', upd); upd();

@@ -367,13 +367,13 @@
       const yes = rec.matches.map((id) => deck.items.find((it) => it.id === id)).filter(Boolean);
       const open = (rec.open || []).map((id) => deck.items.find((it) => it.id === id)).filter(Boolean);
       html += '<div class="match-intro" style="padding-bottom:8px"><div class="match-emoji">' + (yes.length ? '💞' : '🫤') + '</div><h2>' + (yes.length ? yes.length + (yes.length === 1 ? ' Treffer' : ' Treffer') : 'Kein gemeinsames Ja') + '</h2>' +
-        '<p class="about" style="font-size:17px">' + (yes.length ? (deck.hitText || 'Das wollt ihr beide. Alles andere bleibt geheim.') : (open.length ? 'Aber ihr seid beide bei ein paar Dingen offen – siehe unten.' : (deck.noneText || (deck.daily ? 'Heute nicht. Morgen gibt es neue Chancen – oder jemand gibt nach. 😈' : 'Vielleicht beim nächsten Mal. Das Teufelchen empfiehlt: Vielleicht großzügiger antippen.')))) + '</p></div>';
+        '<p class="about" style="font-size:17px">' + (yes.length ? (deck.hitText || 'Das wollt ihr beide. Alles andere bleibt geheim.') : (open.length ? 'Aber ihr seid beide bei ein paar Dingen offen – siehe unten.' : (deck.noneText || (deck.daily ? 'Heute nicht. Morgen gibt es neue Chancen – oder jemand gibt nach. 😉' : 'Vielleicht beim nächsten Mal. Papillon empfiehlt: Vielleicht großzügiger antippen.')))) + '</p></div>';
       if (yes.length) html += '<div class="match-list">' + yes.map((it) => matchItem(it, deck.yesLabel || 'Beide Ja', deck.adult)).join('') + '</div>';
       if (open.length) html += '<div class="eyebrow" style="margin-top:14px">' + L.esc(deck.openTitle || 'Beide offen dafür') + '</div><div class="match-list">' + open.map((it) => matchItem(it, deck.openLabel || 'Vielleicht', deck.adult)).join('') + '</div>';
       /* Mut-Karte: Themen, die nur mir wichtig sind, bleiben geheim – aber ich bekomme Hilfe, sie selbst anzusprechen */
       if (deck.talk && rec.mode === 'relay') {
         const hidden = (rec.mine || []).filter((id) => !rec.matches.includes(id) && !(rec.open || []).includes(id)).map((id) => deck.items.find((it) => it.id === id)).filter(Boolean);
-        if (hidden.length) html += '<div class="card soft" style="margin-top:14px;padding:14px 16px"><div class="eyebrow" style="margin:0 0 6px">🔒 Nur für dich</div><p class="about" style="font-size:17px">' + (hidden.length === 1 ? 'Ein Thema ist dir wichtig, das noch kein Treffer ist.' : hidden.length + ' Themen sind dir wichtig, die noch kein Treffer sind.') + ' ' + name + ' sieht das nicht. Unausgesprochenes wächst – das Teufelchen hilft dir, eines davon sanft selbst anzusprechen.</p><div class="row" style="justify-content:flex-start;margin-top:10px"><button class="pill-btn small" data-hidden>Anzeigen</button></div><div class="match-list hidden" data-hidden-list style="margin-top:10px">' + hidden.map((it) => matchItem(it, 'Nur dir wichtig')).join('') + '</div></div>';
+        if (hidden.length) html += '<div class="card soft" style="margin-top:14px;padding:14px 16px"><div class="eyebrow" style="margin:0 0 6px">🔒 Nur für dich</div><p class="about" style="font-size:17px">' + (hidden.length === 1 ? 'Ein Thema ist dir wichtig, das noch kein Treffer ist.' : hidden.length + ' Themen sind dir wichtig, die noch kein Treffer sind.') + ' ' + name + ' sieht das nicht. Unausgesprochenes wächst. Papillon hilft dir, eines davon sanft selbst anzusprechen.</p><div class="row" style="justify-content:flex-start;margin-top:10px"><button class="pill-btn small" data-hidden>Anzeigen</button></div><div class="match-list hidden" data-hidden-list style="margin-top:10px">' + hidden.map((it) => matchItem(it, 'Nur dir wichtig')).join('') + '</div></div>';
       }
       if (!yes.length || deck.talk) html += tipsHtml(tips('match_' + deck.id, 2), deck.talk ? 'Hilft beim Reden' : 'Für den nächsten Versuch');
       html += '<div class="row wrap" style="margin-top:18px">' + (yes.length ? '<button class="pill-btn primary" data-share-res>Plan teilen ↗</button>' : '') + (!deck.daily && deck.items.length > roundSize(deck) ? '<button class="pill-btn" data-next>Neue Fragen</button>' : '<button class="pill-btn" data-again>Nochmal spielen</button>') + (rec.mode === 'relay' ? '<button class="pill-btn ghost small" data-refresh>Aktualisieren</button>' : '') + '</div>' +
@@ -386,7 +386,7 @@
       const ag = sc.querySelector('[data-again]'); if (ag) ag.onclick = () => playDeck(deck.id, rec.mode === 'pass');
       const nx = sc.querySelector('[data-next]'); if (nx) nx.onclick = () => { P().roundShift = P().roundShift || {}; P().roundShift[deck.id] = (P().roundShift[deck.id] || 0) + 1; if (P().invites) delete P().invites[deck.id]; L.save(); playDeck(deck.id, rec.mode === 'pass'); };
       const rf = sc.querySelector('[data-refresh]'); if (rf) rf.onclick = async () => { rf.disabled = true; rf.textContent = '…'; try { await refreshMatches(deck, rec, true); } catch (e) { L.toast('Keine Verbindung'); rf.disabled = false; rf.textContent = 'Aktualisieren'; } };
-      const si = sc.querySelector('[data-share-inv]'); if (si) si.onclick = () => L.shareText('🎯 Ich habe in Schmetterlingsfutter „' + deck.title + '“ beantwortet. Spiel mit – ich bin gespannt, wo wir übereinstimmen! 😈 — ' + S().sender);
+      const si = sc.querySelector('[data-share-inv]'); if (si) si.onclick = () => L.shareText('🎯 Ich habe in Schmetterlingsfutter „' + deck.title + '“ beantwortet. Spiel mit – ich bin gespannt, wo wir übereinstimmen! 😉 — ' + S().sender);
       const sr = sc.querySelector('[data-share-res]'); if (sr) sr.onclick = () => {
         const yes = rec.matches.map((id) => deck.items.find((it) => it.id === id)).filter(Boolean);
         L.shareText('💞 Gleichklang: ' + deck.title + '\n' + yes.map((it) => it.e + ' ' + it.t).join('\n') + '\n— ' + S().sender + ' & ' + partnerName() + ' (Schmetterlingsfutter)');
@@ -428,7 +428,7 @@
   }
 
   /* ---------- Idee spenden: freiwillig, ohne Namen, landet zur Prüfung bei der Redaktion ---------- */
-  const IDEA_KINDS = [['frage', 'Spielfrage'], ['date', 'Date-Idee'], ['botschaft', 'Botschaft'], ['piek', 'Piek des Tages'], ['thema', 'Gesprächsthema'], ['sonstiges', 'Etwas anderes']];
+  const IDEA_KINDS = [['frage', 'Spielfrage'], ['date', 'Date-Idee'], ['botschaft', 'Botschaft'], ['piek', 'Flügelschlag des Tages'], ['thema', 'Gesprächsthema'], ['sonstiges', 'Etwas anderes']];
   function ideaSheet(kind) {
     let k = kind || 'frage';
     L.openSheet('<h3>💡 Idee spenden</h3>' +

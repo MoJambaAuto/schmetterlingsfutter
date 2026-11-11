@@ -144,8 +144,8 @@ window.LUZIFER_DATA = {
   /* ---- Spruch-Generator: Anfang + Mitte + Schluss werden zufällig kombiniert ---- */
   gen: {
     openers: [
-      "{r}, mal ehrlich:", "Kleine Erinnerung vom Teufelchen:", "Falls du es heute noch nicht gehört hast:", "Psst, {r} –", "Nur damit du es weißt:",
-      "Ich hab nachgedacht, und:", "Ohne Umschweife:", "Zwischen Kaffee und Chaos:", "Der Liebesteufel sagt:", "Offizielle Mitteilung:"
+      "{r}, mal ehrlich:", "Kleine Erinnerung von Papillon:", "Falls du es heute noch nicht gehört hast:", "Psst, {r} –", "Nur damit du es weißt:",
+      "Ich hab nachgedacht, und:", "Ohne Umschweife:", "Zwischen Kaffee und Chaos:", "Papillon flüstert:", "Offizielle Mitteilung:"
     ],
     cores: [
       "du bist mein Lieblingsgrund zu lächeln", "mit dir ist sogar Montag ein Date", "ich würde dich jedes Mal wieder wählen", "du bist mein liebster Mensch auf diesem Planeten",
@@ -154,7 +154,7 @@ window.LUZIFER_DATA = {
     ],
     closers: [
       "Punkt.", "Und jetzt küss mich.", "Heute, morgen, immer.", "Kein Widerspruch erlaubt.", "Das ist Fakt.", "Und zwar jeden Tag ein bisschen mehr.",
-      "Ehrlich.", "Unterschrift: {s} ❤", "Bis gleich, Schatz.", "Dreizack-Ehrenwort. 😈"
+      "Ehrlich.", "Unterschrift: {s} ❤", "Bis gleich, Schatz.", "Flügel-Ehrenwort. 🦋"
     ]
   },
 
@@ -213,7 +213,7 @@ window.LUZIFER_DATA = {
       "😏 Zieh dir was Bequemes an. Oder auch nicht.",
       "😏 Ich vermisse deine Hände. Komm bald heim.",
       "😏 Du siehst heute morgen verboten gut aus. Nur damit du es weißt.",
-      "😏 Das Teufelchen sagt: Heute wird gekuschelt, bis jemand von uns einschläft. Oder nicht einschläft.",
+      "😏 Papillon sagt: Heute wird gekuschelt, bis jemand von uns einschläft. Oder nicht einschläft.",
       "😏 Ich habe Kerzen gekauft. Den Rest überlasse ich deiner Fantasie.",
       "😏 Drei Worte: Ich. Will. Dich."
     ],
@@ -246,36 +246,36 @@ window.LUZIFER_DATA = {
 
   /* ---- Piek des Tages: eine kleine, konkrete Aktion pro Tag (Gottman: „small things often“) ---- */
   pieks: [
-    { c: "aufmerksamkeit", t: "Piek! Schreib {r} jetzt eine Nachricht mit einem konkreten Detail von heute. Kein Standardspruch." },
-    { c: "aufmerksamkeit", t: "Piek! Mach heute ein Foto von {r}, wenn {r} es nicht merkt – und schick es mit einem Satz, was du daran liebst." },
-    { c: "aufmerksamkeit", t: "Piek! Frag heute Abend: „Was war das Beste an deinem Tag?“ – und hör zu, ohne aufs Handy zu schauen." },
-    { c: "aufmerksamkeit", t: "Piek! Bring {r} heute das Lieblingsgetränk, genau so, wie {r} es mag. Ohne zu fragen." },
-    { c: "aufmerksamkeit", t: "Piek! Lob {r} heute vor anderen. Laut und ernst gemeint." },
-    { c: "aufmerksamkeit", t: "Piek! Umarmung, mindestens 20 Sekunden. Heute. Ohne Anlass." },
-    { c: "aufmerksamkeit", t: "Piek! Plane das nächste Date komplett selbst: Tag, Ort, Babysitter, Tisch. {r} muss nur Ja sagen." },
-    { c: "aufmerksamkeit", t: "Piek! Erinnerst du dich, was {r} diese Woche beschäftigt hat? Frag heute nach, wie es ausging." },
-    { c: "aufmerksamkeit", t: "Piek! Leg einen Zettel mit drei Worten dorthin, wo {r} ihn heute findet." },
-    { c: "aufmerksamkeit", t: "Piek! Heute Handy weg beim Essen. Beide. Du fängst an." },
-    { c: "aufmerksamkeit", t: "Piek! Sag {r} heute etwas, das du an {r} bewunderst – nicht am Aussehen." },
-    { c: "aufmerksamkeit", t: "Piek! Küss {r} heute zur Begrüßung so, als hättet ihr euch eine Woche nicht gesehen." },
-    { c: "unaufgefordert", t: "Piek! Heute ohne Ansage: Spülmaschine ausräumen oder Wäsche falten. Und kein Wort darüber." },
-    { c: "unaufgefordert", t: "Piek! Übernimm heute einen Termin, der sonst bei {r} landet: Arzt, Schule, Werkstatt, Behörde." },
-    { c: "unaufgefordert", t: "Piek! Mach heute den Einkauf – mit allem, was fehlt, ohne nachzufragen. Zettel am Kühlschrank zählt." },
-    { c: "unaufgefordert", t: "Piek! Räum heute die eine Ecke auf, die {r} seit Wochen stört. Du weißt welche." },
-    { c: "unaufgefordert", t: "Piek! Koch heute Abend. Komplett: einkaufen, kochen, aufräumen." },
-    { c: "unaufgefordert", t: "Piek! Was steht nächste Woche an, das geplant werden muss? Plane es heute, bevor {r} dran denken muss." },
-    { c: "unaufgefordert", t: "Piek! Tank das Auto voll oder lad das Rad auf – das, was {r} morgen braucht." },
-    { c: "unaufgefordert", t: "Piek! Mach heute den Part, den {r} am wenigsten mag. Ohne Kommentar, ohne Dank erwarten." },
-    { c: "dankbar", t: "Piek! Sag {r} heute konkret Danke für eine Sache, die {r} für euch gemacht hat. Mit „weil“." },
-    { c: "dankbar", t: "Piek! Denk an etwas, das {r} letzte Woche gut gemacht hat, und erwähne es heute. Verspätet zählt doppelt." },
-    { c: "dankbar", t: "Piek! Schreib heute Abend einen Satz in die Dankbarkeits-Notiz. Nur einen. Aber ehrlich." },
-    { c: "frage", t: "Piek! Frag {r} heute: „Wovor hast du gerade am meisten Respekt?“ Und merk dir die Antwort." },
-    { c: "frage", t: "Piek! Weißt du, wer {r} gerade am meisten nervt oder guttut? Frag nach – und trag es in die Love Map ein." },
-    { c: "frage", t: "Piek! Frag {r}: „Was würdest du machen, wenn wir morgen frei hätten?“ Und dann: mach es möglich." },
-    { c: "frage", t: "Piek! Frag heute nach einem Traum von {r}, über den ihr lange nicht gesprochen habt." },
-    { c: "neu", t: "Piek! Schlag heute etwas vor, das ihr noch nie zusammen gemacht habt. Klein reicht: neues Café, neuer Weg." },
-    { c: "neu", t: "Piek! Tanzt heute Abend zu einem Lied in der Küche. Egal wie. Ein Lied." },
-    { c: "neu", t: "Piek! Such ein Rezept aus einem Land, in dem ihr noch nie wart, und kocht es am Wochenende." }
+    { c: "aufmerksamkeit", t: "Schreib {r} jetzt eine Nachricht mit einem konkreten Detail von heute. Kein Standardspruch." },
+    { c: "aufmerksamkeit", t: "Mach heute ein Foto von {r}, wenn {r} es nicht merkt – und schick es mit einem Satz, was du daran liebst." },
+    { c: "aufmerksamkeit", t: "Frag heute Abend: „Was war das Beste an deinem Tag?“ – und hör zu, ohne aufs Handy zu schauen." },
+    { c: "aufmerksamkeit", t: "Bring {r} heute das Lieblingsgetränk, genau so, wie {r} es mag. Ohne zu fragen." },
+    { c: "aufmerksamkeit", t: "Lob {r} heute vor anderen. Laut und ernst gemeint." },
+    { c: "aufmerksamkeit", t: "Umarmung, mindestens 20 Sekunden. Heute. Ohne Anlass." },
+    { c: "aufmerksamkeit", t: "Plane das nächste Date komplett selbst: Tag, Ort, Babysitter, Tisch. {r} muss nur Ja sagen." },
+    { c: "aufmerksamkeit", t: "Erinnerst du dich, was {r} diese Woche beschäftigt hat? Frag heute nach, wie es ausging." },
+    { c: "aufmerksamkeit", t: "Leg einen Zettel mit drei Worten dorthin, wo {r} ihn heute findet." },
+    { c: "aufmerksamkeit", t: "Heute Handy weg beim Essen. Beide. Du fängst an." },
+    { c: "aufmerksamkeit", t: "Sag {r} heute etwas, das du an {r} bewunderst – nicht am Aussehen." },
+    { c: "aufmerksamkeit", t: "Küss {r} heute zur Begrüßung so, als hättet ihr euch eine Woche nicht gesehen." },
+    { c: "unaufgefordert", t: "Heute ohne Ansage: Spülmaschine ausräumen oder Wäsche falten. Und kein Wort darüber." },
+    { c: "unaufgefordert", t: "Übernimm heute einen Termin, der sonst bei {r} landet: Arzt, Schule, Werkstatt, Behörde." },
+    { c: "unaufgefordert", t: "Mach heute den Einkauf – mit allem, was fehlt, ohne nachzufragen. Zettel am Kühlschrank zählt." },
+    { c: "unaufgefordert", t: "Räum heute die eine Ecke auf, die {r} seit Wochen stört. Du weißt welche." },
+    { c: "unaufgefordert", t: "Koch heute Abend. Komplett: einkaufen, kochen, aufräumen." },
+    { c: "unaufgefordert", t: "Was steht nächste Woche an, das geplant werden muss? Plane es heute, bevor {r} dran denken muss." },
+    { c: "unaufgefordert", t: "Tank das Auto voll oder lad das Rad auf – das, was {r} morgen braucht." },
+    { c: "unaufgefordert", t: "Mach heute den Part, den {r} am wenigsten mag. Ohne Kommentar, ohne Dank erwarten." },
+    { c: "dankbar", t: "Sag {r} heute konkret Danke für eine Sache, die {r} für euch gemacht hat. Mit „weil“." },
+    { c: "dankbar", t: "Denk an etwas, das {r} letzte Woche gut gemacht hat, und erwähne es heute. Verspätet zählt doppelt." },
+    { c: "dankbar", t: "Schreib heute Abend einen Satz in die Dankbarkeits-Notiz. Nur einen. Aber ehrlich." },
+    { c: "frage", t: "Frag {r} heute: „Wovor hast du gerade am meisten Respekt?“ Und merk dir die Antwort." },
+    { c: "frage", t: "Weißt du, wer {r} gerade am meisten nervt oder guttut? Frag nach – und trag es in die Love Map ein." },
+    { c: "frage", t: "Frag {r}: „Was würdest du machen, wenn wir morgen frei hätten?“ Und dann: mach es möglich." },
+    { c: "frage", t: "Frag heute nach einem Traum von {r}, über den ihr lange nicht gesprochen habt." },
+    { c: "neu", t: "Schlag heute etwas vor, das ihr noch nie zusammen gemacht habt. Klein reicht: neues Café, neuer Weg." },
+    { c: "neu", t: "Tanzt heute Abend zu einem Lied in der Küche. Egal wie. Ein Lied." },
+    { c: "neu", t: "Such ein Rezept aus einem Land, in dem ihr noch nie wart, und kocht es am Wochenende." }
   ],
   piekCats: { aufmerksamkeit: "Aufmerksamkeit", unaufgefordert: "Unaufgefordert", dankbar: "Dankbarkeit", frage: "Zuhören", neu: "Etwas Neues" },
 
@@ -431,7 +431,7 @@ window.LUZIFER_DATA = {
     night: [ { icon: "🌙", title: "Sternenprojektor", q: "Sternenhimmel Projektor Schlafzimmer" }, { icon: "😴", title: "Schlafmaske aus Seide", q: "Schlafmaske Seide" } ],
     message: [ { icon: "💌", title: "Liebesbriefe-Set", q: "Liebesbriefe Set Geschenk Partner" }, { icon: "📔", title: "Paar-Tagebuch", q: "Paar Tagebuch Fragen" } ],
     reasons: [ { icon: "🫙", title: "Glas voller Gründe", q: "Gründe warum ich dich liebe Glas" }, { icon: "🎁", title: "Liebesgründe-Buch", q: "Was ich an dir liebe Buch zum Ausfüllen" } ],
-    gen: [ { icon: "😈", title: "Freche Partnerkarten", q: "Gutscheinbuch für Paare" }, { icon: "🧩", title: "Paar-Spiel", q: "Spiel für Paare Fragen" } ],
+    gen: [ { icon: "🃏", title: "Freche Partnerkarten", q: "Gutscheinbuch für Paare" }, { icon: "🧩", title: "Paar-Spiel", q: "Spiel für Paare Fragen" } ],
     oracle: [ { icon: "💐", title: "Blumen, die länger halten", q: "Infinity Rose Geschenk" }, { icon: "🌼", title: "Gänseblümchen-Schmuck", q: "Gänseblümchen Kette" } ],
     song: [ { icon: "🔊", title: "Kleine Box für eure Küche", q: "Bluetooth Lautsprecher klein" }, { icon: "🎵", title: "Spieluhr mit eurem Lied", q: "Spieluhr personalisiert" } ],
     time: [ { icon: "🖼️", title: "Sternenhimmel eures ersten Tages", q: "Sternenhimmel Poster personalisiert Datum" }, { icon: "📖", title: "Fotobuch eurer Zeit", q: "Fotobuch Gutschein" } ],

@@ -13,7 +13,7 @@
     const g = D.gen;
     return L.pick(g.openers) + ' ' + L.pick(g.cores) + '. ' + L.pick(g.closers);
   }
-  $('btnGen').onclick = () => { L.spawnHearts(7); L.haptic(8); L.showMessage({ text: generate(), own: false }, 'Frisch gezaubert 😈'); };
+  $('btnGen').onclick = () => { L.spawnHearts(7); L.haptic(8); L.showMessage({ text: generate(), own: false }, 'Frisch gezaubert ✨'); };
 
   /* ---------- 2. Anlässe, Erinnerungen, Geschenke ---------- */
   function occasionsAll() {
@@ -85,7 +85,7 @@
     document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
   }
   function calendarSheet(o) {
-    L.openSheet('<h3>📅 ' + L.esc(o.title) + ' eintragen</h3><p class="about" style="margin-bottom:16px">Jährlich wiederkehrend. Die Kalenderdatei erinnert 14 Tage, 3 Tage und 1 Tag vorher. Titel bleibt neutral – falls der Kalender geteilt ist. Dann piekst dich dein Handy rechtzeitig.</p>' +
+    L.openSheet('<h3>📅 ' + L.esc(o.title) + ' eintragen</h3><p class="about" style="margin-bottom:16px">Jährlich wiederkehrend. Die Kalenderdatei erinnert 14 Tage, 3 Tage und 1 Tag vorher. Titel bleibt neutral – falls der Kalender geteilt ist. Dann erinnert dich dein Handy rechtzeitig.</p>' +
       '<div class="row wrap"><a class="pill-btn primary" style="text-decoration:none" target="_blank" rel="noopener" href="' + gcalUrl(o) + '">Google Kalender öffnen</a><button class="pill-btn" data-ics>Kalenderdatei (.ics)</button><button class="pill-btn ghost" data-cancel>Schließen</button></div>', (sh) => {
       sh.querySelector('[data-cancel]').onclick = L.closeSheet;
       sh.querySelector('[data-ics]').onclick = () => { icsDownload(o); L.toast('Kalenderdatei erstellt'); };
@@ -179,7 +179,7 @@
     { key: 'note', label: 'Notiz (optional: Größe, Farbe, wo, warum)', placeholder: 'Größe M, Laden in der Hauptstraße', max: 160 }
   ], 'Notieren', (v) => {
     if (!v.text) { L.toast('Bitte Text eingeben'); return false; }
-    S().wishes.push({ id: uid('w'), cat: v.cat || 'wunsch', text: v.text, note: v.note, date: new Date().toISOString(), done: null }); L.save(); renderWishes(); L.toast('Notiert – das Teufelchen vergisst nichts.');
+    S().wishes.push({ id: uid('w'), cat: v.cat || 'wunsch', text: v.text, note: v.note, date: new Date().toISOString(), done: null }); L.save(); renderWishes(); L.toast('Notiert. Papillon vergisst nichts.');
   });
   $('btnToggleDoneWishes').onclick = () => { S().showDoneWishes = !S().showDoneWishes; L.save(); renderWishes(); };
 
@@ -298,15 +298,15 @@
     $('piekText').textContent = L.fmt(p.t); $('piekCat').textContent = D.piekCats[p.c] || '';
     $('piekCard').classList.toggle('done', done);
     $('btnPiekDone').textContent = done ? 'Erledigt ✓ – stark!' : 'Erledigt ✓'; $('btnPiekDone').disabled = done;
-    $('piekStreak').textContent = s.piekCount ? s.piekCount + (s.piekCount === 1 ? ' Piek' : ' Pieks') + ' erledigt' : '';
+    $('piekStreak').textContent = s.piekCount ? s.piekCount + (s.piekCount === 1 ? ' Flügelschlag' : ' Flügelschläge') + ' erledigt' : '';
     $('thanksLabel').textContent = 'Was hat ' + s.receiver + ' heute gut gemacht?';
     $('thanksCount').textContent = s.thanks.length ? s.thanks.length + ' notiert' : '';
-    if (window.LZP) { window.LZP.mountTips($('piekTips'), 'piek_' + p.c, 'Hilft beim Piek'); window.LZP.mountTips($('thanksTips'), 'thanks', 'Danke mit etwas Kleinem'); }
+    if (window.LZP) { window.LZP.mountTips($('piekTips'), 'piek_' + p.c, 'Hilft dabei'); window.LZP.mountTips($('thanksTips'), 'thanks', 'Danke mit etwas Kleinem'); }
   }
   $('btnPiekDone').onclick = () => {
     const s = S(); const key = L.todayKey(); if (s.piekDone[key]) return;
     s.piekDone[key] = true; s.piekCount++; L.save(); renderPiek(); L.spawnHearts(10, $('piekCard')); L.haptic(15);
-    L.toast(L.pick(['Das Teufelchen nickt anerkennend. 😈', 'So geht Liebe im Alltag. ✓', 'Piek erledigt – Schmetterlinge gefüttert. 🦋', 'Kein Wort zu ' + s.receiver + '. Einfach gemacht. Stark.']));
+    L.toast(L.pick(['Papillon schlägt begeistert mit den Flügeln. 🦋', 'So geht Liebe im Alltag. ✓', 'Erledigt. Schmetterlinge gefüttert. 🦋', 'Kein Wort zu ' + s.receiver + '. Einfach gemacht. Stark.']));
   };
   $('btnPiekOther').onclick = () => {
     const s = S(); let idx; const cur = D.pieks.indexOf(todaysPiek());
@@ -345,13 +345,13 @@
   /* ---------- 8. Persönlich machen (Konkretheit vor dem Senden) ---------- */
   $('btnPersonal').onclick = () => {
     const base = $('msgText').textContent; if (!base || base === '…') return;
-    L.openSheet('<h3>✎ Persönlich machen</h3><p class="about" style="font-size:17px;margin-bottom:10px">Das Teufelchen sagt: Standardsprüche sind okay, ein konkretes Detail von heute ist besser. Ergänze einen Satz, dann senden.</p>' +
+    L.openSheet('<h3>✎ Persönlich machen</h3><p class="about" style="font-size:17px;margin-bottom:10px">Papillon sagt: Standardsprüche sind okay, ein konkretes Detail von heute ist besser. Ergänze einen Satz, dann senden.</p>' +
       '<div class="field"><label for="pf-p">Deine Nachricht</label><textarea id="pf-p" maxlength="400">' + L.esc(base) + '</textarea></div>' +
       '<div class="row"><button class="pill-btn ghost" data-cancel>Abbrechen</button><button class="pill-btn primary" data-ok>Senden ↗</button></div>', (sh) => {
       sh.querySelector('[data-cancel]').onclick = L.closeSheet;
       sh.querySelector('[data-ok]').onclick = () => {
         const t = sh.querySelector('#pf-p').value.trim(); if (!t) return;
-        if (t === base) { L.toast('Zu Standard. Nenn was Konkretes. 😈'); return; }
+        if (t === base) { L.toast('Zu Standard. Nenn was Konkretes. 🦋'); return; }
         L.closeSheet(); if (window.LZP) window.LZP.sendOrShare(t, 'Persönlich für dich'); else L.shareText(t + '\n— ' + S().sender + ' ❤');
       };
     });
