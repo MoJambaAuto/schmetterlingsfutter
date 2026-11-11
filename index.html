@@ -403,7 +403,7 @@
     <div class="logo"><em>Schmetterlingsfutter</em> 🦋❤</div>
     <div class="view-sub" style="margin-bottom:14px">Beziehungspflege für Paare</div>
     <p class="lead">Futter für die Schmetterlinge im Bauch – jeden Tag. In einer Minute eingerichtet, für euch zwei.</p>
-    <div class="step-dots" id="obDots"><i class="on"></i><i></i><i></i><i></i></div>
+    <div class="step-dots" id="obDots"><i class="on"></i><i></i><i></i><i></i><i></i></div>
 
     <div class="ob-step active" data-step="0">
       <div class="field"><label for="obSender">Wie nennst du dich?</label><input id="obSender" maxlength="18" placeholder="z. B. Hase" autocomplete="off"></div>
@@ -423,8 +423,18 @@
     </div>
     <div class="ob-step" data-step="3">
       <div class="field"><label>Farbwelt</label><div class="theme-grid" id="obThemeGrid"></div></div>
-      <p class="about" style="margin:6px 0 16px">Alles bleibt auf diesem Gerät. Keine Anmeldung, keine Werbebanner. Eure Apps verbinden könnt ihr später freiwillig – verschlüsselt.</p>
-      <div class="ob-nav"><button class="pill-btn ghost" data-prev>Zurück</button><button class="pill-btn primary" id="obFinish">Los geht's ❤</button></div>
+      <p class="about" style="margin:6px 0 16px">Alles bleibt auf diesem Gerät. Keine Anmeldung, keine Werbebanner.</p>
+      <div class="ob-nav"><button class="pill-btn ghost" data-prev>Zurück</button><button class="pill-btn primary" data-next>Weiter</button></div>
+    </div>
+    <div class="ob-step" data-step="4">
+      <div class="ob-pair-title">💞 Jetzt eure Handys verbinden</div>
+      <div class="ob-pair-body">
+        <p class="about" style="font-size:17px;margin-bottom:10px">Erst verbunden macht Schmetterlingsfutter richtig Spaß: Botschaften landen direkt beim Schatz, ihr spielt heimlich auf zwei Handys, und Papillon zeigt, wer dran ist.</p>
+        <button type="button" class="pair-choice" id="obPairScan"><span class="pc-i">📷</span><span class="pc-b"><b>Code scannen</b><small>Mein Schatz hat die App schon und zeigt den Code</small></span></button>
+        <button type="button" class="pair-choice" id="obPairShow"><span class="pc-i">✨</span><span class="pc-b"><b>Meinen Code zeigen</b><small>Mein Schatz scannt ihn mit der App</small></span></button>
+        <p class="about" style="font-size:16px;color:var(--text-muted);margin:4px 0 10px">Ohne Konto, Ende-zu-Ende verschlüsselt. Geht auch später unter „Mehr“.</p>
+      </div>
+      <div class="ob-nav"><button class="pill-btn ghost" data-prev>Zurück</button><button class="pill-btn ghost" id="obFinish">Später verbinden</button></div>
     </div>
   </div>
 </div>
@@ -469,6 +479,7 @@
 <script src="js/anreiz.js"></script>
 <script src="js/kamera.js"></script>
 <script src="js/daten.js"></script>
+<script src="js/koppeln.js"></script>
 <script src="js/stats.js"></script>
 </body>
 </html>

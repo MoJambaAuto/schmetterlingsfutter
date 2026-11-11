@@ -584,7 +584,7 @@
   /* ---------- Onboarding ---------- */
   let obStep = 0; const ob = { sender: S.sender, receiver: S.receiver, emojiS: S.emojiS, emojiR: S.emojiR, theme: S.theme, anniversary: S.anniversary };
   function obShow(n) {
-    obStep = Math.max(0, Math.min(3, n));
+    obStep = Math.max(0, Math.min(4, n));
     document.querySelectorAll('.ob-step').forEach((s) => s.classList.toggle('active', Number(s.dataset.step) === obStep));
     document.querySelectorAll('#obDots i').forEach((d, i) => d.classList.toggle('on', i === obStep));
     const inp = document.querySelector('.ob-step.active input'); if (inp && obStep < 2) setTimeout(() => inp.focus(), 100);

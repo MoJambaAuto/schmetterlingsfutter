@@ -81,7 +81,7 @@
     const r = await post('/pair/join', { pair: c.pair, dev: devId() }, true);
     P().partner = { pair: c.pair, token: r.token, secret: c.secret, role: 'b', joined: true, name: '', since: new Date().toISOString() };
     L.save(); keys = null;
-    await send({ t: 'hello', name: S().sender, pron: S().pron || '' });
+    await send(Object.assign({ t: 'hello', name: S().sender, pron: S().pron || '' }, window.LZD ? { dates: window.LZD.payload() } : {}));
     return P().partner;
   }
   async function leavePair(silent) {
@@ -112,7 +112,7 @@
       const r = await post('/msg/pull', {});
       lastPull = Date.now();
       const p = P().partner;
-      if (r.joined && !p.joined) { p.joined = true; L.save(); }
+      if (r.joined && !p.joined) { p.joined = true; L.save(); if (window.LZC) setTimeout(() => { if (document.querySelector('#sheet [data-qr]')) L.closeSheet(); window.LZC.celebrate(); }, 700); }
       const ids = []; let news = 0;
       for (const m of r.messages || []) {
         ids.push(m.id);
@@ -679,19 +679,22 @@
       const code = fmtCode(p.pair, p.secret);
       L.openSheet('<h3>💞 Partner-Verbindung</h3>' +
         (p.joined ? '<p class="about" style="margin-bottom:12px">Verbunden mit <b>' + L.esc(partnerName()) + '</b>' + (p.since ? ' seit ' + L.fmtDate(new Date(p.since)) : '') + '. Botschaften, Gutscheine und Gleichklang-Spiele laufen jetzt direkt zwischen euren Apps – verschlüsselt, ohne Konto.</p>'
-          : '<p class="about" style="margin-bottom:10px">Noch wartet die Verbindung auf ' + L.esc(S().receiver) + '. Sitzt ihr nebeneinander? Dann einfach diesen Code mit der Handy-Kamera scannen. Sonst Link oder Code schicken:</p><div class="qr" data-qr="' + L.esc(pairLink()) + '"></div><div class="paircode">' + code + '</div>') +
-        '<div class="row wrap">' + (p.joined ? '' : '<button class="pill-btn primary" data-link>Link schicken ↗</button><button class="pill-btn" data-copy>Code kopieren</button><button class="pill-btn ghost small" data-check>Schon beigetreten?</button>') +
+          : '<p class="about" style="margin-bottom:10px;font-size:17px"><b>' + L.esc(S().receiver) + '</b> öffnet Schmetterlingsfutter, tippt auf <b>„📷 Code scannen“</b> und hält die Kamera auf diesen Code:</p><div class="qr-wrap"><div class="qr" data-qr="' + L.esc(pairLink()) + '"></div>' + ['', '', '', '', ''].map((_, i) => '<span class="qr-b" style="--d:' + (i * -1.4) + 's;filter:hue-rotate(' + (i * 70) + 'deg) saturate(1.4)">🦋</span>').join('') + '</div><div class="paircode">' + code + '</div><div class="pair-wait">🦋 Warte auf ' + L.esc(S().receiver) + ' …</div><p class="about" style="font-size:16px;color:var(--text-muted);margin:6px 0 10px">Nicht nebeneinander? Dann schick den Link.</p>') +
+        '<div class="row wrap">' + (p.joined ? '' : '<button class="pill-btn primary" data-link>Link schicken ↗</button><button class="pill-btn" data-copy>Code kopieren</button><button class="pill-btn ghost small" data-rescan>📷 Lieber den Code von ' + L.esc(S().receiver) + ' scannen</button>') +
         '<button class="pill-btn ghost danger small" data-leave>Verbindung trennen</button><button class="pill-btn ghost" data-cancel>Schließen</button></div>' +
         '<p class="about" style="font-size:16px;color:var(--text-muted);margin-top:12px">Der Code enthält ein Geheimnis, das nur eure beiden Apps kennen. Der Vermittlungsdienst sieht nur verschlüsselte Daten. „Trennen“ löscht dort alles sofort.</p>', (sh) => {
         sh.querySelector('[data-cancel]').onclick = L.closeSheet;
         if (window.LZN) window.LZN.fillQr(sh);
         const lk = sh.querySelector('[data-link]'); if (lk) lk.onclick = () => L.shareText('💞 Lass uns Schmetterlingsfutter verbinden! Tipp auf den Link:\n' + pairLink() + '\nCode: ' + code + '\niPhone: erst ' + location.origin + location.pathname + ' in Safari öffnen, über Teilen „Zum Home-Bildschirm“ legen und den Code dort unter Mehr → Partner verbinden eingeben.');
         const cp = sh.querySelector('[data-copy]'); if (cp) cp.onclick = async () => { try { await navigator.clipboard.writeText(code); L.toast('Code kopiert 📋'); } catch (e) { L.toast(code); } };
-        const ck = sh.querySelector('[data-check]'); if (ck) ck.onclick = async () => { ck.textContent = '…'; await pull(true); L.closeSheet(); if (joined()) L.toast('💞 Verbunden!'); else L.toast('Noch nicht – ' + S().receiver + ' muss den Link öffnen.'); };
+        const rs = sh.querySelector('[data-rescan]'); if (rs) rs.onclick = () => { L.closeSheet(); if (window.LZC) window.LZC.scan(); };
+        /* Solange der Code offen ist: alle 3 Sekunden nachsehen, ob der Schatz beigetreten ist */
+        if (!p.joined) { const iv = setInterval(async () => { if (!document.querySelector('#sheet [data-qr]') || joined()) { clearInterval(iv); return; } try { await pull(true); } catch (e) {} }, 3000); }
         sh.querySelector('[data-leave]').onclick = () => { L.closeSheet(); L.confirmSheet('Verbindung trennen?', 'Beide Apps werden getrennt, alle Vermittlungsdaten werden gelöscht. Eure lokalen Daten bleiben.', 'Trennen', () => leavePair(), true); };
       });
       return;
     }
+    if (window.LZC) return window.LZC.chooser();
     L.openSheet('<h3>💞 Apps verbinden</h3><p class="about" style="margin-bottom:14px">Dann landen Botschaften und Gutscheine direkt in der App von ' + L.esc(S().receiver) + ', und bei den Gleichklang-Spielen antwortet ihr beide heimlich auf dem eigenen Handy. Ohne Konto, verschlüsselt.</p>' +
       '<div class="row wrap" style="margin-bottom:14px"><button class="pill-btn primary" data-new>Ich erzeuge den Code</button></div>' +
       '<div class="field"><label for="pf-code">… oder ich habe einen Code von ' + L.esc(S().receiver) + '</label><input id="pf-code" maxlength="24" placeholder="ABCDEF-GHJKLM-NPQRST" autocomplete="off" autocapitalize="characters" spellcheck="false"></div>' +
@@ -708,10 +711,11 @@
   async function doJoin(code, btn) {
     const c = parseCode(code); if (!c) { L.toast('Code prüfen – 18 Zeichen wie ABCDEF-GHJKLM-NPQRST'); return; }
     if (btn) { btn.disabled = true; btn.textContent = '…'; }
-    try { await joinPair(code); L.closeSheet(); L.toast('💞 Verbunden! ' + S().receiver + ' bekommt gleich Bescheid.'); L.spawnHearts(14); renderAll(); setTimeout(() => pull(true), 1500); }
+    try { await joinPair(code); L.closeSheet(); renderAll(); if (window.LZC) window.LZC.celebrate(S().receiver); else { L.toast('💞 Verbunden! ' + S().receiver + ' bekommt gleich Bescheid.'); L.spawnHearts(14); } setTimeout(() => pull(true), 1500); return true; }
     catch (e) {
       const msg = e.code === 'full' ? 'Dieser Code ist schon mit einem anderen Gerät verbunden.' : e.code === 'unknown' ? 'Code unbekannt oder abgelaufen (48 h).' : e.code === 'same device' ? 'Das ist dein eigener Code.' : (e.message || 'Fehler');
       L.toast(msg); if (btn) { btn.disabled = false; btn.textContent = 'Beitreten'; }
+      return false;
     }
   }
   function handlePairParam() {
@@ -955,9 +959,9 @@
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') pull(true); });
   window.addEventListener('focus', () => pull());
   setInterval(() => { if (document.visibilityState === 'visible') pull(); }, 45000);
-  $('obFinish').addEventListener('click', () => setTimeout(() => { renderAll(); offerPendingPair(); setTimeout(pairWelcome, 1600); }, 80));
+  $('obFinish').addEventListener('click', () => setTimeout(() => { renderAll(); offerPendingPair(); }, 80));
 
-  window.LZP = { searchSheet, searchFormHtml, bindSearch, activity, deckStatus, openDeckFromStatus, explored, lastSent, P, paired, joined, partnerName, sendOrShare, sendCoupon, send, pull, pairSheet, inboxSheet, playDeck, renderDecks, renderAll, renderGiftRadar, amazonUrl, tips, tipOf, tipsHtml, bindTips, mountTips, leavePair, unread, RELAY, on, inboxType, openMatch, closeMatch, online, pairLink, ideaSheet, reportSheet, iosBrowser, commonSheet, renderCommon, pushOn, pushOff, pushSupported, renderPush, partnerPron: () => (P().partner && P().partner.pron) || '', announce: () => { if (paired() && joined()) send({ t: 'hello', name: S().sender, pron: S().pron || '' }).catch(() => {}); } };
+  window.LZP = { createPair, doJoin, searchSheet, searchFormHtml, bindSearch, activity, deckStatus, openDeckFromStatus, explored, lastSent, P, paired, joined, partnerName, sendOrShare, sendCoupon, send, pull, pairSheet, inboxSheet, playDeck, renderDecks, renderAll, renderGiftRadar, amazonUrl, tips, tipOf, tipsHtml, bindTips, mountTips, leavePair, unread, RELAY, on, inboxType, openMatch, closeMatch, online, pairLink, ideaSheet, reportSheet, iosBrowser, commonSheet, renderCommon, pushOn, pushOff, pushSupported, renderPush, partnerPron: () => (P().partner && P().partner.pron) || '', announce: () => { if (paired() && joined()) send({ t: 'hello', name: S().sender, pron: S().pron || '' }).catch(() => {}); } };
   renderAll(); handlePairParam();
   if (window.LZF) { window.LZF.renderPiek(); window.LZF.renderGiftRadar && window.LZF.renderGiftRadar(); }
   /* Erst abholen, wenn alle Skripte geladen sind (naehe.js meldet eigene Nachrichtenarten an) */

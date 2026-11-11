@@ -24,6 +24,8 @@
       const a = p.activity().find((x) => x.kind !== 'wait');
       if (a) return { key: 'act_' + a.deck.id, text: a.kind === 'turn' ? name + ' wartet bei „' + a.deck.title + '“ auf dich!' : 'Euer Ergebnis bei „' + a.deck.title + '“ ist da ✨', go: 'Ansehen', run: () => p.openDeckFromStatus(a.deck) };
     }
+    /* Noch nicht verbunden: daran erinnert Papillon zuerst (jedes zweite Mal) */
+    if (p && !(p.paired() && p.joined()) && p.RELAY && Math.random() < 0.5) return { key: 'pair', text: 'Verbindet eure Handys – dann landet alles direkt bei ' + name + ' 💞', go: 'Verbinden', run: () => p.pairSheet() };
     const pool = [];
     (D.decks || []).forEach((deck) => {
       if (deck.talk || (deck.adult && !S().intim)) return;
