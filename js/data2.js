@@ -3,7 +3,7 @@
 (function () {
   'use strict';
   const D = window.LUZIFER_DATA;
-  D.version = '3.13.0';
+  D.version = '3.14.0';
 
   /* Ideen-Briefkasten: eingeschaltet seit 10.11.2026 (Vermittlungsdienst kennt die Adresse /idea) */
   D.ideaBox = true;
@@ -263,10 +263,72 @@
   ].reverse().forEach((x) => D.jingles.unshift({ id: x[0], cat: x[1], title: x[2], text: x[3], sec: x[4], file: 'audio/jingles/' + x[0] + '.mp3', sung: true, pd: 'Aufnahme: Suno' }));
   /* ---- Ende Runde 2 ---- */
 
+  /* ---- Gesungene Jingles (Suno, Runde 3): Silvester, Frauenstimme als Grundaufnahme. Downloads von Mo freigegeben am 11.11.2026. ---- */
+  [
+    ["s-silvester-1","silvester","Auf uns zwei","Auf uns zwei und alles, was jetzt kommt!",4.9],
+    ["s-silvester-2","silvester","Mitternachtskuss","Um Mitternacht gehört mein Kuss nur dir.",3.1],
+    ["s-silvester-3","silvester","Funken","Raketen am Himmel, Funken bei uns zwei.",5.5]
+  ].reverse().forEach((x) => D.jingles.unshift({ id: x[0], cat: x[1], title: x[2], text: x[3], sec: x[4], file: 'audio/jingles/' + x[0] + '.mp3', sung: true, pd: 'Aufnahme: Suno' }));
+  /* ---- Ende Runde 3 ---- */
+
   /* ---- Stimmen der Aufnahmen: w = Frauenstimme, m = Männerstimme, x = Duett (gilt für beide). Schlüssel = Kennung ohne „s-“ und Nummer.
      D.jingleAlt: zusätzliche Aufnahme mit der anderen Stimme, [Kennung, Stimme, Sekunden] → audio/jingles/<Kennung>-<Stimme>.mp3 ---- */
-  D.jingleVoiceOf = { einfachso: 'm', morgen: 'w', nacht: 'w', danke: 'm', vergessen: 'm', streit: 'w', vermissen: 'w', stolz: 'w', streit2: 'm', vgeburtstag: 'm', vfeiertag: 'w', jahrestag: 'x', geburtstag: 'w', valentin: 'x', weihnachten: 'w', silvester: 'x', lust: 'w' };
+  D.jingleVoiceOf = { einfachso: 'm', morgen: 'w', nacht: 'w', danke: 'm', vergessen: 'm', streit: 'w', vermissen: 'w', stolz: 'w', streit2: 'm', vgeburtstag: 'm', vfeiertag: 'w', jahrestag: 'x', geburtstag: 'w', valentin: 'x', weihnachten: 'w', silvester: 'w', lust: 'w' };
   D.jingleAlt = [
+    ["s-morgen-1","m",4.5],
+    ["s-morgen-2","m",4.1],
+    ["s-morgen-3","m",6.7],
+    ["s-nacht-1","m",6],
+    ["s-nacht-2","m",4.2],
+    ["s-nacht-3","m",5.3],
+    ["s-streit-1","m",4.9],
+    ["s-streit-2","m",3.9],
+    ["s-streit-3","m",5.5],
+    ["s-vermissen-1","m",5.7],
+    ["s-vermissen-2","m",4.5],
+    ["s-vermissen-3","m",4.8],
+    ["s-stolz-1","m",4.3],
+    ["s-stolz-2","m",5],
+    ["s-stolz-3","m",5.2],
+    ["s-vfeiertag-1","m",4.8],
+    ["s-vfeiertag-2","m",5.4],
+    ["s-vfeiertag-3","m",6],
+    ["s-geburtstag-1","m",4.2],
+    ["s-geburtstag-2","m",3.9],
+    ["s-geburtstag-3","m",5],
+    ["s-weihnachten-1","m",9.1],
+    ["s-weihnachten-2","m",6.5],
+    ["s-lust-1","m",4.3],
+    ["s-lust-2","m",3.8],
+    ["s-lust-3","m",7.2],
+    ["s-einfachso-1","w",6.4],
+    ["s-einfachso-2","w",4.3],
+    ["s-einfachso-3","w",5.9],
+    ["s-danke-1","w",3.7],
+    ["s-danke-2","w",5.1],
+    ["s-danke-3","w",4.8],
+    ["s-vergessen-1","w",5],
+    ["s-vergessen-2","w",4.4],
+    ["s-vergessen-3","w",5.7],
+    ["s-streit2-1","w",6.2],
+    ["s-streit2-2","w",3.9],
+    ["s-streit2-3","w",5.3],
+    ["s-vgeburtstag-1","w",5.7],
+    ["s-vgeburtstag-2","w",5.6],
+    ["s-vgeburtstag-3","w",6],
+    ["s-jahrestag-1","m",5.3],
+    ["s-jahrestag-2","m",3.6],
+    ["s-jahrestag-1","w",4.9],
+    ["s-jahrestag-2","w",5.2],
+    ["s-valentin-1","m",5],
+    ["s-valentin-2","m",4.7],
+    ["s-valentin-3","m",6.6],
+    ["s-valentin-1","w",6.1],
+    ["s-valentin-2","w",5.5],
+    ["s-valentin-3","w",6.9],
+    ["s-silvester-1","m",4.1],
+    ["s-silvester-2","m",4.5],
+    ["s-silvester-3","m",6.3]
   ];
   D.jingles.forEach((j) => { if (!j.sung) return; const base = j.id.replace(/^s-/, '').replace(/-\d+$/, ''); j.voices = {}; j.voices[D.jingleVoiceOf[base] || 'x'] = j.file; j.secs = {}; });
   D.jingleAlt.forEach((a) => { const j = D.jingles.find((x) => x.id === a[0]); if (!j || !j.voices) return; j.voices[a[1]] = 'audio/jingles/' + a[0] + '-' + a[1] + '.mp3'; if (a[2]) j.secs[a[1]] = a[2]; });
