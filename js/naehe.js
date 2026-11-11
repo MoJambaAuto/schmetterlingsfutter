@@ -144,7 +144,7 @@
       '<canvas class="kritzel" id="kzCanvas" width="320" height="320" aria-label="Malfläche"></canvas>' +
       '<div class="kz-tools">' + colors.map((c, i) => '<button type="button" class="kz-c' + (i === 1 ? ' on' : '') + '" data-c="' + c + '" style="background:' + c + '" aria-label="Farbe"></button>').join('') +
       '<span class="kz-sep"></span>' + stamps.map((e) => '<button type="button" class="kz-s" data-s="' + e + '" aria-label="Stempel ' + e + '">' + e + '</button>').join('') + '</div>' +
-      '<div class="row wrap" style="margin:10px 0"><button class="pill-btn small ghost" data-clear>🧽 Leeren</button><button class="pill-btn small ghost" data-photo>📷 Foto dahinter</button><input type="file" accept="image/*" class="hidden" id="kzFile"></div>' +
+      '<div class="row wrap" style="margin:10px 0"><button class="pill-btn small ghost" data-clear>🧽 Leeren</button><button class="pill-btn small ghost" data-photo>📷 Foto dahinter</button><button class="pill-btn small ghost" data-cam>🦋 Kamera mit Effekten</button><input type="file" accept="image/*" class="hidden" id="kzFile"></div>' +
       '<div class="field"><label for="kzText">Ein Satz dazu (optional)</label><input id="kzText" maxlength="80" placeholder="z. B. Denk an dich!" autocomplete="off"></div>' +
       '<div class="row wrap">' + (joined ? '<button class="pill-btn primary" data-send>💌 An ' + esc(you()) + '</button><button class="pill-btn" data-gift>🎁 Als Überraschung</button>' : '') + '<button class="pill-btn' + (joined ? '' : ' primary') + '" data-share>↗ Teilen</button><button class="pill-btn ghost" data-cancel>Abbrechen</button></div>' +
       (joined ? '' : '<p class="about" style="font-size:16px;color:var(--text-muted);margin-top:10px">Mit verbundenen Apps landet das Bild direkt auf der Startseite deines Schatzes. „Teilen“ öffnet das Teilen-Menü deines Handys – dort gibt es auch Quick Share und AirDrop für Geräte in der Nähe.</p>') +
@@ -172,6 +172,7 @@
       sh.querySelector('[data-clear]').onclick = () => { clear(); dirty = false; };
       const file = sh.querySelector('#kzFile');
       sh.querySelector('[data-photo]').onclick = () => file.click();
+      sh.querySelector('[data-cam]').onclick = () => { if (window.LZK) { L.closeSheet(); window.LZK.open(); } };
       file.addEventListener('change', () => {
         const f = file.files[0]; if (!f) return; const img = new Image(); const url = URL.createObjectURL(f);
         img.onload = () => { const sc = Math.max(320 / img.width, 320 / img.height); const w = img.width * sc, h = img.height * sc; ctx.drawImage(img, (320 - w) / 2, (320 - h) / 2, w, h); URL.revokeObjectURL(url); dirty = true; };

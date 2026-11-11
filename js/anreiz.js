@@ -37,6 +37,7 @@
       else text = fresh ? 'Schon „' + deck.title + '“ ausprobiert? Ein paar schnelle Fragen 💞' : more ? '„' + deck.title + '“ hat neue Fragen für euch' : '';
       if (text) pool.push({ key: 'deck_' + deck.id, text, go: 'Los', run: () => p && p.playDeck(deck.id) });
     });
+    if (window.LZK) pool.push({ key: 'kamera', text: 'Ein Selfie mit Schmetterlingen für ' + name + '? 📸', go: 'Los', run: () => window.LZK.open() });
     pool.push({ key: 'oracle', text: 'Zupf mal am Gänseblümchen-Orakel 🌼', go: 'Los', run: () => { L.showView('play'); L.showSub('play', 'oracle'); } });
     pool.push({ key: 'klartext', text: 'Etwas Wichtiges sanft ansprechen? Klartext hilft 🕊️', go: 'Ansehen', run: () => { L.showView('play'); L.showSub('play', 'klartext'); } });
     pool.push({ key: 'music', text: 'Ein Lied für ' + name + '? 🎵', go: 'Los', run: () => { L.showView('play'); L.showSub('play', 'music'); } });

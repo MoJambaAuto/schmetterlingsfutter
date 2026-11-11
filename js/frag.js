@@ -15,6 +15,7 @@
 
   /* ---------- Was es alles gibt: [Gruppe, Symbol, Titel, Suchwörter, Antwort (nur wo nötig), Sprung] ---------- */
   const ITEMS = [
+    ['Schicken', '📸', 'Schmetterlings-Kamera: Selfie, Foto oder Video mit Schmetterlingen', 'kamera foto selfie video bild aufnehmen filter effekt schmetterling fluegel krone verwandlung ar', '', () => { if (window.LZK) window.LZK.open(); }],
     ['Botschaften', '💌', 'Neue Botschaft', 'botschaft nachricht liebesbotschaft text sagen herz tippen neu', '', tap('btnNext')],
     ['Botschaften', '💋', 'Ein Kuss', 'kuss kuessen bussi', '', tap('btnKiss')],
     ['Botschaften', '🤗', 'Kuscheln', 'kuscheln umarmung umarmen druecken', '', tap('btnHug')],
@@ -61,7 +62,7 @@
     ['Verwaltung', '📱', 'Auf dem iPhone nutzen', 'iphone apple ios installieren safari bildschirm', 'Öffne die Seite in Safari, tippe auf Teilen und dann „Zum Home-Bildschirm“.', null],
     ['Verwaltung', '💡', 'Idee spenden', 'idee vorschlag feedback verbessern mitmachen', '', () => { if (P()) P().ideaSheet('frage'); }],
     ['Verwaltung', '🚩', 'Etwas melden', 'melden fehler unpassend funktioniert nicht kaputt', '', () => { if (P()) P().reportSheet(''); }],
-    ['Verwaltung', '🔒', 'Datenschutz', 'datenschutz daten privat sicher verschluesselt impressum', '', () => { location.href = 'privacy.html'; }]
+    ['Verwaltung', '🔒', 'Datenschutz', 'datenschutz daten privat sicher verschluesselt impressum', '', () => { location.href = 'privacy.html'; }],
     ['Verwaltung', '🦋', 'Papillon fliegt vorbei: ein- oder ausschalten', 'schmetterling fliegt fliegen anreiz einladung ausschalten abschalten nervt stoert papillon', '', spot('settings', 'togFly')],
   ];
 
