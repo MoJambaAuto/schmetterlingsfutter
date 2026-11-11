@@ -130,8 +130,8 @@
   const FIRST_FLY = 20, PER_FLY = 12, DAY_CAP = 6;
   /* Arten: Farbdrehung der 🦋-Grafik, Gewicht = Häufigkeit */
   const SPECIES = [
-    { id: 'himmel', n: 'Himmelsfalter', hue: 0, w: 26 }, { id: 'veilchen', n: 'Veilchenfalter', hue: 55, w: 22 }, { id: 'rosen', n: 'Rosenfalter', hue: 115, w: 22 },
-    { id: 'sonnen', n: 'Sonnenfalter', hue: 180, w: 14 }, { id: 'klee', n: 'Kleefalter', hue: 270, w: 10 }, { id: 'gold', n: 'Goldfalter', hue: 205, w: 5, rare: 1 }, { id: 'sternen', n: 'Sternenfalter', hue: 55, w: 1, rare: 2 }
+    { id: 'himmel', n: 'Himmels\u00adfalter', c: ['#6cc4ff', '#3f8fe0'], w: 26 }, { id: 'veilchen', n: 'Veilchen\u00adfalter', c: ['#c29bff', '#8d5fe6'], w: 22 }, { id: 'rosen', n: 'Rosen\u00adfalter', c: ['#ff8fb5', '#f0568a'], w: 22 },
+    { id: 'sonnen', n: 'Sonnen\u00adfalter', c: ['#ffc35c', '#ff8a3d'], w: 14 }, { id: 'klee', n: 'Klee\u00adfalter', c: ['#86e0a0', '#3fae6b'], w: 10 }, { id: 'gold', n: 'Gold\u00adfalter', c: ['#ffe38a', '#f2b632'], w: 5, rare: 1 }, { id: 'sternen', n: 'Sternen\u00adfalter', c: ['#ffffff', '#cfe6ff'], w: 1, rare: 2 }
   ];
   const KOKON = '<svg viewBox="0 0 48 48" width="1em" height="1em" aria-hidden="true"><path d="M6 8h36" stroke="#c9a27a" stroke-width="3" stroke-linecap="round"/><path d="M24 8v6" stroke="#c9a27a" stroke-width="2"/><ellipse cx="24" cy="28" rx="9" ry="15" fill="#e6c9a0"/><path d="M16 22q8 4 16 0M15.5 29q8.5 4 17 0M17 36q7 3 14 0" stroke="#b98f5f" stroke-width="2" fill="none" stroke-linecap="round"/></svg>';
   function bst() {
@@ -149,7 +149,12 @@
     const sum = SPECIES.reduce((a, s) => a + s.w, 0); let r = ((h >>> 0) % 1000) / 1000 * sum;
     for (const s of SPECIES) { if ((r -= s.w) < 0) return s; } return SPECIES[0];
   }
-  const flyHtml = (sp, cls) => '<span class="fly' + (cls ? ' ' + cls : '') + (sp.rare ? ' rare' + sp.rare : '') + '" style="filter:hue-rotate(' + sp.hue + 'deg)' + (sp.rare ? ' drop-shadow(0 0 6px #ffd76a)' : '') + '">🦋</span>';
+  /* eigene Grafik statt 🦋: das Emoji sieht auf jedem Handy anders aus */
+  const flyHtml = (sp) => '<svg class="fly-svg' + (sp.rare ? ' rare' : '') + '" viewBox="0 0 64 64" width="1em" height="1em" aria-hidden="true">' +
+    '<path d="M31 30C24 12 8 8 5 18c-3 10 8 18 26 14z" fill="' + sp.c[0] + '"/><path d="M33 30c7-18 23-22 26-12 3 10-8 18-26 14z" fill="' + sp.c[0] + '"/>' +
+    '<path d="M31 33c-14 0-22 8-18 17 4 8 15 4 18-13z" fill="' + sp.c[1] + '"/><path d="M33 33c14 0 22 8 18 17-4 8-15 4-18-13z" fill="' + sp.c[1] + '"/>' +
+    '<circle cx="15" cy="20" r="3.2" fill="#fff" opacity=".55"/><circle cx="49" cy="20" r="3.2" fill="#fff" opacity=".55"/><circle cx="22" cy="44" r="2.4" fill="#fff" opacity=".4"/><circle cx="42" cy="44" r="2.4" fill="#fff" opacity=".4"/>' +
+    '<rect x="30" y="18" width="4" height="30" rx="2" fill="#3a2440"/><path d="M31 19c-2-6-5-8-8-9M33 19c2-6 5-8 8-9" stroke="#3a2440" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>';
   function picHtml(t) { const st = STAGES[stageOf(t)]; return st[1] === 'kokon' ? KOKON : st[1] === '🦋' ? flyHtml(speciesOf(flies(t))) : st[1]; }
   function mood() { const b = bst(); const h = (Date.now() - (b.last || 0)) / 36e5; return !b.last ? 'neu' : h < 24 ? 'froh' : h < 72 ? 'hunger' : 'schlaf'; }
   function nextGoal(t) {
@@ -170,7 +175,7 @@
     b.level = lv; L.save();
     const st = STAGES[stageOf(t)], fl = flies(t), sp = fl ? speciesOf(fl) : null;
     const title = fl > 1 ? 'Ein neuer Schmetterling!' : fl === 1 ? 'Geschlüpft!' : stageOf(t) === 2 ? 'Die Raupe spinnt sich ein' : 'Aus dem Ei geschlüpft';
-    const line = sp ? sp.n + (sp.rare ? ' · selten' : '') : st[2];
+    const line = sp ? sp.n.replace('\u00ad', '') + (sp.rare ? ' · selten' : '') : st[2];
     const shareText = fl > 1 ? 'Unser Schwarm wächst: ' + fl + ' Schmetterlinge 🦋' : fl === 1 ? 'Unser Schmetterling ist geschlüpft 🦋' : 'Bei uns wächst etwas heran 🐛';
     setTimeout(() => {
       L.openSheet('<div class="bfly-party"><div class="bfly-big">' + picHtml(t) + '</div><h3>' + esc(title) + '</h3><p class="about" style="margin-bottom:16px">' + esc(line) + '</p>' +

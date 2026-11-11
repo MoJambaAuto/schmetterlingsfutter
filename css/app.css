@@ -576,3 +576,11 @@ button.reason-text { background:transparent; border:0; padding:0; text-align:lef
 a.pill-btn { text-decoration:none; display:inline-flex; align-items:center; justify-content:center; }
 #pmTrait button.on, #pmMood button.on { background:var(--accent-dark); border-color:var(--accent-dark); color:#fff; }
 .msg-text, .fp-text, #sheet .about { white-space:pre-line; }
+
+/* 3.11.1 Schmetterlings-Grafik und Schwarm-Raster */
+.fly-svg { display:inline-block; vertical-align:middle; }
+.fly-svg.rare { filter:drop-shadow(0 0 6px #ffd76a); }
+.swarm { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px 8px; }
+.swarm-i { width:auto; font-size:46px; }
+.swarm-i small { hyphens:manual; overflow-wrap:anywhere; }
+.bfly-pic svg, .bfly-big svg { filter:drop-shadow(0 2px 8px rgba(0,0,0,.35)); }
