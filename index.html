@@ -109,8 +109,9 @@
         <button class="btn" id="btnNah"><span class="btn-icon">📡</span><span>Nah<br>dran</span></button>
       </div>
       <div class="eyebrow tile-head">Zu zweit</div>
-      <div class="btn-row three">
+      <div class="btn-row">
         <button class="btn" id="btnPlayTile"><span class="btn-icon">🎯</span><span>Spiele</span></button>
+        <button class="btn" id="btnCommonTile"><span class="btn-icon">🤝</span><span>Gemeinsam<br>entdecken</span></button>
         <button class="btn" id="btnKlartext"><span class="btn-icon">💬</span><span>Klartext<br>reden</span></button>
         <button class="btn" id="btnIntimTile"><span class="btn-icon">🔥</span><span>Zwei-<br>samkeit</span></button>
       </div>
@@ -144,6 +145,7 @@
     <section class="view" id="view-play" aria-labelledby="nav-play">
       <div class="seg" role="tablist" data-seg="play">
         <button role="tab" data-sub="match" class="active" aria-selected="true">🎯 Gleichklang</button>
+        <button role="tab" data-sub="gemeinsam" aria-selected="false">🤝 Gemeinsam</button>
         <button role="tab" data-sub="klartext" aria-selected="false">💬 Klartext</button>
         <button role="tab" data-sub="music" aria-selected="false">🎵 Musik</button>
         <button role="tab" data-sub="oracle" aria-selected="false">🌼 Orakel</button>
@@ -155,6 +157,12 @@
         <div id="klartextList" style="width:100%"></div>
         <div class="card soft" style="margin-top:8px;padding:12px 16px"><div class="tips-slot" id="klartextTips" style="margin:0"></div></div>
         <p class="about" style="font-size:16px;color:var(--text-muted);margin-top:4px">Die Spiele helfen beim Reden, sie ersetzen keine Paarberatung. Wenn du dich bedroht fühlst oder Angst vor deinem Partner oder deiner Partnerin hast: Hilfetelefon „Gewalt gegen Frauen“ 116 016, Hilfetelefon „Gewalt an Männern“ 0800 123 99 00 – kostenlos und vertraulich.</p>
+      </div>
+      <div class="sub" id="sub-gemeinsam">
+        <div class="view-title">Gemeinsam</div>
+        <div class="view-sub">Was euch verbindet und was ihr neu entdecken könnt</div>
+        <div class="card soft hidden" id="commonBox"></div>
+        <div id="commonList" style="width:100%"></div>
       </div>
       <div class="sub active" id="sub-match">
         <div class="view-title">Gleichklang</div>

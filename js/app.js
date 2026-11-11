@@ -298,6 +298,7 @@
   $('btnWrite').onclick = () => writeOwn((t) => showMessage({ text: t, own: true }, 'Persönlich für dich'));
   $('btnReasons').onclick = () => { const p = $('reasonPanel'); const open = p.classList.toggle('hidden'); if (!open) { renderReasons(); if (window.LZP) window.LZP.mountTips($('reasonTips'), 'reasons', 'Gründe schenken'); p.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } };
   $('btnPlayTile').onclick = () => { showView('play'); showSub('play', 'match'); window.scrollTo(0, 0); };
+  $('btnCommonTile').onclick = () => { showView('play'); showSub('play', 'gemeinsam'); window.scrollTo(0, 0); };
   $('btnIntimTile').onclick = () => { showView('play'); showSub('play', 'intim'); window.scrollTo(0, 0); };
   $('btnDrawReason').onclick = () => { if (!S.reasons.length) { toast('Füge erst einen Grund hinzu'); return; } showReason(pick(S.reasons)); };
   $('btnAddReason').onclick = () => promptSheet('Neuer Grund', [{ key: 'r', label: 'Warum ich dich liebe …', placeholder: 'z. B. Wie du morgens singst', max: 120 }], 'Hinzufügen', (v) => {

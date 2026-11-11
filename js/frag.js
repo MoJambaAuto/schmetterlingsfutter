@@ -32,6 +32,7 @@
     ['Zu zweit', '💞', 'Handys verbinden', 'verbinden koppeln partner code paar link einladen zweites handy app verbindung', '', () => { if (P()) P().pairSheet(); }],
     ['Zu zweit', '📬', 'Postfach', 'postfach nachrichten eingang erhalten bekommen angekommen', '', () => { if (P()) P().inboxSheet(); }],
     ['Zu zweit', '🎯', 'Worauf habt ihr heute Bock?', 'spiel spielen bock lust heute abend gleichklang unternehmen', '', deck(/bock/i)],
+    ['Zu zweit', '🤝', 'Gemeinsame Interessen', 'gemeinsam gemeinsamkeiten interessen hobby hobbys freizeit musik film filme serie serien fernsehen kultur reisen urlaub essen entdecken verbindet neues ausprobieren', '', view('play', 'gemeinsam')],
     ['Zu zweit', '🗓️', 'Date-Ideen', 'date dates ideen ausgehen verabredung ausflug', '', deck(/date/i)],
     ['Zu zweit', '🌦️', 'Wetterbericht der Woche', 'wetter wetterbericht woche stimmung beziehung rueckblick', '', () => { if (N()) N().checkinStart(); }],
     ['Zu zweit', '🗝️', 'Unausgesprochen', 'reden thema ansprechen unausgesprochen problem sorgen', '', deck(/reden/i)],

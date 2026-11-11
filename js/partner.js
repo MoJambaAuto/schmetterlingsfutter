@@ -250,7 +250,7 @@
     const prev = P().matches[deck.id];
     const sd = gameSd(deck, mode);
     game = { deck, mode, step: 0, who: 'me', mine: {}, theirs: {}, prev, sd, items: roundItems(deck, sd) };
-    let html = '<div class="match-head"><button class="icon-btn" data-close aria-label="Schließen">✕</button><div class="eyebrow" style="margin:0">Gleichklang</div><span></span></div>' +
+    let html = '<div class="match-head"><button class="icon-btn" data-close aria-label="Schließen">✕</button><div class="eyebrow" style="margin:0">' + (deck.common ? 'Gemeinsam' : 'Gleichklang') + '</div><span></span></div>' +
       '<div class="match-intro"><div class="match-emoji">' + deck.icon + '</div><h2>' + L.esc(deck.title) + '</h2><p class="about">' + L.esc(deck.sub) + '</p>';
     if (canRelay) html += '<div class="seg-mode" role="group" aria-label="Spielweise"><button type="button" data-mode="relay"' + (mode === 'relay' ? ' class="on" aria-pressed="true"' : '') + '>📱📱 Zwei Handys</button><button type="button" data-mode="pass"' + (mode === 'pass' ? ' class="on" aria-pressed="true"' : '') + '>📱 Ein Handy</button></div>';
     html += '<p class="about mode-line">' + (mode === 'relay' ? 'Ihr antwortet beide in der eigenen App.' : 'Erst du, dann ' + L.esc(partnerName()) + '.') + ' ' + game.items.length + ' Fragen.</p>';
@@ -366,30 +366,32 @@
     } else {
       const yes = rec.matches.map((id) => deck.items.find((it) => it.id === id)).filter(Boolean);
       const open = (rec.open || []).map((id) => deck.items.find((it) => it.id === id)).filter(Boolean);
-      html += '<div class="match-intro" style="padding-bottom:8px"><div class="match-emoji">' + (yes.length ? '💞' : '🫤') + '</div><h2>' + (yes.length ? yes.length + (yes.length === 1 ? ' Treffer' : ' Treffer') : 'Kein gemeinsames Ja') + '</h2>' +
+      if (deck.common) noteCommon(deck, rec);
+      html += '<div class="match-intro" style="padding-bottom:8px"><div class="match-emoji">' + (yes.length ? '💞' : '🫤') + '</div><h2>' + (yes.length ? yes.length + (deck.common ? (yes.length === 1 ? ' Gemeinsamkeit' : ' Gemeinsamkeiten') : ' Treffer') : (deck.common ? 'Noch nichts Gemeinsames' : 'Kein gemeinsames Ja')) + '</h2>' +
         '<p class="about" style="font-size:17px">' + (yes.length ? (deck.hitText || 'Das wollt ihr beide. Alles andere bleibt geheim.') : (open.length ? 'Aber ihr seid beide bei ein paar Dingen offen – siehe unten.' : (deck.noneText || (deck.daily ? 'Heute nicht. Morgen gibt es neue Chancen – oder jemand gibt nach. 😉' : 'Vielleicht beim nächsten Mal. Papillon empfiehlt: Vielleicht großzügiger antippen.')))) + '</p></div>';
       if (yes.length) html += '<div class="match-list">' + yes.map((it) => matchItem(it, deck.yesLabel || 'Beide Ja', deck.adult)).join('') + '</div>';
-      if (open.length) html += '<div class="eyebrow" style="margin-top:14px">' + L.esc(deck.openTitle || 'Beide offen dafür') + '</div><div class="match-list">' + open.map((it) => matchItem(it, deck.openLabel || 'Vielleicht', deck.adult)).join('') + '</div>';
+      if (open.length) html += '<div class="eyebrow" style="margin-top:14px">' + L.esc(deck.openTitle || 'Beide offen dafür') + '</div><div class="match-list">' + open.map((it) => matchItem(it, deck.common && (rec.mine || []).indexOf(it.id) >= 0 ? 'Dein Ding, ' + name + ' ist neugierig' : (deck.openLabel || 'Vielleicht'), deck.adult)).join('') + '</div>';
       /* Mut-Karte: Themen, die nur mir wichtig sind, bleiben geheim – aber ich bekomme Hilfe, sie selbst anzusprechen */
       if (deck.talk && rec.mode === 'relay') {
         const hidden = (rec.mine || []).filter((id) => !rec.matches.includes(id) && !(rec.open || []).includes(id)).map((id) => deck.items.find((it) => it.id === id)).filter(Boolean);
         if (hidden.length) html += '<div class="card soft" style="margin-top:14px;padding:14px 16px"><div class="eyebrow" style="margin:0 0 6px">🔒 Nur für dich</div><p class="about" style="font-size:17px">' + (hidden.length === 1 ? 'Ein Thema ist dir wichtig, das noch kein Treffer ist.' : hidden.length + ' Themen sind dir wichtig, die noch kein Treffer sind.') + ' ' + name + ' sieht das nicht. Unausgesprochenes wächst. Papillon hilft dir, eines davon sanft selbst anzusprechen.</p><div class="row" style="justify-content:flex-start;margin-top:10px"><button class="pill-btn small" data-hidden>Anzeigen</button></div><div class="match-list hidden" data-hidden-list style="margin-top:10px">' + hidden.map((it) => matchItem(it, 'Nur dir wichtig')).join('') + '</div></div>';
       }
-      if (!yes.length || deck.talk) html += tipsHtml(tips('match_' + deck.id, 2), deck.talk ? 'Hilft beim Reden' : 'Für den nächsten Versuch');
-      html += '<div class="row wrap" style="margin-top:18px">' + (yes.length ? '<button class="pill-btn primary" data-share-res>Plan teilen ↗</button>' : '') + (!deck.daily && deck.items.length > roundSize(deck) ? '<button class="pill-btn" data-next>Neue Fragen</button>' : '<button class="pill-btn" data-again>Nochmal spielen</button>') + (rec.mode === 'relay' ? '<button class="pill-btn ghost small" data-refresh>Aktualisieren</button>' : '') + '</div>' +
+      if (!yes.length || deck.talk) html += tipsHtml(tips('match_' + deck.id, 2), deck.talk ? 'Hilft beim Reden' : deck.common ? 'Passend dazu' : 'Für den nächsten Versuch');
+      html += '<div class="row wrap" style="margin-top:18px">' + (yes.length ? '<button class="pill-btn primary" data-share-res>' + (deck.common ? 'Teilen ↗' : 'Plan teilen ↗') + '</button>' : '') + (deck.common && commonAll().length ? '<button class="pill-btn" data-common>Alle Gemeinsamkeiten</button>' : '') + (!deck.daily && deck.items.length > roundSize(deck) ? '<button class="pill-btn" data-next>Neue Fragen</button>' : '<button class="pill-btn" data-again>Nochmal spielen</button>') + (rec.mode === 'relay' ? '<button class="pill-btn ghost small" data-refresh>Aktualisieren</button>' : '') + '</div>' +
         '<p class="about" style="font-size:16px;color:var(--text-muted);margin-top:12px">Stand ' + L.fmtDate(new Date(rec.date)) + (rec.mode === 'relay' ? ' · über die Partner-Verbindung, nur Prüfsummen verglichen' : ' · Handy-weitergeben-Modus') + '. Produktvorschläge sind Werbelinks zur Amazon-Suche.</p>';
     }
     openMatch(html, (sc) => {
       sc.querySelector('[data-close]').onclick = closeMatch; bindTips(sc);
       const hb = sc.querySelector('[data-hidden]'); if (hb) hb.onclick = () => { sc.querySelector('[data-hidden-list]').classList.toggle('hidden'); hb.textContent = hb.textContent === 'Anzeigen' ? 'Verbergen' : 'Anzeigen'; };
       sc.querySelectorAll('[data-soft]').forEach((b) => b.onclick = () => { if (window.LZN) window.LZN.softStart(b.dataset.soft); });
+      const ca = sc.querySelector('[data-common]'); if (ca) ca.onclick = () => { closeMatch(); if (L.showView) { L.showView('play'); L.showSub('play', 'gemeinsam'); } commonSheet(); };
       const ag = sc.querySelector('[data-again]'); if (ag) ag.onclick = () => playDeck(deck.id, rec.mode === 'pass');
       const nx = sc.querySelector('[data-next]'); if (nx) nx.onclick = () => { P().roundShift = P().roundShift || {}; P().roundShift[deck.id] = (P().roundShift[deck.id] || 0) + 1; if (P().invites) delete P().invites[deck.id]; L.save(); playDeck(deck.id, rec.mode === 'pass'); };
       const rf = sc.querySelector('[data-refresh]'); if (rf) rf.onclick = async () => { rf.disabled = true; rf.textContent = '…'; try { await refreshMatches(deck, rec, true); } catch (e) { L.toast('Keine Verbindung'); rf.disabled = false; rf.textContent = 'Aktualisieren'; } };
       const si = sc.querySelector('[data-share-inv]'); if (si) si.onclick = () => L.shareText('🎯 Ich habe in Schmetterlingsfutter „' + deck.title + '“ beantwortet. Spiel mit – ich bin gespannt, wo wir übereinstimmen! 😉 — ' + S().sender);
       const sr = sc.querySelector('[data-share-res]'); if (sr) sr.onclick = () => {
         const yes = rec.matches.map((id) => deck.items.find((it) => it.id === id)).filter(Boolean);
-        L.shareText('💞 Gleichklang: ' + deck.title + '\n' + yes.map((it) => it.e + ' ' + it.t).join('\n') + '\n— ' + S().sender + ' & ' + partnerName() + ' (Schmetterlingsfutter)');
+        L.shareText((deck.common ? '🤝 Das verbindet uns: ' : '💞 Gleichklang: ') + deck.title + '\n' + yes.map((it) => it.e + ' ' + it.t).join('\n') + '\n— ' + S().sender + ' & ' + partnerName() + ' (Schmetterlingsfutter)');
       };
     });
     renderDecks(); renderInboxBadge();
@@ -398,8 +400,57 @@
     if (it.q) return '<div class="match-item"><span class="mi-e">' + it.e + '</span><div class="mi-b"><div class="mi-t">' + L.esc(it.t) + '</div><div class="mi-s">' + L.esc(badge) + '</div><div class="mi-q">💬 ' + L.esc(it.q) + '</div><button type="button" class="tip inline" data-soft="' + L.esc(it.t) + '">🕊️ Sanft ansprechen</button></div></div>';
     return'<div class="match-item"><span class="mi-e">' + it.e + '</span><div class="mi-b"><div class="mi-t">' + L.esc(it.t) + '</div><div class="mi-s">' + badge + (it.tip ? ' · <button type="button" class="tip inline" data-q="' + L.esc(it.tip) + '"' + (adult ? ' data-adult="1"' : '') + '>🛒 ' + L.esc(it.tip) + ' ↗</button>' : '') + '</div></div></div>';
   }
+  /* ---------- Gemeinsam: was beide mögen oder beide ausprobieren würden, wächst zu einer Sammlung ---------- */
+  function noteCommon(deck, rec) {
+    if (!rec || rec.expired || !Array.isArray(rec.matches)) return;
+    const sig = rec.matches.join(',') + '|' + (rec.open || []).join(','); if (rec.noted === sig) return;
+    const s = S(); if (!s.common) s.common = {}; const c = s.common[deck.id] || (s.common[deck.id] = {});
+    rec.matches.forEach((id) => { c[id] = 'yes'; }); (rec.open || []).forEach((id) => { if (c[id] !== 'yes') c[id] = 'open'; });
+    rec.noted = sig; L.save();
+  }
+  function commonAll() {
+    const out = [], c = S().common || {};
+    D.decks.forEach((deck) => { if (!deck.common || !c[deck.id]) return; deck.items.forEach((it) => { const st = c[deck.id][it.id]; if (st) out.push({ deck, it, st }); }); });
+    return out;
+  }
+  function suggestCommon(x) {
+    sendOrShare(x.st === 'yes' ? 'Das mögen wir beide: ' + x.it.e + ' ' + x.it.t + '. Wann nehmen wir uns Zeit dafür?' : 'Wollen wir das zusammen entdecken: ' + x.it.e + ' ' + x.it.t + '?', 'Gemeinsam');
+  }
+  function renderCommon() {
+    const box = $('commonBox'); if (!box) return; const all = commonAll();
+    box.classList.toggle('hidden', !all.length); if (!all.length) { box.innerHTML = ''; return; }
+    const yes = all.filter((x) => x.st === 'yes'); const pool = yes.length ? yes : all; const x = pool[weekNum() % pool.length];
+    box.innerHTML = '<div class="row between"><div class="eyebrow" style="margin:0">Das verbindet euch</div><span class="tag">' + all.length + '</span></div>' +
+      '<div class="match-item" style="margin-top:12px"><span class="mi-e">' + x.it.e + '</span><div class="mi-b"><div class="mi-t">' + L.esc(x.it.t) + '</div><div class="mi-s">Impuls der Woche</div></div></div>' +
+      '<div class="row wrap" style="justify-content:flex-start;gap:10px"><button class="pill-btn small primary" data-sug>Vorschlagen ↗</button><button class="pill-btn small" data-all>Alle ansehen</button></div>' +
+      (x.it.tip ? tipsHtml([{ icon: '🛒', title: x.it.tip, q: x.it.tip }], 'Passend dazu') : '');
+    box.querySelector('[data-sug]').onclick = () => suggestCommon(x); box.querySelector('[data-all]').onclick = commonSheet; bindTips(box);
+  }
+  function commonSheet() {
+    const all = commonAll(); let html = '<h3>🤝 Eure Gemeinsamkeiten</h3>', last = null, ads = false;
+    all.forEach((x, i) => {
+      if (x.deck !== last) { html += '<div class="eyebrow" style="margin:14px 0 8px">' + x.deck.icon + ' ' + L.esc(x.deck.title) + '</div>'; last = x.deck; }
+      if (x.it.tip) ads = true;
+      html += '<div class="match-item" data-i="' + i + '"><span class="mi-e">' + x.it.e + '</span><div class="mi-b"><div class="mi-t">' + L.esc(x.it.t) + '</div><div class="mi-s">' + (x.st === 'yes' ? 'Mögt ihr beide' : 'Zum Entdecken') + '</div>' +
+        '<div class="row wrap" style="justify-content:flex-start;gap:8px;margin-top:8px"><button class="pill-btn small" data-sug>Vorschlagen ↗</button>' + (x.it.tip ? '<button type="button" class="tip inline" data-q="' + L.esc(x.it.tip) + '">🛒 ' + L.esc(x.it.tip) + ' ↗</button>' : '') + '<button class="pill-btn small ghost" data-rm aria-label="Entfernen">✕</button></div></div></div>';
+    });
+    if (!all.length) html += '<p class="about">Spielt eine Runde, dann füllt sich diese Liste.</p>';
+    html += (ads ? '<p class="about" style="font-size:16px;color:var(--text-muted);margin-top:10px">🛒 Werbelink zur Amazon-Suche.</p>' : '') + '<div class="row" style="margin-top:14px"><button class="pill-btn ghost" data-cancel>Schließen</button></div>';
+    L.openSheet(html, (sh) => {
+      sh.querySelector('[data-cancel]').onclick = () => { L.closeSheet(); renderCommon(); }; bindTips(sh);
+      sh.querySelectorAll('.match-item[data-i]').forEach((row) => {
+        const x = all[+row.dataset.i], c = S().common[x.deck.id];
+        row.querySelector('[data-sug]').onclick = () => suggestCommon(x);
+        const rm = row.querySelector('[data-rm]'); rm.onclick = () => {
+          const off = row.classList.toggle('off'); if (off) delete c[x.it.id]; else c[x.it.id] = x.st;
+          rm.textContent = off ? '↩ Zurückholen' : '✕'; rm.setAttribute('aria-label', off ? 'Zurückholen' : 'Entfernen'); L.save(); renderCommon();
+        };
+      });
+    });
+  }
+
   function renderDecks() {
-    const l = $('deckList'); if (!l) return; l.innerHTML = '';
+    const l = $('deckList'); if (!l) return; l.innerHTML = ''; const cl = $('commonList'); if (cl) cl.innerHTML = '';
     D.decks.forEach((deck) => {
       if (deck.talk) return; // läuft unter „Klartext“
       if (deck.adult && !S().intim) return;
@@ -409,15 +460,22 @@
         else if (rec.matches === null) state = (rec.stale ? '✨ ' + partnerName() + ' hat geantwortet – antippen' : 'Wartet auf ' + partnerName());
         else state = rec.matches.length + (rec.matches.length === 1 ? ' Treffer' : ' Treffer') + (rec.stale ? ' · neu laden' : '');
       }
+      if (deck.common && !(rec && (rec.matches === null || rec.stale))) { const n = Object.keys((S().common || {})[deck.id] || {}).length; state = n ? n + (n === 1 ? ' Gemeinsamkeit' : ' Gemeinsamkeiten') + ' · weiter entdecken' : ''; }
       const d = document.createElement('button'); d.type = 'button'; d.className = 'deck' + (deck.adult ? ' adult' : '');
-      d.innerHTML = '<span class="d-ico">' + deck.icon + '</span><div class="d-body"><div class="d-title">' + L.esc(deck.title) + '</div><div class="d-sub">' + L.esc(state || deck.sub) + '</div></div><span class="d-go">›</span>';
+      d.innerHTML = '<span class="d-ico">' + deck.icon + '</span><div class="d-body"><div class="d-title">' + L.esc(deck.title) + '</div><div class="d-sub">' + L.esc(state || deck.teaser || deck.sub) + '</div></div><span class="d-go">›</span>';
       d.onclick = () => {
         if (rec && rec.matches === null && rec.mode === 'relay' && !(deck.daily && rec.date.slice(0, 10) !== L.todayKey())) { showResults(deck, rec); refreshMatches(deck, rec, true).catch(() => {}); }
         else if (rec && rec.stale && rec.mode === 'relay') { showResults(deck, rec); refreshMatches(deck, rec, true).catch(() => {}); }
-        else playDeck(deck.id);
+        else {
+          /* Interessen: nach einer fertigen Runde kommen beim nächsten Mal neue Karten */
+          const iv = (P().invites || {})[deck.id];
+          if (deck.common && rec && Array.isArray(rec.matches) && (!iv || iv.sd === rec.sd)) { P().roundShift = P().roundShift || {}; P().roundShift[deck.id] = (P().roundShift[deck.id] || 0) + 1; L.save(); }
+          playDeck(deck.id);
+        }
       };
-      l.appendChild(d);
+      (deck.common && cl ? cl : l).appendChild(d);
     });
+    renderCommon();
     /* Der Ideen-Briefkasten erscheint erst, wenn der Vermittlungsdienst ihn annimmt (Schalter D.ideaBox) */
     ['ideaRow', 'ideaRow2'].forEach((id) => { const el = $(id); if (el) el.classList.toggle('hidden', !D.ideaBox); });
     const rb = $('btnReport'); if (rb) rb.classList.toggle('hidden', !D.ideaBox);
@@ -670,7 +728,7 @@
   setInterval(() => { if (document.visibilityState === 'visible') pull(); }, 45000);
   $('obFinish').addEventListener('click', () => setTimeout(() => { renderAll(); offerPendingPair(); setTimeout(pairWelcome, 1600); }, 80));
 
-  window.LZP = { P, paired, joined, partnerName, sendOrShare, sendCoupon, send, pull, pairSheet, inboxSheet, playDeck, renderDecks, renderAll, renderGiftRadar, amazonUrl, tips, tipsHtml, bindTips, mountTips, leavePair, unread, RELAY, on, inboxType, openMatch, closeMatch, online, pairLink, ideaSheet, reportSheet, iosBrowser, partnerPron: () => (P().partner && P().partner.pron) || '', announce: () => { if (paired() && joined()) send({ t: 'hello', name: S().sender, pron: S().pron || '' }).catch(() => {}); } };
+  window.LZP = { P, paired, joined, partnerName, sendOrShare, sendCoupon, send, pull, pairSheet, inboxSheet, playDeck, renderDecks, renderAll, renderGiftRadar, amazonUrl, tips, tipsHtml, bindTips, mountTips, leavePair, unread, RELAY, on, inboxType, openMatch, closeMatch, online, pairLink, ideaSheet, reportSheet, iosBrowser, commonSheet, renderCommon, partnerPron: () => (P().partner && P().partner.pron) || '', announce: () => { if (paired() && joined()) send({ t: 'hello', name: S().sender, pron: S().pron || '' }).catch(() => {}); } };
   renderAll(); handlePairParam();
   if (window.LZF) { window.LZF.renderPiek(); window.LZF.renderGiftRadar && window.LZF.renderGiftRadar(); }
   /* Erst abholen, wenn alle Skripte geladen sind (naehe.js meldet eigene Nachrichtenarten an) */

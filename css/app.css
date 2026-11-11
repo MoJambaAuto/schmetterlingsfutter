@@ -616,3 +616,7 @@ a.pill-btn { text-decoration:none; display:inline-flex; align-items:center; just
 #app { padding-top:62px; }
 .futter-pop { bottom:190px; }
 .piek-card > .row.between { flex-wrap:wrap; gap:6px 10px; }
+
+/* 3.16.0 Gemeinsam */
+.match-item.off { opacity:.5; }
+#commonBox .tips { margin-top:12px; }

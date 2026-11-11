@@ -3,7 +3,7 @@
 (function () {
   'use strict';
   const D = window.LUZIFER_DATA;
-  D.version = '3.15.0';
+  D.version = '3.16.0';
 
   /* Ideen-Briefkasten: eingeschaltet seit 10.11.2026 (Vermittlungsdienst kennt die Adresse /idea) */
   D.ideaBox = true;
@@ -376,4 +376,188 @@
     "Was immer der Tag bringt: Am Ende lande ich am liebsten bei dir.",
     "Ich hab dich lieb. Von hier bis zum Kühlschrank und zurück, und das mehrmals."
   );
+
+  /* ---- Gemeinsame Interessen (3.16.0): laufen über die Gleichklang-Technik. Sichtbar wird nur, was beide mögen
+     oder beide ausprobieren würden. Zeilen: [Kennung, Symbol, Text, Suchbegriff für einen Werbelink zur Amazon-Suche]. ---- */
+  const CL = { ja: '❤️ Mag ich', vielleicht: '✨ Würde ich ausprobieren', nein: 'Nicht meins' };
+  const cdeck = (id, icon, title, rows) => D.decks.push({ id, icon, title, sub: 'Was mögt ihr beide? Was wollt ihr ausprobieren?', common: true, teaser: rows.slice(0, 3).map((r) => r[2]).join(', ') + ' …', opts: 3, labels: CL,
+    yesLabel: 'Mögt ihr beide', openTitle: 'Zum gemeinsamen Entdecken', openLabel: 'Beide offen dafür', hitText: 'Das verbindet euch. Alles andere bleibt für sich.',
+    noneText: 'In der nächsten Runde warten neue Themen.', items: rows.map((r) => ({ id: r[0], e: r[1], t: r[2], tip: r[3] || '' })) });
+  cdeck("hobby", "🧩", "Hobbys und Freizeit", [
+    ["wandern","🥾","Wandern","Wanderrucksack 20 Liter"],
+    ["rad","🚴","Radtouren","Fahrradtasche Gepäckträger"],
+    ["kochen","🍳","Kochen","Kochbuch für zwei"],
+    ["backen","🧁","Backen","Backbuch"],
+    ["garten","🌱","Gärtnern, auch auf dem Balkon","Kräutergarten Set Balkon"],
+    ["brettspiele","🎲","Brett- und Kartenspiele","Spiel für 2 Personen"],
+    ["puzzle","🧩","Puzzeln","Puzzle 1000 Teile Erwachsene"],
+    ["gaming","🎮","Videospiele","Koop Spiel für zwei"],
+    ["foto","📷","Fotografieren","Kamera Stativ Reise"],
+    ["malen","🎨","Malen und Zeichnen","Aquarell Set Anfänger"],
+    ["handarbeit","🧶","Stricken, Nähen, Handarbeit","Strickset Anfänger"],
+    ["heimwerken","🔨","Heimwerken und Bauen","Werkzeugkoffer"],
+    ["tanzen","💃","Tanzen","Paartanz lernen Buch"],
+    ["yoga","🧘","Yoga","Yogamatte"],
+    ["fitness","🏋️","Fitness und Kraftsport","Kurzhanteln Set"],
+    ["laufen","🏃","Laufen","Laufgürtel Handy"],
+    ["schwimmen","🏊","Schwimmen","Schwimmbrille"],
+    ["klettern","🧗","Klettern und Bouldern","Chalkbag"],
+    ["camping","⛺","Camping","Campingkocher"],
+    ["angeln","🎣","Angeln","Angelset Einsteiger"],
+    ["lesen","📚","Lesen","Leselampe Buch"],
+    ["sterne","🔭","Sterne beobachten","Teleskop Einsteiger"],
+    ["modellbau","🧱","Modellbau und Klemmbausteine","Klemmbausteine Erwachsene Set"],
+    ["tiere","🐕","Zeit mit Tieren",""],
+    ["ehrenamt","🤝","Ehrenamt",""],
+    ["sprache","🗣️","Eine Sprache lernen","Sprachkurs Buch Anfänger"],
+    ["geocaching","🧭","Schatzsuche mit dem Handy",""],
+    ["troedel","🧺","Flohmärkte und Trödel",""]
+  ]);
+  cdeck("musik", "🎵", "Musik", [
+    ["pop","🎤","Pop",""],
+    ["rock","🎸","Rock",""],
+    ["hiphop","🎧","Hip-Hop und Rap",""],
+    ["elektro","🎛️","Elektro und Techno",""],
+    ["schlager","🪩","Schlager",""],
+    ["klassik","🎻","Klassik",""],
+    ["jazz","🎷","Jazz und Soul",""],
+    ["metal","🤘","Metal",""],
+    ["indie","🌿","Indie und Alternative",""],
+    ["oldies","📻","Oldies und Musik der 80er und 90er",""],
+    ["latin","🪇","Latin und Salsa",""],
+    ["soundtrack","🎬","Filmmusik",""],
+    ["konzert","🎟️","Konzerte besuchen","Ohrstöpsel Konzert"],
+    ["festival","🎪","Festivals","Festival Ausrüstung Set"],
+    ["vinyl","💿","Schallplatten hören","Plattenspieler"],
+    ["selbst","🎹","Selbst Musik machen","Ukulele Set Anfänger"],
+    ["karaoke","🎙️","Singen und Karaoke","Karaoke Mikrofon Bluetooth"],
+    ["playlist","📝","Eine gemeinsame Playlist pflegen",""],
+    ["kueche","🕺","Musik zum Tanzen in der Küche","Bluetooth Lautsprecher klein"],
+    ["musical","🎭","Musicals","Musical Gutschein"],
+    ["oper","🏛️","Oper und Operette",""],
+    ["chor","👥","Im Chor singen",""],
+    ["auto","🚗","Laut mitsingen im Auto",""],
+    ["kneipe","🍻","Live-Musik in der Kneipe",""],
+    ["hoerbuch","🎧","Hörbücher und Podcasts","Kopfhörer Bluetooth"],
+    ["neues","🔍","Neue Musik füreinander aussuchen",""]
+  ]);
+  cdeck("film", "🎬", "Film, Serien und Fernsehen", [
+    ["komoedie","😂","Komödien",""],
+    ["romantik","💕","Liebesfilme",""],
+    ["krimi","🕵️","Krimis und Thriller",""],
+    ["scifi","🚀","Science-Fiction",""],
+    ["fantasy","🐉","Fantasy",""],
+    ["horror","👻","Horror",""],
+    ["action","💥","Action",""],
+    ["doku","🌍","Dokus",""],
+    ["truecrime","🔎","True Crime",""],
+    ["anime","🌸","Anime",""],
+    ["trick","🧸","Animationsfilme",""],
+    ["klassiker","🎞️","Filmklassiker","Filmklassiker Sammlung"],
+    ["historie","🏰","Historienfilme und Kostümserien",""],
+    ["helden","🦸","Superhelden-Filme",""],
+    ["marathon","🍿","Serien-Marathon am Wochenende","Popcornmaschine"],
+    ["kino","🎟️","Kino","Kinogutschein"],
+    ["heimkino","📽️","Heimkino mit Beamer","Mini Beamer"],
+    ["quiz","🧠","Quizshows mitraten","Quiz Spiel Erwachsene"],
+    ["kochshow","👩‍🍳","Koch- und Backshows",""],
+    ["reality","🌴","Reality-TV",""],
+    ["sport","⚽","Sport schauen",""],
+    ["sonntag","🚔","Der Sonntagskrimi",""],
+    ["comedy","🎤","Stand-up und Comedy",""],
+    ["weihnacht","🎄","Weihnachtsfilme, auch im Juli","Kuscheldecke XXL"],
+    ["original","🗣️","Filme im Originalton",""],
+    ["arthouse","🎨","Programmkino",""],
+    ["natur","🦁","Tier- und Naturfilme",""]
+  ]);
+  cdeck("kultur", "🎭", "Kultur und Ausgehen", [
+    ["museum","🖼️","Museen und Ausstellungen",""],
+    ["theater","🎭","Theater",""],
+    ["kabarett","🎤","Kabarett und Comedy live",""],
+    ["lesung","📖","Lesungen",""],
+    ["klassik","🎻","Klassische Konzerte",""],
+    ["ballett","🩰","Ballett und Tanztheater",""],
+    ["galerie","🎨","Galerien und Kunst",""],
+    ["fuehrung","🏛️","Stadtführungen und Architektur","Reiseführer Deutschland Städte"],
+    ["burgen","🏰","Burgen, Schlösser, Geschichte",""],
+    ["stadtfest","🎪","Stadtfeste und Märkte",""],
+    ["weihnachtsmarkt","🎄","Weihnachtsmärkte","Thermobecher"],
+    ["restaurant","🍽️","Neue Restaurants testen",""],
+    ["bar","🍸","Cocktailbars","Cocktail Set Zuhause"],
+    ["cafe","☕","Cafés entdecken",""],
+    ["kneipenquiz","🧠","Kneipenquiz","Quiz Spiel Erwachsene"],
+    ["tanzengehen","🪩","Tanzen gehen",""],
+    ["bowling","🎳","Bowling und Billard",""],
+    ["escape","🔐","Escape Rooms","Escape Room Spiel Zuhause"],
+    ["freizeitpark","🎢","Freizeitparks",""],
+    ["zoo","🦒","Zoo und Aquarium",""],
+    ["kirmes","🎡","Kirmes",""],
+    ["stadion","🏟️","Stadion und Live-Sport",""],
+    ["planetarium","🌌","Planetarium","Sternenkarte drehbar"],
+    ["therme","♨️","Therme und Sauna","Saunatuch Set"],
+    ["minigolf","⛳","Minigolf",""],
+    ["spieleabend","🃏","Spieleabende mit Freunden","Partyspiel Erwachsene"]
+  ]);
+  cdeck("reisen", "🧳", "Reisen und Draußen", [
+    ["stadt","🏙️","Städtereisen","Reiseführer Städtetrip Europa"],
+    ["strand","🏖️","Strandurlaub","Strandtuch XXL"],
+    ["berge","🏔️","Urlaub in den Bergen","Wanderstöcke"],
+    ["roadtrip","🚗","Roadtrip","Roadtrip Europa Buch"],
+    ["camper","🚐","Wohnmobil und Camper",""],
+    ["zelten","⛺","Zelten","Zelt 2 Personen"],
+    ["wellness","🧖","Wellness-Urlaub","Bademantel Paar Set"],
+    ["aktiv","🚵","Aktivurlaub",""],
+    ["fern","✈️","Fernreisen","Rubbel Weltkarte"],
+    ["meer","🌊","Nord- und Ostsee",""],
+    ["ski","⛷️","Ski und Snowboard",""],
+    ["schiff","🚢","Kreuzfahrt",""],
+    ["zug","🚆","Reisen mit dem Zug","Zugreisen Europa Buch"],
+    ["region","🗺️","Die eigene Region entdecken","Rubbel Landkarte Deutschland Ausflüge"],
+    ["picknick","🧺","Picknick","Picknickkorb für 2"],
+    ["paddeln","🛶","Paddeln","Dry Bag wasserdicht"],
+    ["wald","🌲","Waldspaziergänge",""],
+    ["sonnenaufgang","🌅","Sonnenaufgänge ansehen","Thermoskanne"],
+    ["see","🏞️","Baden im See",""],
+    ["huette","🛖","Urlaub in einer Hütte",""],
+    ["spontan","🎒","Spontane Kurztrips","Weekender Tasche"],
+    ["hotel","🏨","Schöne Hotels","Hotelgutschein"],
+    ["hausboot","🚤","Hausboot",""],
+    ["weitwandern","🚶","Mehrere Tage wandern","Wanderführer Fernwanderweg"],
+    ["garten","🌷","Parks und Gärten",""],
+    ["traum","🌍","Von einer Weltreise träumen","Reise Tagebuch Paar"]
+  ]);
+  cdeck("genuss", "🍝", "Essen und Genuss", [
+    ["italien","🍝","Italienisch","Nudelmaschine"],
+    ["asien","🍜","Asiatisch","Wok Set"],
+    ["sushi","🍣","Sushi","Sushi Set selber machen"],
+    ["grillen","🔥","Grillen","Tischgrill Balkon"],
+    ["veggie","🥗","Vegetarisch und vegan","Kochbuch vegetarisch"],
+    ["scharf","🌶️","Scharfes Essen","Chili Saucen Set"],
+    ["streetfood","🌮","Streetfood",""],
+    ["burger","🍔","Burger","Burgerpresse Set"],
+    ["fruehstueck","🥐","Lange frühstücken","Frühstückstablett Bett"],
+    ["kaffee","☕","Guter Kaffee","Kaffeemühle Hand"],
+    ["tee","🍵","Tee","Tee Geschenkset"],
+    ["schoko","🍫","Schokolade","Schokolade Probierset"],
+    ["kaese","🧀","Käse","Käsebrett Set"],
+    ["kuchen","🍰","Kuchen und Torten","Backbuch"],
+    ["eis","🍦","Eis","Eismaschine"],
+    ["rezepte","📖","Neue Rezepte ausprobieren","Kochbuch für zwei"],
+    ["fondue","🫕","Fondue und Raclette","Raclette Grill"],
+    ["pizza","🍕","Pizza selber machen","Pizzastein Backofen"],
+    ["markt","🧺","Über den Wochenmarkt gehen","Einkaufskorb"],
+    ["schick","🍽️","Schick essen gehen",""],
+    ["imbiss","🍟","Currywurst und Pommes",""],
+    ["tapas","🫒","Tapas und kleine Teller","Tapas Schalen Set"],
+    ["brot","🥖","Brot backen","Gärkorb Set"],
+    ["weltkueche","🌍","Ein Land kochen, in dem ihr noch nie wart","Kochbuch Weltküche"],
+    ["dessert","🍮","Nachtisch zuerst",""],
+    ["kochkurs","👩‍🍳","Kochkurse","Kochkurs Gutschein"]
+  ]);
+  D.tips.match_hobby = [{"icon":"🎲","title":"Spiel für zwei","q":"Spiel für 2 Personen"},{"icon":"🎟️","title":"Erlebnisbox für zwei","q":"Erlebnisbox für zwei"}];
+  D.tips.match_musik = [{"icon":"🔊","title":"Kleine Box für die Küche","q":"Bluetooth Lautsprecher klein"},{"icon":"🎙️","title":"Karaoke-Mikrofon","q":"Karaoke Mikrofon Bluetooth"}];
+  D.tips.match_film = [{"icon":"🍿","title":"Popcornmaschine","q":"Popcornmaschine"},{"icon":"🧣","title":"Kuscheldecke","q":"Kuscheldecke XXL Paar"}];
+  D.tips.match_kultur = [{"icon":"🔐","title":"Escape-Spiel für zu Hause","q":"Escape Room Spiel Zuhause"},{"icon":"🎟️","title":"Erlebnisgutschein","q":"Erlebnisgutschein für zwei"}];
+  D.tips.match_reisen = [{"icon":"🗺️","title":"Rubbelkarte für Ausflüge","q":"Rubbel Landkarte Deutschland Ausflüge"},{"icon":"🧳","title":"Kurztrip-Gutschein","q":"Kurzurlaub Gutschein Paar"}];
+  D.tips.match_genuss = [{"icon":"📖","title":"Kochbuch für zwei","q":"Kochbuch für zwei"},{"icon":"🍫","title":"Schokolade zum Probieren","q":"Schokolade Probierset"}];
 })();
