@@ -56,6 +56,34 @@ async function shortHash(text) {
   return Array.from(new Uint8Array(d).slice(0, 3), (x) => x.toString(16).padStart(2, '0')).join(''); // 24 Bit: reicht zum Bremsen, nicht zum Wiedererkennen
 }
 
+/* ---- Anonyme Nutzungs-Zähler (nur mit Zustimmung in der App) ----
+   Die App schickt höchstens einmal am Tag die Zähler der Vortage: {ver, days:[{day, c:{schlüssel:anzahl}, q:{quelle:{begriff:anzahl}}}]}.
+   Keine Kennung, keine Uhrzeit. Gespeichert wird nur die Summe je Tag, Version und Schlüssel. */
+const STATS_KEY = /^[a-z0-9_:.-]{1,64}$/;
+const STATS_TERM = /^[a-z0-9äöüß][a-z0-9äöüß .&+-]{1,39}$/;
+const STATS_SRC = ['shop', 'frag'];
+const STATS_MAX_KEYS = 300, STATS_MAX_N = 500, STATS_MAX_TERMS = 30, STATS_PER_DAY = 200, STATS_TOTAL_DAY = 50000, STATS_KEEP_DAYS = 400;
+function statsDays(body, t) {
+  if (!body || typeof body.ver !== 'string' || !/^\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(body.ver) || !Array.isArray(body.days) || !body.days.length || body.days.length > 7) return null;
+  const today = new Date(t).toISOString().slice(0, 10), oldest = new Date(t - 8 * 864e5).toISOString().slice(0, 10), out = [];
+  for (const d of body.days) {
+    if (!d || typeof d.day !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(d.day) || d.day > today || d.day < oldest) return null;
+    const c = d.c && typeof d.c === 'object' ? d.c : {}, keys = Object.keys(c);
+    if (keys.length > STATS_MAX_KEYS) return null;
+    const cc = [];
+    for (const k of keys) { const n = c[k]; if (!STATS_KEY.test(k) || !Number.isInteger(n) || n < 1) return null; cc.push([k, Math.min(n, STATS_MAX_N)]); }
+    const qq = [];
+    const q = d.q && typeof d.q === 'object' ? d.q : {};
+    for (const src of Object.keys(q)) {
+      if (!STATS_SRC.includes(src) || !q[src] || typeof q[src] !== 'object') return null;
+      const terms = Object.keys(q[src]); if (terms.length > STATS_MAX_TERMS) return null;
+      for (const term of terms) { const n = q[src][term]; if (!STATS_TERM.test(term) || !Number.isInteger(n) || n < 1) return null; qq.push([src, term, Math.min(n, 20)]); }
+    }
+    out.push({ day: d.day, cc, qq });
+  }
+  return out;
+}
+
 /* ---- Mitteilungen aufs Handy: Web Push OHNE Inhalt. Der Dienst stupst das Gerät nur an, die App holt dann wie immer ab.
    Gespeichert wird je Gerät nur die Push-Adresse des Browsers. Schlüssel: VAPID_PRIVATE (Geheimnis, JWK) und VAPID_PUBLIC. ---- */
 const PUSH_HOSTS = [/^fcm\.googleapis\.com$/, /\.push\.services\.mozilla\.com$/, /\.notify\.windows\.com$/, /\.push\.apple\.com$/];
@@ -165,6 +193,24 @@ async function handle(req, env, ctx) {
     return json({ ok: true }, 200, req, env);
   }
 
+  /* ---- Anonyme Zähler (ohne Anmeldung) ---- */
+  if (url.pathname === '/stats') {
+    const days = statsDays(body, t); if (!days) return err('input', 400, req, env);
+    const day = new Date(t).toISOString().slice(0, 10);
+    const who = await shortHash(day + '|' + (req.headers.get('CF-Connecting-IP') || 'local') + '|stats');
+    const total = await env.DB.prepare('SELECT COALESCE(SUM(n), 0) AS n FROM stats_rate WHERE day = ?').bind(day).first();
+    if (total && total.n >= STATS_TOTAL_DAY) return err('later', 429, req, env);
+    const mine = await env.DB.prepare('SELECT n FROM stats_rate WHERE day = ? AND who = ?').bind(day, who).first();
+    if (mine && mine.n >= STATS_PER_DAY) return err('limit', 429, req, env);
+    const st = [env.DB.prepare('INSERT INTO stats_rate (day, who, n) VALUES (?, ?, 1) ON CONFLICT(day, who) DO UPDATE SET n = n + 1').bind(day, who)];
+    days.forEach((d) => {
+      d.cc.forEach(([k, n]) => st.push(env.DB.prepare('INSERT INTO stats (day, ver, k, n) VALUES (?, ?, ?, ?) ON CONFLICT(day, ver, k) DO UPDATE SET n = n + excluded.n').bind(d.day, body.ver, k, n)));
+      d.qq.forEach(([src, term, n]) => st.push(env.DB.prepare('INSERT INTO stats_q (day, src, term, n) VALUES (?, ?, ?, ?) ON CONFLICT(day, src, term) DO UPDATE SET n = n + excluded.n').bind(d.day, src, term, n)));
+    });
+    await env.DB.batch(st);
+    return json({ ok: true }, 200, req, env);
+  }
+
   const a = await auth(env, body);
   if (!a) return err('auth', 401, req, env);
   await env.DB.prepare('UPDATE pairs SET last_seen = ? WHERE id = ?').bind(t, a.pair.id).run();
@@ -263,7 +309,10 @@ async function cleanup(env) {
     env.DB.prepare('DELETE FROM answers WHERE pair_id NOT IN (SELECT id FROM pairs)'),
     env.DB.prepare('DELETE FROM messages WHERE pair_id NOT IN (SELECT id FROM pairs)'),
     env.DB.prepare('DELETE FROM push_subs WHERE pair_id NOT IN (SELECT id FROM pairs)'),
-    env.DB.prepare('DELETE FROM idea_rate WHERE day < ?').bind(new Date(t).toISOString().slice(0, 10))
+    env.DB.prepare('DELETE FROM idea_rate WHERE day < ?').bind(new Date(t).toISOString().slice(0, 10)),
+    env.DB.prepare('DELETE FROM stats_rate WHERE day < ?').bind(new Date(t).toISOString().slice(0, 10)),
+    env.DB.prepare('DELETE FROM stats WHERE day < ?').bind(new Date(t - STATS_KEEP_DAYS * 864e5).toISOString().slice(0, 10)),
+    env.DB.prepare('DELETE FROM stats_q WHERE day < ?').bind(new Date(t - STATS_KEEP_DAYS * 864e5).toISOString().slice(0, 10))
   ]);
 }
 

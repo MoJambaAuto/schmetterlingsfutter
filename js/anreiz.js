@@ -56,14 +56,14 @@
 
   function fly(sug) {
     if (el || !sug) return;
-    shownThisVisit = true; countUp(); S().flyLast = sug.key; L.save();
+    shownThisVisit = true; countUp(); S().flyLast = sug.key; L.save(); window.LZS && window.LZS.count('fly_show:' + sug.key);
     el = document.createElement('div'); el.className = 'fly'; el.setAttribute('role', 'status');
     el.innerHTML = '<button type="button" class="fly-b" aria-label="Papillon: ' + L.esc(sug.text) + '"><span class="fly-w" style="filter:hue-rotate(' + HUES[Math.floor(Math.random() * HUES.length)] + 'deg) saturate(1.4)">🦋</span></button>' +
       '<div class="fly-bubble"><div class="fly-t">' + L.esc(sug.text) + '</div><div class="row" style="gap:8px;justify-content:flex-start;margin-top:8px"><button type="button" class="pill-btn small primary" data-go>' + L.esc(sug.go) + ' ›</button><button type="button" class="pill-btn small ghost" data-no aria-label="Papillon wegschicken">Später</button></div></div>';
     document.body.appendChild(el);
-    const go = () => { leave(true); try { sug.run(); } catch (e) {} };
+    const go = () => { window.LZS && window.LZS.count('fly_go:' + sug.key); leave(true); try { sug.run(); } catch (e) {} };
     el.querySelector('[data-go]').onclick = go; el.querySelector('.fly-b').onclick = go;
-    el.querySelector('[data-no]').onclick = () => leave(false);
+    el.querySelector('[data-no]').onclick = () => { window.LZS && window.LZS.count('fly_no:' + sug.key); leave(false); };
     const b = el.querySelector('.fly-b');
     if (calm()) { el.classList.add('landed'); }
     else {
@@ -91,7 +91,7 @@
     row.innerHTML = '<div>Papillon fliegt vorbei<small>Lädt ab und zu zu einem Spiel ein</small></div><button class="toggle" id="togFly" role="switch" aria-label="Papillon fliegt vorbei"></button>';
     hap.closest('.switch').after(row);
     const t = $('togFly'); const set = () => t.setAttribute('aria-checked', off() ? 'false' : 'true'); set();
-    t.onclick = () => { S().flyOff = !off(); L.save(); set(); if (off()) leave(true); };
+    t.onclick = () => { S().flyOff = !off(); L.save(); set(); window.LZS && window.LZS.count(off() ? 'fly_off' : 'fly_on'); if (off()) leave(true); };
   }
 
   mountToggle();

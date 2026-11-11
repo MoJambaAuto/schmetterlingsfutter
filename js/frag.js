@@ -94,7 +94,9 @@
 
   /* ---------- Oberfläche ---------- */
   const row = (it) => '<button type="button" class="frag-row" data-i="' + ITEMS.indexOf(it) + '"><span class="frag-e">' + it[1] + '</span><span class="frag-b"><span class="frag-t">' + esc(it[2]) + '</span>' + (it[4] ? '<span class="frag-a">' + esc(it[4]) + '</span>' : '') + '</span>' + (it[5] ? '<span class="frag-go" aria-hidden="true">›</span>' : '') + '</button>';
+  let missT = null;
   function open() {
+    if (window.LZS) window.LZS.count('frag_open');
     L.openSheet('<h3>🦋 Frag Papillon</h3><div class="field" style="margin-bottom:10px"><input id="fragQ" type="search" autocomplete="off" enterkeyhint="search" placeholder="Was möchtest du tun?" aria-label="Was möchtest du tun?"></div><div id="fragOut"></div><div class="row" style="margin-top:12px"><button class="pill-btn ghost" data-cancel>Schließen</button></div>', (sh) => {
       const inp = sh.querySelector('#fragQ'), out = sh.querySelector('#fragOut');
       function draw() {
@@ -102,11 +104,12 @@
         if (!q) { let g = ''; ITEMS.forEach((it) => { if (it[0] !== g) { g = it[0]; html += '<div class="eyebrow frag-g">' + esc(g) + '</div>'; } html += row(it); }); }
         else {
           const hits = search(q);
+          clearTimeout(missT); if (!hits.length && window.LZS) missT = setTimeout(() => { window.LZS.count('frag_miss'); window.LZS.term('frag', q); }, 2500);
           html = hits.length ? hits.map(row).join('') : '<p class="about" style="margin:6px 0 12px">Dazu finde ich in der App noch nichts.</p><div class="row wrap" style="justify-content:flex-start">' + (P() ? '<button type="button" class="pill-btn" id="fragShop">🛒 Bei Amazon nach „' + esc(q.slice(0, 30)) + '“ suchen ↗</button>' : '') + (D.ideaBox && P() ? '<button type="button" class="pill-btn ghost" id="fragAsk">💡 Frage an uns schicken</button>' : '') + '</div>' + (P() ? '<p class="about" style="font-size:16px;color:var(--text-muted);margin-top:8px">Werbelink zur Amazon-Suche.</p>' : '');
         }
         out.innerHTML = html;
-        out.querySelectorAll('.frag-row').forEach((b) => b.onclick = () => { const it = ITEMS[Number(b.dataset.i)]; if (!it[5]) return; L.closeSheet(); setTimeout(it[5], 60); });
-        const shop = out.querySelector('#fragShop'); if (shop) shop.onclick = () => window.open(P().amazonUrl(q), '_blank', 'noopener');
+        out.querySelectorAll('.frag-row').forEach((b) => b.onclick = () => { const it = ITEMS[Number(b.dataset.i)]; if (window.LZS) window.LZS.count('frag_go:' + norm(it[2]).split(' ').slice(0, 3).join('_')); if (!it[5]) return; L.closeSheet(); setTimeout(it[5], 60); });
+        const shop = out.querySelector('#fragShop'); if (shop) shop.onclick = () => { if (window.LZS) { window.LZS.count('frag_shop'); window.LZS.term('shop', q); } window.open(P().amazonUrl(q), '_blank', 'noopener'); };
         const ask = out.querySelector('#fragAsk'); if (ask) ask.onclick = async () => { ask.disabled = true; try { await fetch(P().RELAY + '/idea', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ kind: 'sonstiges', text: ('FRAGE | ' + q).slice(0, 240), app: D.version }) }); L.toast('Danke! Wir schauen es uns an.'); L.closeSheet(); } catch (e) { ask.disabled = false; L.toast('Keine Verbindung. Versuch es später nochmal.'); } };
       }
       inp.oninput = draw; inp.onkeydown = (e) => { if (e.key === 'Enter') { const first = out.querySelector('.frag-row'); if (first && inp.value.trim()) first.click(); } };

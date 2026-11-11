@@ -64,3 +64,13 @@ Solange kein Schlüssel hinterlegt ist, liefert `GET /push/key` einen leeren Sch
 
 Zusätzliche Wege: `GET /push/key` → `{key}`, `/push/sub {endpoint}`, `/push/unsub`. `/msg/send` nimmt optional `quiet: true` (kein Anstupsen).
 Erlaubt sind nur die Push-Dienste von Google, Mozilla, Microsoft und Apple. Test: `relay/test/push.test.mjs` (Startbefehle im Kopf der Datei).
+
+## Anonym mithelfen (ab App 3.21.0)
+
+Nur mit Zustimmung in der App: einmal am Tag Tagessummen der Vortage an `POST /stats` (`{ver, days:[{day, c:{schlüssel:anzahl}, q:{shop|frag:{begriff:anzahl}}}]}`), ohne Kennung und Uhrzeit. Tabellen `stats`, `stats_q`, `stats_rate` (Migration 0004), Löschung nach 400 Tagen im täglichen Aufräumen.
+
+1. Tabelle anlegen: `npx wrangler d1 migrations apply schmetterlingsfutter --remote`
+2. `npx wrangler deploy`
+3. Auswerten: `node relay/scripts/auswertung.mjs --tage 28` (nur lesend; `--lokal` für den Testdienst). Pflege-Ablauf: Claude-Skill `schmetterlingsfutter-pflege`.
+
+Solange der Dienst `/stats` nicht kennt, sammelt die App die Summen bis zu acht Tage im Gerät und versucht es täglich erneut.

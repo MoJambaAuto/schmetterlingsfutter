@@ -147,7 +147,7 @@
   function stopCam() { if (stream) { stream.getTracks().forEach((tr) => tr.stop()); stream = null; } if (video) video.srcObject = null; }
   function showMsg(text) {
     const msg = root.querySelector('.cam-msg'); msg.classList.remove('hidden');
-    msg.innerHTML = '<p>' + esc(text) + '</p><button type="button" class="pill-btn primary" data-pick2>📷 Foto aufnehmen oder auswählen</button>';
+    window.LZS && window.LZS.count('cam_nocam'); msg.innerHTML = '<p>' + esc(text) + '</p><button type="button" class="pill-btn primary" data-pick2>📷 Foto aufnehmen oder auswählen</button>';
     msg.querySelector('[data-pick2]').onclick = () => root.querySelector('#camFile').click();
   }
   function useFile(f) {
@@ -160,7 +160,7 @@
   /* ---------- Foto ---------- */
   function shoot() {
     if (!cv.width) { L.toast('Kamera startet noch …'); return; }
-    L.haptic(15); const fl = root.querySelector('.cam-flash'); fl.classList.remove('go'); void fl.offsetWidth; fl.classList.add('go');
+    window.LZS && window.LZS.count('cam_photo:' + fx); L.haptic(15); const fl = root.querySelector('.cam-flash'); fl.classList.remove('go'); void fl.offsetWidth; fl.classList.add('go');
     cv.toBlob((blob) => { if (blob) preview({ kind: 'photo', blob, url: URL.createObjectURL(blob) }); }, 'image/jpeg', 0.9);
   }
   function smallDataUrl() {
@@ -195,7 +195,7 @@
       const type = (rec && rec.mimeType) || mime || 'video/webm'; rec = null;
       const blob = new Blob(recChunks, { type: type.split(';')[0] }); if (blob.size) preview({ kind: 'video', blob, url: URL.createObjectURL(blob) });
     };
-    rec.start(250); recStart = performance.now(); btn.classList.add('on'); btn.setAttribute('aria-label', 'Aufnahme beenden'); L.haptic(10);
+    window.LZS && window.LZS.count('cam_video:' + fx); rec.start(250); recStart = performance.now(); btn.classList.add('on'); btn.setAttribute('aria-label', 'Aufnahme beenden'); L.haptic(10);
     recTimer = setTimeout(() => { if (rec) rec.stop(); }, REC_MAX);
   }
 
@@ -212,8 +212,8 @@
     const ext = item.kind === 'photo' ? 'jpg' : (item.blob.type.includes('mp4') ? 'mp4' : 'webm');
     const fname = 'schmetterlingsfutter-' + (item.kind === 'photo' ? 'foto' : 'video') + '.' + ext;
     pv.querySelector('[data-again]').onclick = () => closePreview(item);
-    pv.querySelector('[data-save]').onclick = () => { download(item.blob, fname); L.toast(item.kind === 'photo' ? 'Foto gespeichert 💾' : 'Video gespeichert 💾'); };
-    pv.querySelector('[data-share]').onclick = async () => {
+    pv.querySelector('[data-save]').onclick = () => { window.LZS && window.LZS.count('cam_save:' + item.kind); download(item.blob, fname); L.toast(item.kind === 'photo' ? 'Foto gespeichert 💾' : 'Video gespeichert 💾'); };
+    pv.querySelector('[data-share]').onclick = async () => { window.LZS && window.LZS.count('cam_share:' + item.kind);
       const caption = (text() ? text() + ' — ' : '') + S().sender + ' 🦋\nGemacht mit Schmetterlingsfutter: ' + APP_URL;
       let file = null; try { file = new File([item.blob], fname, { type: item.blob.type }); } catch (e) {}
       if (file && navigator.canShare && navigator.canShare({ files: [file] })) { try { await navigator.share({ files: [file], text: caption }); } catch (e) {} return; }
@@ -222,7 +222,7 @@
     const sb = pv.querySelector('[data-send]'); if (sb) sb.onclick = async () => {
       const u = smallDataUrl(); if (!u) { L.toast('Foto zu groß zum Schicken – nutze „Teilen“'); return; }
       sb.disabled = true; sb.textContent = '…';
-      try { await P().send({ t: 'pic', img: u, text: text() || '📸 Schmetterlings-Foto' }); L.toast('📸 Unterwegs zu ' + partnerName()); L.spawnHearts(10); close(); }
+      window.LZS && window.LZS.count('cam_send'); try { await P().send({ t: 'pic', img: u, text: text() || '📸 Schmetterlings-Foto' }); L.toast('📸 Unterwegs zu ' + partnerName()); L.spawnHearts(10); close(); }
       catch (e) { sb.disabled = false; sb.textContent = '💌 An ' + partnerName(); L.toast('Senden fehlgeschlagen – später nochmal'); }
     };
   }
@@ -230,13 +230,14 @@
   function download(blob, name) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500); }
 
   /* ---------- Öffnen / Schließen ---------- */
-  function setFx(id) {
+  function setFx(id, user) {
+    if (user && fx !== id) window.LZS && window.LZS.count('cam_fx:' + id);
     fx = id; fxStart = performance.now(); if (cv.width) resetParts(cv.width, cv.height);
     root.querySelectorAll('[data-fx]').forEach((b) => { const on = b.dataset.fx === id; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
     const hint = root.querySelector('.cam-hint'); hint.classList.toggle('hidden', tapped || !(id === 'krone' || id === 'verwandlung'));
   }
   function open() {
-    if (root) return;
+    if (root) return; window.LZS && window.LZS.count('cam_open');
     root = document.createElement('div'); root.className = 'cam'; root.setAttribute('role', 'dialog'); root.setAttribute('aria-modal', 'true'); root.setAttribute('aria-label', 'Schmetterlings-Kamera');
     root.innerHTML = '<div class="cam-top"><button type="button" class="icon-btn" data-x aria-label="Kamera schließen">✕</button><span class="cam-title">🦋 Schmetterlings-Kamera</span><button type="button" class="icon-btn" data-flip aria-label="Kamera wechseln">🔄</button></div>' +
       '<div class="cam-stage"><canvas aria-label="Kamerabild mit Schmetterlingen"></canvas><div class="cam-hint hidden">Tippe auf dein Gesicht, dann sitzen Krone und Flügel richtig</div><div class="cam-msg hidden"></div><div class="cam-flash"></div></div>' +
@@ -252,7 +253,7 @@
     root.querySelector('[data-rec]').onclick = toggleRec;
     root.querySelector('[data-pick]').onclick = () => root.querySelector('#camFile').click();
     root.querySelector('#camFile').addEventListener('change', (e) => { useFile(e.target.files[0]); e.target.value = ''; });
-    root.querySelectorAll('[data-fx]').forEach((b) => { b.onclick = () => setFx(b.dataset.fx); });
+    root.querySelectorAll('[data-fx]').forEach((b) => { b.onclick = () => setFx(b.dataset.fx, true); });
     cv.addEventListener('pointerdown', (e) => { const r = cv.getBoundingClientRect(); anchor = { x: Math.min(.95, Math.max(.05, (e.clientX - r.left) / r.width)), y: Math.min(.95, Math.max(.05, (e.clientY - r.top) / r.height)) }; if (fx === 'verwandlung') fxStart = performance.now(); tapped = true; root.querySelector('.cam-hint').classList.add('hidden'); });
     t0 = performance.now(); setFx(S().camFx || 'schwarm'); frame(); startCam();
   }

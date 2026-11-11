@@ -99,7 +99,7 @@
     const at = Date.now();
     const body = await encrypt(Object.assign({ at }, obj));
     const res = await post('/msg/send', QUIET[obj.t] ? { body, quiet: true } : { body });
-    if (!QUIET[obj.t]) noteSent(obj, at);
+    if (!QUIET[obj.t]) { noteSent(obj, at); window.LZS && window.LZS.count('send:' + obj.t); }
     // jede Geste an den Schatz ist Futter für den gemeinsamen Schmetterling
     if (window.LZX && obj.t !== 'hello' && obj.t !== 'matchdone') { try { window.LZX.feed(obj.t); } catch (e) {} }
     return res;
@@ -304,7 +304,7 @@
     return '<form class="own-search" role="search"><input type="search" enterkeyhint="search" maxlength="80" placeholder="' + L.esc(ph || 'Eigene Idee suchen, z. B. Kochkurs') + '" aria-label="Eigene Suche bei Amazon" value="' + L.esc(val || '') + '"><button type="submit" class="pill-btn small" aria-label="Bei Amazon suchen">🔍</button></form>';
   }
   function bindSearch(root, adult) {
-    root.querySelectorAll('form.own-search').forEach((f) => { f.onsubmit = (e) => { e.preventDefault(); const q = f.querySelector('input').value.trim(); if (!q) { f.querySelector('input').focus(); return; } window.open(amazonUrl(q, adult), '_blank', 'noopener'); }; });
+    root.querySelectorAll('form.own-search').forEach((f) => { f.onsubmit = (e) => { e.preventDefault(); const q = f.querySelector('input').value.trim(); if (!q) { f.querySelector('input').focus(); return; } if (window.LZS) { window.LZS.count('shop_search:' + ((f.closest('[id]') || {}).id || 'sonst')); window.LZS.term('shop', q); } window.open(amazonUrl(q, adult), '_blank', 'noopener'); }; });
   }
   function searchSheet(prefill) {
     L.openSheet('<h3>🔍 Selbst suchen</h3><p class="about" style="font-size:17px;margin-bottom:10px">Für alles, wofür die App noch keine Idee hat: Anlass, Hobby, Geschenk.</p>' + searchFormHtml('', prefill) +
@@ -355,6 +355,7 @@
     if (deck.adult && !S().intim) { L.toast('Erst den Bereich „Zweisamkeit“ unter Mehr einschalten (18+)'); return; }
     const canRelay = !!(paired() && joined() && RELAY);
     const mode = (!forcePass && canRelay) ? 'relay' : 'pass';
+    window.LZS && window.LZS.count('deck_open:' + deck.id);
     { let hit = false; P().inbox.forEach((m) => { if (m.t === 'match' && m.deck === deck.id && !m.read) { m.read = true; hit = true; } }); if (hit) { L.save(); renderInboxBadge(); flushSeen(); } }
     const prev = P().matches[deck.id];
     const sd = gameSd(deck, mode);
@@ -386,15 +387,15 @@
       '<div class="match-card"><div class="match-emoji">' + it.e + '</div><div class="match-q">' + L.esc(it.t) + '</div></div>' +
       '<div class="match-opts' + (g.deck.labels ? ' stack' : '') + '">' + opts.map((o) => '<button class="pill-btn ' + (o === 'ja' ? 'primary' : '') + '" data-a="' + o + '">' + (g.deck.labels || optLabels)[o] + '</button>').join('') + '</div>' +
       '<div class="row wrap" style="margin-top:14px">' + (i > 0 ? '<button class="pill-btn ghost small" data-back>Zurück</button><button class="pill-btn ghost small" data-done>Das reicht für heute</button>' : '') + '</div>', (sc) => {
-      sc.querySelector('[data-close]').onclick = () => L.confirmSheet('Spiel beenden?', 'Deine Antworten gehen verloren.', 'Beenden', closeMatch, true, 'Weiterspielen');
-      const dn = sc.querySelector('[data-done]'); if (dn) dn.onclick = () => { g.step = items.length; finishAnswers(); };
+      sc.querySelector('[data-close]').onclick = () => L.confirmSheet('Spiel beenden?', 'Deine Antworten gehen verloren.', 'Beenden', () => { window.LZS && window.LZS.count('deck_abort:' + g.deck.id + ':' + g.step); closeMatch(); }, true, 'Weiterspielen');
+      const dn = sc.querySelector('[data-done]'); if (dn) dn.onclick = () => { window.LZS && window.LZS.count('deck_short:' + g.deck.id); g.step = items.length; finishAnswers(); };
       sc.querySelectorAll('[data-a]').forEach((b) => b.onclick = () => { answers[it.id] = b.dataset.a; L.haptic(6); g.step++; askNext(); });
       const bk = sc.querySelector('[data-back]'); if (bk) bk.onclick = () => { g.step--; askNext(); };
     });
   }
   async function finishAnswers() {
     const g = game; const deck = g.deck;
-    if (g.who === 'me') noteExplored(deck, Object.keys(g.mine));
+    if (g.who === 'me') { noteExplored(deck, Object.keys(g.mine)); window.LZS && window.LZS.count('deck_done:' + deck.id + ':' + g.mode); }
     if (g.mode === 'pass') {
       if (g.who === 'me') {
         g.who = 'them'; g.step = 0;
@@ -527,6 +528,7 @@
     const sig = rec.matches.join(',') + '|' + (rec.open || []).join(','); if (rec.noted === sig) return;
     const s = S(); if (!s.common) s.common = {}; const c = s.common[deck.id] || (s.common[deck.id] = {});
     rec.matches.forEach((id) => { c[id] = 'yes'; }); (rec.open || []).forEach((id) => { if (c[id] !== 'yes') c[id] = 'open'; });
+    if (window.LZS && !deck.adult) { rec.matches.forEach((id) => window.LZS.count('like:' + deck.id + ':' + id)); (rec.open || []).forEach((id) => window.LZS.count('open:' + deck.id + ':' + id)); window.LZS.count('deck_result:' + deck.id); }
     rec.noted = sig; L.save();
   }
   function commonAll() {

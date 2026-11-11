@@ -3,7 +3,7 @@
 (function () {
   'use strict';
   const D = window.LUZIFER_DATA;
-  D.version = '3.20.0';
+  D.version = '3.21.0';
 
   /* Ideen-Briefkasten: eingeschaltet seit 10.11.2026 (Vermittlungsdienst kennt die Adresse /idea) */
   D.ideaBox = true;

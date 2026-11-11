@@ -695,3 +695,7 @@ html.cam-open, html.cam-open body { overflow:hidden; }
 .cam-prev img, .cam-prev video { width:100%; max-height:58vh; object-fit:contain; border-radius:16px; background:#000; display:block; }
 .cam-prev .row { justify-content:flex-start; gap:10px; }
 .cam-note { font-size:15px; color:rgba(255,255,255,.7); margin-top:10px; line-height:1.45; }
+
+/* 3.21.0 Anonym mithelfen */
+.stats-list { margin:6px 0 0 20px; font-size:16px; line-height:1.5; color:var(--text-soft); }
+.stats-list li { margin-bottom:3px; }
