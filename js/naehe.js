@@ -115,7 +115,7 @@
     s.inbox.push({ id: uid('m'), t: 'jingle', jid: j ? j.id : '', text: String(obj.text || (j ? j.title : 'Jingle')).slice(0, 200), v: obj.v === 'm' || obj.v === 'w' ? obj.v : '', at: created || Date.now(), read: false });
     L.toast('🎶 Neuer Jingle von ' + you()); L.haptic(20); return true;
   });
-  P.inboxType('jingle', { icon: '🎶', meta: 'Jingle – antippen zum Abspielen', open: (m) => { const j = jingleById(m.jid); if (j) playJingle(j, null, m.v || theirVoice()); L.showView('home'); L.showMessage({ text: m.text, own: true }, '🎶 Von ' + you() + ' für dich'); L.spawnHearts(10); } });
+  P.inboxType('jingle', { icon: '🎶', meta: 'Jingle – antippen zum Abspielen', open: (m) => { const j = jingleById(m.jid); if (j) playJingle(j, null, m.v || theirVoice()); L.showView('home'); L.showMessage({ text: m.text, own: true, incoming: true, re: m.re, mid: m.id }, '🎶 Von ' + you() + ' für dich'); L.spawnHearts(10); } });
 
   /* =====================================================================
      2. Kritzel-Gruß: kleines Bild malen / Foto bekritzeln und verschicken
@@ -205,10 +205,10 @@
     L.toast('🎨 Kritzel-Gruß von ' + you()); L.haptic(20); return true;
   });
   function picSheet(m) {
-    L.openSheet('<h3>🎨 Von ' + esc(you()) + '</h3>' + (m.img ? '<img class="pic-big" src="' + m.img + '" alt="Kritzel-Gruß">' : '') + (m.text ? '<p class="about" style="text-align:center;margin:10px 0">' + esc(m.text) + '</p>' : '') +
+    L.openSheet('<h3>🎨 Von ' + esc(you()) + '</h3>' + (m.re && window.LZR ? window.LZR.quoteHtml(m.re, 'deine Nachricht') : '') + (m.img ? '<img class="pic-big" src="' + m.img + '" alt="Kritzel-Gruß">' : '') + (m.text ? '<p class="about" style="text-align:center;margin:10px 0">' + esc(m.text) + '</p>' : '') +
       '<div class="row wrap" style="margin-top:12px"><button class="pill-btn primary" data-reply>Zurückkritzeln 🎨</button>' + (m.img ? '<button class="pill-btn" data-save>Speichern ↗</button>' : '') + '<button class="pill-btn ghost" data-cancel>Schließen</button></div>', (sh) => {
       sh.querySelector('[data-cancel]').onclick = L.closeSheet;
-      sh.querySelector('[data-reply]').onclick = () => { L.closeSheet(); kritzelSheet(); };
+      sh.querySelector('[data-reply]').onclick = () => { L.closeSheet(); if (window.LZR) window.LZR.start(m); kritzelSheet(); };
       const sv = sh.querySelector('[data-save]'); if (sv) sv.onclick = () => shareImage(m.img, m.text || '');
     });
   }
@@ -222,6 +222,7 @@
     if (!m || !P.paired()) { c.classList.add('hidden'); c.innerHTML = ''; return; }
     c.classList.remove('hidden');
     c.innerHTML = '<div class="eyebrow" style="margin:0 0 8px">' + (m.t === 'pic' ? '🎨' : m.t === 'jingle' ? '🎶' : '💌') + ' Neu von ' + esc(you()) + '</div>' +
+      (m.re && window.LZR ? window.LZR.quoteHtml(m.re, 'deine Nachricht') : '') +
       (m.t === 'pic' && m.img ? '<img class="pic-big" src="' + m.img + '" alt="Kritzel-Gruß">' : '') +
       (m.text ? '<div class="fp-text">' + esc(m.text) + '</div>' : '') +
       '<div class="row wrap" style="margin-top:12px">' + (m.t === 'jingle' && jingleById(m.jid) ? '<button class="pill-btn small primary" data-play>▶ Abspielen</button>' : '') +
@@ -229,10 +230,11 @@
     const pl = c.querySelector('[data-play]'); if (pl) pl.onclick = () => { pl.textContent = '♪ …'; playJingle(jingleById(m.jid), () => { pl.textContent = '▶ Nochmal'; }, m.v || theirVoice()); L.spawnHearts(8, c); };
     const fs = c.querySelector('[data-fpshare]'); if (fs) fs.onclick = () => { if (m.t === 'pic' && m.img) window.LZX.sharePic(m.img); else window.LZX.shareCard({ text: m.text, label: m.label || 'Für mich', sig: you() }); };
     c.querySelector('[data-seen]').onclick = () => { m.read = true; L.save(); L.spawnHearts(8, c); P.renderAll(); P.send({ t: 'seen' }).catch(() => {}); };
-    c.querySelector('[data-reply]').onclick = () => { m.read = true; L.save(); P.renderAll(); replySheet(); };
+    c.querySelector('[data-reply]').onclick = () => { m.read = true; L.save(); P.renderAll(); if (window.LZR) window.LZR.start(m); replySheet(m); };
   }
-  function replySheet() {
-    L.openSheet('<h3>Antworten</h3><div class="row wrap"><button class="pill-btn primary" data-k>🎨 Kritzel-Gruß</button><button class="pill-btn" data-j>🎶 Jingle</button><button class="pill-btn" data-t>✍️ Ein Satz</button><button class="pill-btn ghost" data-cancel>Schließen</button></div>', (sh) => {
+  function replySheet(m) {
+    const q = m && window.LZR ? '<div class="re-quote"><span class="re-k">Du antwortest auf</span><span class="re-t">„' + esc(window.LZR.snippet(m)) + '“</span></div><p class="about" style="font-size:15px;margin:0 0 12px">' + esc(you()) + ' sieht bei deiner Antwort, worauf sie sich bezieht.</p>' : '';
+    L.openSheet('<h3>Antworten</h3>' + q + '<div class="row wrap"><button class="pill-btn primary" data-k>🎨 Kritzel-Gruß</button><button class="pill-btn" data-j>🎶 Jingle</button><button class="pill-btn" data-t>✍️ Ein Satz</button><button class="pill-btn ghost" data-cancel>Schließen</button></div>', (sh) => {
       sh.querySelector('[data-cancel]').onclick = L.closeSheet;
       sh.querySelector('[data-k]').onclick = () => { L.closeSheet(); kritzelSheet(); };
       sh.querySelector('[data-j]').onclick = () => { L.closeSheet(); openJingles(); };
@@ -614,7 +616,9 @@
     c.querySelector('[data-off]').onclick = () => { s.iosHintOff = true; L.save(); iosHint(); };
   }
   function render() { renderFromPartner(); renderKlartext(); renderJingles(); giftCheck(); iosHint(); }
-  window.LZN = { render, softStart, fillQr, qrSvg, kritzelSheet, giftSheet, giftCheck, openJingles, playJingle, jingleById, checkinStart, weekKey, greetLink };
+  /* Antworten-Knopf an der Botschaftskarte (eingehende Nachricht) */
+  const rbm = $('btnReplyMsg'); if (rbm) rbm.onclick = () => { const cur = (st().inbox || []).find((x) => x.id === rbm.dataset.mid) || null; if (cur && window.LZR) window.LZR.start(cur); replySheet(cur); };
+  window.LZN = { replySheet, render, softStart, fillQr, qrSvg, kritzelSheet, giftSheet, giftCheck, openJingles, playJingle, jingleById, checkinStart, weekKey, greetLink };
   window.addEventListener('hashchange', handleGreet); // App ist schon offen und bekommt einen Liebes-Link
   render(); handleGreet();
 })();

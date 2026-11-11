@@ -62,6 +62,7 @@
 
       <div class="card msg-card">
         <div class="msg-label" id="msgLabel">Heute für dich</div>
+        <div id="msgRe"></div>
         <div class="msg-text" id="msgText" aria-live="polite">…</div>
         <div class="msg-sig" id="msgSig">— Hase</div>
         <div class="msg-actions">
@@ -69,6 +70,7 @@
           <button class="icon-btn" id="btnShare" aria-label="Botschaft teilen">↗</button>
           <button class="icon-btn" id="btnPersonal" aria-label="Persönlich machen und senden">✎</button>
           <button class="icon-btn" id="btnCopy" aria-label="Botschaft kopieren">⧉</button>
+          <button class="icon-btn hidden" id="btnReplyMsg" aria-label="Darauf antworten">↩</button>
           <button class="icon-btn hidden" id="btnSendPartner" aria-label="In die App deines Schatzes schicken">💌</button>
           <button class="icon-btn hidden" id="btnReport" aria-label="Diese Botschaft melden">🚩</button>
         </div>
@@ -337,6 +339,7 @@
       <div class="view-sub">Deine Daten bleiben auf diesem Gerät</div>
 
       <div class="card" style="padding:18px 20px" id="partnerSettings"></div>
+      <div class="card" style="padding:18px 20px" id="likesSettings"></div>
 
       <div class="card" style="padding:18px 20px">
         <div class="eyebrow">Namen</div>
@@ -478,6 +481,8 @@
 <script src="js/vendor/qrcode.js"></script>
 <script src="js/app.js"></script>
 <script src="js/features.js"></script>
+<script src="js/antwort.js"></script>
+<script src="js/geschenk.js"></script>
 <script src="js/partner.js"></script>
 <script src="js/naehe.js"></script>
 <script src="js/extra.js"></script>

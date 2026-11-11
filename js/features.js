@@ -105,7 +105,12 @@
     const key = /^(jahrestag|hochzeit|kuss|kennenlernen)$/.test(o.id) ? 'jahrestag' : o.id === 'geburtstag' ? 'geburtstag' : (D.gifts[o.id] ? o.id : null);
     const ideas = (key ? D.gifts[key] : []).concat(D.gifts.default);
     const wishes = S().wishes.filter((w) => !w.done && (w.cat || 'wunsch') === 'wunsch');
-    let html = '<h3>🎁 Geschenkideen – ' + L.esc(o.title) + '</h3>' + (window.LZP ? window.LZP.searchFormHtml('Eigene Idee suchen …') : '');
+    const W = window.LZW; const mine = W ? W.ideas(4) : [];
+    let html = '<h3>🎁 Geschenkideen – ' + L.esc(o.title) + '</h3>' + (W ? W.profileHtml() : '') + (window.LZP ? window.LZP.searchFormHtml('Eigene Idee suchen …') : '');
+    if (mine.length) {
+      html += '<div class="eyebrow">Passend zu ' + L.esc(S().receiver) + '</div>';
+      mine.forEach((g) => { html += '<button class="gift-item" data-q="' + L.esc(g.q) + '"><span class="g-ico">' + g.icon + '</span><span class="g-t">' + L.esc(g.title) + (g.like ? '<span class="g-s">' + L.esc(g.like) + '</span>' : '') + '</span><span>↗</span></button>'; });
+    }
     if (wishes.length) {
       html += '<div class="eyebrow">Aus dem Wunschsammler</div>';
       wishes.slice(0, 5).forEach((w) => { html += '<button class="gift-item" data-q="' + L.esc(w.text) + '"><span class="g-ico">⭐</span><span class="g-t">' + L.esc(w.text) + (w.note ? '<span class="g-s">' + L.esc(w.note) + '</span>' : '') + '</span><span>↗</span></button>'; });
@@ -122,6 +127,7 @@
       sh.querySelector('[data-cancel]').onclick = L.closeSheet;
       sh.querySelectorAll('[data-q]').forEach((b) => b.onclick = () => window.open(amazonUrl(b.dataset.q), '_blank', 'noopener'));
       if (window.LZP) window.LZP.bindSearch(sh);
+      if (W) W.bindProfile(sh, () => giftSheet(o));
     });
   }
   $('btnAddOccasion').onclick = () => L.promptSheet('Eigener Anlass', [

@@ -96,6 +96,8 @@
   const QUIET = { hello: 1, seen: 1, matchdone: 1 }; // kein Anstupsen: Begrüßung, Lesebestätigung, Abgleich
   async function send(obj) {
     if (!paired()) throw new Error('Nicht verbunden');
+    if (window.LZR) obj = window.LZR.attach(obj);
+    if (obj.t === 'hello' && window.LZW) obj = Object.assign({ likes: window.LZW.payload() }, obj);
     const at = Date.now();
     const body = await encrypt(Object.assign({ at }, obj));
     const res = await post('/msg/send', QUIET[obj.t] ? { body, quiet: true } : { body });
@@ -121,6 +123,8 @@
         if (await handleIncoming(obj, m.created)) news++;
         /* Sendezeit merken: damit bestätigt die App später „gesehen“, ohne Inhalte zu wiederholen */
         if (typeof obj.at === 'number') P().inbox.forEach((e) => { if (!before.has(e.id) && !e.sat) e.sat = obj.at; });
+        /* Bezug „↩ Antwort auf …“ (3.26.0) */
+        if (obj.re && window.LZR) { const re = window.LZR.clean(obj.re); if (re) P().inbox.forEach((e) => { if (!before.has(e.id) && !e.re) e.re = re; }); }
       }
       if (ids.length) await post('/msg/ack', { ids });
       if (news) { L.save(); renderAll(); }
@@ -138,6 +142,7 @@
       if (typeof obj.food === 'number' && window.LZX) { try { window.LZX.theirFood(obj.food); } catch (e) {} }
       if (name && S().receiver !== name) { S().receiver = name; L.renderHeader(); }
       if (obj.dates && window.LZD) { try { window.LZD.got(obj.dates); } catch (e) {} }
+      if (Array.isArray(obj.likes) && window.LZW) { try { window.LZW.got(obj.likes); } catch (e) {} }
       if (first) { try { await send(Object.assign({ t: 'hello', name: S().sender, pron: S().pron || '', reply: true }, window.LZD ? { dates: window.LZD.payload() } : {})); } catch (e) {} L.toast('💞 Verbunden mit ' + (name || 'deinem Schatz')); L.spawnHearts(14); }
       if (Array.isArray(obj.seen)) gotSeen(obj.seen, created);
       return true;
@@ -246,7 +251,8 @@
   /* ---------- Senden oder Teilen ---------- */
   function sendOrShare(text, label) {
     const on = paired() && joined();
-    L.openSheet('<h3>Wohin damit?</h3><p class="about" style="margin-bottom:14px;font-size:17px">' + L.esc(text.length > 160 ? text.slice(0, 160) + '…' : text) + '</p>' +
+    const ra = window.LZR && on ? window.LZR.active() : null;
+    L.openSheet('<h3>Wohin damit?</h3>' + (ra ? window.LZR.quoteHtml(ra, '') : '') + '<p class="about" style="margin-bottom:14px;font-size:17px">' + L.esc(text.length > 160 ? text.slice(0, 160) + '…' : text) + '</p>' +
       '<div class="row wrap">' + (on ? '<button class="pill-btn primary" data-app>💌 In die App von ' + L.esc(partnerName()) + '</button>' : '') + '<button class="pill-btn' + (on ? '' : ' primary') + '" data-card>🖼️ Als Bild teilen</button><button class="pill-btn" data-share>↗ Als Text teilen</button><button class="pill-btn ghost" data-cancel>Abbrechen</button></div>', (sh) => {
       sh.querySelector('[data-cancel]').onclick = L.closeSheet;
       sh.querySelector('[data-share]').onclick = () => { L.closeSheet(); L.shareText(text + '\n— ' + S().sender + ' ❤'); };
@@ -267,9 +273,11 @@
   /* adult = Vorschlag steht im 18+-Bereich. Dort wird die Partnerkennung nur angehängt, wenn affiliateAdult eingeschaltet ist
      (Amazon-Programmrichtlinien: Seiten mit sexuellen Inhalten gelten als ungeeignet – Entscheidung liegt bei Mo). */
   const ADULT_KEYS = /^(intim_|match_vorlieben)/;
-  function amazonUrl(q, adult) {
+  function amazonUrl(q, adult, raw) {
     const tag = (adult && !D.affiliateAdult) ? '' : (D.affiliateTag || '').trim();
-    return 'https://www.amazon.de/s?k=' + encodeURIComponent(q) + (tag ? '&tag=' + encodeURIComponent(tag) : '');
+    /* 3.26.0: Suchbegriff passend zur Person (nicht bei eigener Suche) und Budget als Preisfilter */
+    const W = window.LZW; if (W && !raw && !adult) q = W.query(q);
+    return 'https://www.amazon.de/s?k=' + encodeURIComponent(q) + (W ? W.priceParam() : '') + (tag ? '&tag=' + encodeURIComponent(tag) : '');
   }
   function tips(key, n) {
     const ad = ADULT_KEYS.test(key);
@@ -306,7 +314,7 @@
     return '<form class="own-search" role="search"><input type="search" enterkeyhint="search" maxlength="80" placeholder="' + L.esc(ph || 'Eigene Idee suchen, z. B. Kochkurs') + '" aria-label="Eigene Suche bei Amazon" value="' + L.esc(val || '') + '"><button type="submit" class="pill-btn small" aria-label="Bei Amazon suchen">🔍</button></form>';
   }
   function bindSearch(root, adult) {
-    root.querySelectorAll('form.own-search').forEach((f) => { f.onsubmit = (e) => { e.preventDefault(); const q = f.querySelector('input').value.trim(); if (!q) { f.querySelector('input').focus(); return; } if (window.LZS) { window.LZS.count('shop_search:' + ((f.closest('[id]') || {}).id || 'sonst')); window.LZS.term('shop', q); } window.open(amazonUrl(q, adult), '_blank', 'noopener'); }; });
+    root.querySelectorAll('form.own-search').forEach((f) => { f.onsubmit = (e) => { e.preventDefault(); const q = f.querySelector('input').value.trim(); if (!q) { f.querySelector('input').focus(); return; } if (window.LZS) { window.LZS.count('shop_search:' + ((f.closest('[id]') || {}).id || 'sonst')); window.LZS.term('shop', q); } window.open(amazonUrl(q, adult, true), '_blank', 'noopener'); }; });
   }
   function searchSheet(prefill) {
     L.openSheet('<h3>🔍 Selbst suchen</h3><p class="about" style="font-size:17px;margin-bottom:10px">Für alles, wofür die App noch keine Idee hat: Anlass, Hobby, Geschenk.</p>' + searchFormHtml('', prefill) +
@@ -762,15 +770,17 @@
     items.forEach((m) => {
       const when = new Date(m.at).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
       const def = inboxTypes[m.t];
-      html += '<div class="inbox-item' + (m.read ? '' : ' new') + '" data-id="' + m.id + '"><span class="ii-e">' + (def ? def.icon : m.t === 'coupon' ? '🎟️' : m.t === 'match' ? '🎯' : m.t === 'unknown' ? '❔' : '💌') + '</span><div class="ii-b">' + (def && def.html ? def.html(m) : '') + '<div class="ii-t">' + L.esc(m.text || '') + '</div><div class="ii-m">' + (def ? L.esc(def.meta || '') + ' · ' : m.t === 'match' ? (m.ready ? 'Ergebnis da – antippen · ' : 'Einladung zum Mitspielen · ') : m.t === 'coupon' ? 'Gutschein, liegt bei Wünsche → Gutscheine · ' : (m.label ? L.esc(m.label) + ' · ' : '')) + when + '</div></div><button class="reason-del" aria-label="Löschen" data-del="' + m.id + '">✕</button></div>';
+      const canReply = { msg: 1, pic: 1, jingle: 1, coupon: 1 }[m.t] && window.LZR;
+      html += '<div class="inbox-item' + (m.read ? '' : ' new') + '" data-id="' + m.id + '"><span class="ii-e">' + (def ? def.icon : m.t === 'coupon' ? '🎟️' : m.t === 'match' ? '🎯' : m.t === 'unknown' ? '❔' : '💌') + '</span><div class="ii-b">' + (m.re && window.LZR ? window.LZR.quoteHtml(m.re, 'deine Nachricht') : '') + (def && def.html ? def.html(m) : '') + '<div class="ii-t">' + L.esc(m.text || '') + '</div><div class="ii-m">' + (def ? L.esc(def.meta || '') + ' · ' : m.t === 'match' ? (m.ready ? 'Ergebnis da – antippen · ' : 'Einladung zum Mitspielen · ') : m.t === 'coupon' ? 'Gutschein, liegt bei Wünsche → Gutscheine · ' : (m.label ? L.esc(m.label) + ' · ' : '')) + when + '</div>' + (canReply ? '<button type="button" class="pill-btn small ghost ii-reply" data-reply="' + m.id + '">↩ Antworten</button>' : '') + '</div><button class="reason-del" aria-label="Löschen" data-del="' + m.id + '">✕</button></div>';
     });
     html += '<div class="row" style="margin-top:14px"><button class="pill-btn ghost" data-cancel>Schließen</button></div>';
     L.openSheet(html, (sh) => {
       sh.querySelector('[data-cancel]').onclick = L.closeSheet;
       sh.querySelectorAll('.inbox-item').forEach((el) => el.onclick = (e) => {
         if (e.target.dataset.del) return;
+        if (e.target.dataset.reply) { const rm = s.inbox.find((x) => x.id === e.target.dataset.reply); if (!rm) return; rm.read = true; L.save(); L.closeSheet(); window.LZR.start(rm); if (window.LZN && window.LZN.replySheet) setTimeout(() => window.LZN.replySheet(rm), 60); renderAll(); return; }
         const m = s.inbox.find((x) => x.id === el.dataset.id); if (!m) return; m.read = true; L.save(); L.closeSheet();
-        if (m.t === 'msg') { L.showView('home'); L.showMessage({ text: m.text, own: true, incoming: true }, 'Von ' + partnerName() + ' für dich'); L.spawnHearts(10); }
+        if (m.t === 'msg') { L.showView('home'); L.showMessage({ text: m.text, own: true, incoming: true, re: m.re, mid: m.id }, 'Von ' + partnerName() + ' für dich'); L.spawnHearts(10); }
         else if (m.t === 'coupon') { L.showView('wishes'); L.showSub('wishes', 'coupons'); }
         else if (m.t === 'match') { const deck = deckById(m.deck); if (deck) { const rec = s.matches[deck.id]; const iv = (s.invites || {})[deck.id]; if (rec && rec.mode === 'relay' && (m.ready || !iv || !iv.sd || iv.sd === rec.sd) && (!deck.daily || rec.date.slice(0, 10) === L.todayKey())) { showResults(deck, rec); refreshMatches(deck, rec, true).catch(() => {}); } else playDeck(deck.id); } }
         else if (inboxTypes[m.t] && inboxTypes[m.t].open) inboxTypes[m.t].open(m);
@@ -852,14 +862,15 @@
     if (!o) { g.classList.add('hidden'); return; }
     g.classList.remove('hidden');
     const key = /^(jahrestag|hochzeit|kuss|kennenlernen)$/.test(o.id) ? 'jahrestag' : o.id === 'geburtstag' ? 'geburtstag' : (D.gifts[o.id] ? o.id : null);
-    const ideas = ((key ? D.gifts[key] : []).concat(D.gifts.default)).filter((x) => x.q).slice(0, 2);
+    const W = window.LZW; const mine = W ? W.ideas(1) : [];
+    const ideas = mine.concat(((key ? D.gifts[key] : []).concat(D.gifts.default)).filter((x) => x.q)).slice(0, 2);
     let html = '<div class="row between"><div class="eyebrow" style="margin:0">🎁 Geschenk-Radar</div><span class="tag">' + (o.days === 0 ? 'heute' : 'in ' + o.days + (o.days === 1 ? ' Tag' : ' Tagen')) + '</span></div>' +
-      '<div style="font-size:18px;margin:6px 0 2px">' + o.icon + ' ' + L.esc(o.title) + (o.days <= 14 ? ' – jetzt wird es Zeit.' : ' – entspannt vorplanen.') + '</div>';
+      '<div style="font-size:18px;margin:6px 0 2px">' + o.icon + ' ' + L.esc(o.title) + (o.days <= 14 ? ' – jetzt wird es Zeit.' : ' – entspannt vorplanen.') + '</div>' + (W ? W.profileHtml() : '');
     const items = wishes.slice(0, 1).map((w) => ({ icon: '⭐', title: w.text, q: w.text })).concat(ideas.map((x) => ({ icon: x.icon, title: x.title, q: x.q })));
     html += tipsHtml(items, wishes.length ? 'Aus der Love Map und passende Ideen' : 'Ideen');
     html += '<div class="row wrap" style="margin-top:8px;justify-content:flex-start"><button class="pill-btn small ghost" data-all>Alle Ideen für ' + L.esc(o.title) + '</button><button class="pill-btn small ghost" data-wish>+ Wunsch notieren</button></div>';
     html += searchFormHtml('Etwas anderes suchen …');
-    g.innerHTML = html; bindTips(g); bindSearch(g);
+    g.innerHTML = html; bindTips(g); bindSearch(g); if (W) W.bindProfile(g);
     g.querySelector('[data-all]').onclick = () => window.LZF.giftSheet(o);
     g.querySelector('[data-wish]').onclick = () => $('btnAddWish').click();
   }

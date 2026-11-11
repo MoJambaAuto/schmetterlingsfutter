@@ -15,6 +15,9 @@
 
   /* ---------- Was es alles gibt: [Gruppe, Symbol, Titel, Suchwörter, Antwort (nur wo nötig), Sprung] ---------- */
   const ITEMS = [
+    ['Jeden Tag', '💝', 'Das mag ich: Interessen für passende Geschenkideen', 'mag ich interessen hobbys vorlieben geschenk passend profil geschmack', '', () => { if (window.LZW) window.LZW.sheet('me'); }],
+    ['Jeden Tag', '🎯', 'Was mag mein Schatz? Geschenke passend machen (Budget)', 'geschenk passend budget preis frau mann alter interessen schatz partner', '', () => { if (window.LZW) window.LZW.sheet('them'); }],
+    ['Jeden Tag', '↩', 'Auf eine Nachricht antworten (mit Bezug)', 'antworten antwort bezug worauf zitat reagieren nachricht postfach', '', () => { if (P()) P().inboxSheet(); }],
     ['Zu zweit', '🦋', 'Wanderzug (Backgammon)', 'backgammon wanderzug brettspiel wuerfel würfel steine tric trac puff', '', () => { if (window.LZG2) window.LZG2.newGame('wanderzug'); }],
     ['Zu zweit', '🌼', 'Wiese durchsuchen (wie Schiffe versenken)', 'schiffe versenken verstecken suchen wiese raster treffer', '', () => { if (window.LZG2) window.LZG2.newGame('wiese'); }],
     ['Zu zweit', '🐛', 'Raupe rät (Wortraten)', 'galgenmaennchen galgenmännchen hangman wort raten buchstaben raupe', '', () => { if (window.LZG2) window.LZG2.newGame('raupe'); }],

@@ -208,6 +208,9 @@
     fade(() => {
       $('msgText').textContent = fmt(item.text);
       $('msgLabel').textContent = label || (item.own ? 'Persönlich für dich' : '');
+      $('msgSig').textContent = '— ' + (item.incoming ? S.receiver : S.sender);
+      const re = $('msgRe'); if (re) re.innerHTML = item.re && window.LZR ? window.LZR.quoteHtml(item.re, 'deine Nachricht') : '';
+      const rb = $('btnReplyMsg'); if (rb) { rb.classList.toggle('hidden', !(item.incoming && item.mid)); rb.dataset.mid = item.mid || ''; }
       $('reasonPanel').classList.add('hidden');
       updateFavBtn();
       if (window.LZP) window.LZP.mountTips($('msgTips'), tipKeyFor(label), 'Passend dazu');
