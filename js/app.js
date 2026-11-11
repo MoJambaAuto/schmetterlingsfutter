@@ -65,7 +65,10 @@
   let toastTimer;
   function toast(msg) {
     const t = $('toast'); t.textContent = msg; t.classList.add('show');
-    clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+    /* Lesezeit nach Textlänge: mindestens 4 Sekunden, höchstens 9. Antippen schließt sofort. */
+    const ms = Math.min(9000, Math.max(4000, 2000 + String(msg).length * 75));
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), ms);
+    t.onclick = () => { clearTimeout(toastTimer); t.classList.remove('show'); };
   }
 
   /* ---------- Sheet (Bottom-Modal) ---------- */

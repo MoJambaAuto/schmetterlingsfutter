@@ -620,3 +620,7 @@ a.pill-btn { text-decoration:none; display:inline-flex; align-items:center; just
 /* 3.16.0 Gemeinsam */
 .match-item.off { opacity:.5; }
 #commonBox .tips { margin-top:12px; }
+
+/* 3.16.1 Einblendung: antippbar, solange sie sichtbar ist */
+.toast { pointer-events:none; }
+.toast.show { pointer-events:auto; cursor:pointer; }
