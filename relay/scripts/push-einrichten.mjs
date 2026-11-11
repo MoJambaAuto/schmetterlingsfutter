@@ -27,9 +27,16 @@ function wrangler(args, input) {
 let cfg = readFileSync(cfgFile, 'utf8');
 if (cfg.includes('"VAPID_PUBLIC"') && !process.argv.includes('--neu')) stop('In wrangler.jsonc steht schon ein Schlüssel. Nichts geändert.');
 
-console.log('1/4 Tabelle anlegen …');
-const m = wrangler('d1 migrations apply schmetterlingsfutter --remote --config wrangler.jsonc');
-if (!m.ok) stop('Die Tabelle ließ sich nicht anlegen.\n' + m.tail);
+// Die Tabelle push_subs (Migration 0003) ist seit 11.11.2026 in der echten Datenbank. Bei einer neuen Datenbank vorher:
+//   npx wrangler d1 migrations apply schmetterlingsfutter --remote
+console.log('1/4 Anmeldung bei Cloudflare prüfen …');
+const loggedIn = () => { const r = spawnSync('npx wrangler whoami', { cwd: relay, encoding: 'utf8', shell: true, env: Object.assign({}, process.env, { CI: 'true' }) }); return /logged in/i.test((r.stdout || '') + (r.stderr || '')); };
+if (!loggedIn()) {
+  console.log('    Dieses Terminal ist nicht angemeldet. Gleich öffnet sich der Browser: dort bitte auf „Allow“ klicken.');
+  spawnSync('npx wrangler login', { cwd: relay, stdio: 'inherit', shell: true });
+  if (!loggedIn()) stop('Die Anmeldung bei Cloudflare hat nicht geklappt.');
+}
+console.log('    angemeldet.');
 
 console.log('2/4 Schlüsselpaar erzeugen und privaten Schlüssel bei Cloudflare ablegen …');
 const pair = await crypto.subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, true, ['sign', 'verify']);
