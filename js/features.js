@@ -19,6 +19,10 @@
   function occasionsAll() {
     const s = S(); const list = D.occasions.filter((o) => !(s.hiddenOccasions || []).includes(o.id)).map((o) => Object.assign({ builtin: true }, o));
     if (s.anniversary) { const d = L.parseISODate(s.anniversary); list.push({ id: 'jahrestag', title: 'Unser Jahrestag', month: d.getMonth() + 1, day: d.getDate(), icon: '💍', builtin: true, year0: d.getFullYear() }); }
+    const dd = s.dates || {};
+    [['met', 'kennenlernen', 'Unser Kennenlerntag', '🤝'], ['kiss', 'kuss', 'Tag unseres ersten Kusses', '💋'], ['wed', 'hochzeit', 'Unser Hochzeitstag', '💍']].forEach(([f, id, title, icon]) => {
+      if (dd[f]) { const d = L.parseISODate(dd[f]); list.push({ id, title, month: d.getMonth() + 1, day: d.getDate(), icon, builtin: true, year0: d.getFullYear() }); }
+    });
     if (s.partnerBirthday) { const d = L.parseISODate(s.partnerBirthday); list.push({ id: 'geburtstag', title: 'Geburtstag ' + s.receiver, month: d.getMonth() + 1, day: d.getDate(), icon: '🎂', builtin: true, year0: d.getFullYear() }); }
     s.occasions.forEach((o) => list.push(Object.assign({ builtin: false }, o)));
     const today = L.atMidnight(new Date());
@@ -51,7 +55,7 @@
         '<div class="o-actions"><button title="In Kalender" aria-label="In Kalender eintragen" data-cal>📅</button><button title="Geschenkidee" aria-label="Geschenkideen" data-gift>🎁</button></div>';
       d.querySelector('[data-cal]').onclick = () => calendarSheet(o);
       d.querySelector('[data-gift]').onclick = () => giftSheet(o);
-      if (o.id !== 'jahrestag' && o.id !== 'geburtstag') {
+      if (!/^(jahrestag|geburtstag|hochzeit|kuss|kennenlernen)$/.test(o.id)) {
         d.querySelector('.o-body').style.cursor = 'pointer';
         d.querySelector('.o-body').onclick = () => L.confirmSheet('Anlass ausblenden?', o.title + (o.builtin ? ' (lässt sich über „Einrichtung erneut starten“ nicht zurückholen – Alles löschen setzt zurück)' : ''), 'Ausblenden', () => {
           if (o.builtin) { S().hiddenOccasions = (S().hiddenOccasions || []).concat(o.id); } else { S().occasions = S().occasions.filter((x) => x.id !== o.id); }
@@ -98,7 +102,7 @@
     return 'https://www.amazon.de/s?k=' + encodeURIComponent(q) + (tag ? '&tag=' + encodeURIComponent(tag) : '');
   }
   function giftSheet(o) {
-    const key = o.id === 'jahrestag' ? 'jahrestag' : o.id === 'geburtstag' ? 'geburtstag' : (D.gifts[o.id] ? o.id : null);
+    const key = /^(jahrestag|hochzeit|kuss|kennenlernen)$/.test(o.id) ? 'jahrestag' : o.id === 'geburtstag' ? 'geburtstag' : (D.gifts[o.id] ? o.id : null);
     const ideas = (key ? D.gifts[key] : []).concat(D.gifts.default);
     const wishes = S().wishes.filter((w) => !w.done && (w.cat || 'wunsch') === 'wunsch');
     let html = '<h3>🎁 Geschenkideen – ' + L.esc(o.title) + '</h3>' + (window.LZP ? window.LZP.searchFormHtml('Eigene Idee suchen …') : '');

@@ -137,7 +137,8 @@
       if (typeof obj.pron === 'string') p.pron = obj.pron.slice(0, 20);
       if (typeof obj.food === 'number' && window.LZX) { try { window.LZX.theirFood(obj.food); } catch (e) {} }
       if (name && S().receiver !== name) { S().receiver = name; L.renderHeader(); }
-      if (first) { try { await send({ t: 'hello', name: S().sender, pron: S().pron || '', reply: true }); } catch (e) {} L.toast('💞 Verbunden mit ' + (name || 'deinem Schatz')); L.spawnHearts(14); }
+      if (obj.dates && window.LZD) { try { window.LZD.got(obj.dates); } catch (e) {} }
+      if (first) { try { await send(Object.assign({ t: 'hello', name: S().sender, pron: S().pron || '', reply: true }, window.LZD ? { dates: window.LZD.payload() } : {})); } catch (e) {} L.toast('💞 Verbunden mit ' + (name || 'deinem Schatz')); L.spawnHearts(14); }
       if (Array.isArray(obj.seen)) gotSeen(obj.seen, created);
       return true;
     }
@@ -843,7 +844,7 @@
     const wishes = s.wishes.filter((w) => !w.done && (w.cat || 'wunsch') === 'wunsch');
     if (!o) { g.classList.add('hidden'); return; }
     g.classList.remove('hidden');
-    const key = o.id === 'jahrestag' ? 'jahrestag' : o.id === 'geburtstag' ? 'geburtstag' : (D.gifts[o.id] ? o.id : null);
+    const key = /^(jahrestag|hochzeit|kuss|kennenlernen)$/.test(o.id) ? 'jahrestag' : o.id === 'geburtstag' ? 'geburtstag' : (D.gifts[o.id] ? o.id : null);
     const ideas = ((key ? D.gifts[key] : []).concat(D.gifts.default)).filter((x) => x.q).slice(0, 2);
     let html = '<div class="row between"><div class="eyebrow" style="margin:0">🎁 Geschenk-Radar</div><span class="tag">' + (o.days === 0 ? 'heute' : 'in ' + o.days + (o.days === 1 ? ' Tag' : ' Tagen')) + '</span></div>' +
       '<div style="font-size:18px;margin:6px 0 2px">' + o.icon + ' ' + L.esc(o.title) + (o.days <= 14 ? ' – jetzt wird es Zeit.' : ' – entspannt vorplanen.') + '</div>';

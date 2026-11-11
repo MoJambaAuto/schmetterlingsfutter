@@ -1,8 +1,8 @@
 /* Schmetterlingsfutter Service Worker – App-Shell offline verfügbar machen. */
-const CACHE = 'schmetterlingsfutter-v3.21.0';
+const CACHE = 'schmetterlingsfutter-v3.22.0';
 const ASSETS = [
   './', './index.html', './privacy.html', './manifest.webmanifest',
-  './css/app.css', './js/data.js', './js/data2.js', './js/vendor/qrcode.js', './js/app.js', './js/features.js', './js/partner.js', './js/naehe.js', './js/extra.js', './js/frag.js', './js/anreiz.js', './js/kamera.js', './js/stats.js',
+  './css/app.css', './js/data.js', './js/data2.js', './js/vendor/qrcode.js', './js/app.js', './js/features.js', './js/partner.js', './js/naehe.js', './js/extra.js', './js/frag.js', './js/anreiz.js', './js/kamera.js', './js/daten.js', './js/stats.js',
   './fonts/PlayfairDisplay-400.woff2', './fonts/PlayfairDisplay-400i.woff2',
   './fonts/Lato-300.woff2', './fonts/Lato-400.woff2', './fonts/Lato-700.woff2',
   './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png', './icons/apple-touch-icon.png'

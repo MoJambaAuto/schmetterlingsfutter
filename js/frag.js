@@ -15,6 +15,7 @@
 
   /* ---------- Was es alles gibt: [Gruppe, Symbol, Titel, Suchwörter, Antwort (nur wo nötig), Sprung] ---------- */
   const ITEMS = [
+    ['Zu zweit', '📅', 'Unsere Daten: Jahrestag, Kennenlernen, erster Kuss, Hochzeitstag, Geburtstage', 'jahrestag datum kennengelernt kennenlernen kuss erster hochzeit hochzeitstag geburtstag geburtsdatum zusammen seit wann daten abgleichen', 'Gemeinsame Daten stehen bei verbundenen Apps automatisch bei euch beiden gleich drin.', () => { if (window.LZD) window.LZD.sheet('anniversary'); }],
     ['Schicken', '📸', 'Schmetterlings-Kamera: Selfie, Foto oder Video mit Schmetterlingen', 'kamera foto selfie video bild aufnehmen filter effekt schmetterling fluegel krone verwandlung ar', '', () => { if (window.LZK) window.LZK.open(); }],
     ['Botschaften', '💌', 'Neue Botschaft', 'botschaft nachricht liebesbotschaft text sagen herz tippen neu', '', tap('btnNext')],
     ['Botschaften', '💋', 'Ein Kuss', 'kuss kuessen bussi', '', tap('btnKiss')],

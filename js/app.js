@@ -645,7 +645,7 @@
   window.LZ = {
     get S() { return S; }, save, fmt, esc, pick, toast, openSheet, closeSheet, confirmSheet, promptSheet,
     spawnHearts, showMessage, showView, showSub, haptic, fmtDate, parseISODate, atMidnight, todayKey, shareText, renderHeader,
-    setToggle, showEnvelope
+    setToggle, showEnvelope, renderTime
   };
 
   /* Melden: schickt den Wortlaut der Vorlage (ohne eure Namen) an die Redaktion */

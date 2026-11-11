@@ -81,27 +81,48 @@
         const a = 1 - Math.abs(e - 1.95) / 0.45; const g = ctx.createRadialGradient(ax, ay, 0, ax, ay, 0.8 * m);
         g.addColorStop(0, 'rgba(255,255,255,' + (0.9 * a) + ')'); g.addColorStop(1, 'rgba(255,180,220,0)'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
       }
-      if (e > 1.9) wings(ax, ay, m, t, Math.min(1, (e - 1.9) / 0.6));
+      if (e > 1.9) wings(ax, ay, m, t, e - 1.9);
     }
   }
-  /* Flügel-Bild in hoher Auflösung, einmal je Farbe */
-  const bigWings = {};
-  function bigSprite(h) {
-    if (bigWings[h]) return bigWings[h];
-    const c = document.createElement('canvas'); c.width = c.height = 512; const x = c.getContext('2d');
-    try { x.filter = 'hue-rotate(' + h + 'deg) saturate(1.5)'; } catch (e) {}
-    x.font = '420px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('🦋', 256, 280);
-    return (bigWings[h] = c);
+  /* Flügel, selbst gezeichnet: setzen hinter den Schultern an, falten sich auf und schlagen sanft.
+     Durchscheinender Farbverlauf, Adern, Augenflecken, Leuchten. Das Gesicht bleibt frei. */
+  const PALETTES = [[285, 325], [205, 255], [330, 15], [28, 48], [165, 195]];
+  const easeBack = (x) => { const c = 1.6; x = Math.min(1, Math.max(0, x)); return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+  function wingSide(side, h1, h2) {
+    const fore = new Path2D(); fore.moveTo(0.04, -0.02);
+    fore.bezierCurveTo(0.18, -0.30, 0.46, -0.66, 0.66, -0.52); fore.bezierCurveTo(0.76, -0.42, 0.64, -0.16, 0.46, -0.06); fore.bezierCurveTo(0.30, 0.0, 0.14, 0.02, 0.04, -0.02);
+    const hind = new Path2D(); hind.moveTo(0.04, 0.0);
+    hind.bezierCurveTo(0.22, 0.02, 0.46, 0.05, 0.51, 0.22); hind.bezierCurveTo(0.55, 0.37, 0.36, 0.48, 0.23, 0.41); hind.bezierCurveTo(0.11, 0.34, 0.05, 0.16, 0.04, 0.0);
+    const g = ctx.createRadialGradient(0.04, 0, 0.02, 0.04, 0, 0.78);
+    g.addColorStop(0, 'hsla(' + h1 + ',100%,88%,0.08)'); g.addColorStop(0.32, 'hsla(' + h1 + ',95%,68%,0.42)');
+    g.addColorStop(0.7, 'hsla(' + h2 + ',95%,58%,0.78)'); g.addColorStop(1, 'hsla(' + h2 + ',90%,32%,0.92)');
+    ctx.save(); ctx.shadowColor = 'hsla(' + h1 + ',100%,72%,0.75)'; ctx.shadowBlur = 28;
+    ctx.fillStyle = g; ctx.fill(hind); ctx.fill(fore); ctx.restore();
+    /* Adern */
+    ctx.strokeStyle = 'rgba(255,255,255,0.32)'; ctx.lineWidth = 0.006; ctx.beginPath();
+    [[0.62, -0.5], [0.66, -0.34], [0.5, -0.12], [0.46, 0.2], [0.3, 0.38]].forEach(([x, y]) => { ctx.moveTo(0.05, -0.005); ctx.quadraticCurveTo(x * 0.45, y * 0.3, x, y); });
+    ctx.stroke();
+    /* Rand: dunkle Kante mit feinem Lichtsaum */
+    ctx.lineJoin = 'round'; ctx.strokeStyle = 'hsla(' + h2 + ',70%,18%,0.85)'; ctx.lineWidth = 0.018; ctx.stroke(fore); ctx.stroke(hind);
+    ctx.strokeStyle = 'rgba(255,255,255,0.55)'; ctx.lineWidth = 0.004; ctx.stroke(fore); ctx.stroke(hind);
+    /* Augenfleck und Punkte */
+    const eye = ctx.createRadialGradient(0.35, 0.26, 0, 0.35, 0.26, 0.075);
+    eye.addColorStop(0, 'rgba(255,255,255,0.95)'); eye.addColorStop(0.35, 'hsla(' + h1 + ',100%,70%,0.9)'); eye.addColorStop(0.7, 'hsla(' + h2 + ',80%,20%,0.85)'); eye.addColorStop(1, 'hsla(' + h2 + ',80%,20%,0)');
+    ctx.fillStyle = eye; ctx.beginPath(); ctx.arc(0.35, 0.26, 0.075, 0, 6.283); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    [[0.6, -0.47, 0.016], [0.66, -0.4, 0.013], [0.53, -0.52, 0.012], [0.68, -0.32, 0.01]].forEach(([x, y, r]) => { ctx.beginPath(); ctx.arc(x, y, r, 0, 6.283); ctx.fill(); });
   }
-  function wings(ax, ay, m, t, a) {
-    /* Großer Schmetterling, in der Mitte geteilt und ohne Körper: die Flügel rahmen die Person ein, das Gesicht bleibt frei */
-    const spr = bigSprite(HUES[Math.floor(fxStart / 1000) % HUES.length]), size = 1.25 * m, gap = 0.17 * m, flap = 0.86 + 0.14 * Math.sin(t * 2.2);
-    const cut = 0.1 * 512, half = 256 - cut, dw = size * half / 512;
-    ctx.save(); ctx.globalAlpha = 0.85 * a;
-    ctx.save(); ctx.translate(ax - gap, ay); ctx.scale(flap, 1); ctx.drawImage(spr, 0, 0, half, 512, -dw, -size / 2, dw, size); ctx.restore();
-    ctx.save(); ctx.translate(ax + gap, ay); ctx.scale(flap, 1); ctx.drawImage(spr, 256 + cut, 0, half, 512, 0, -size / 2, dw, size); ctx.restore();
+  function wings(ax, ay, m, t, e) {
+    const [h1, h2] = PALETTES[Math.floor(fxStart / 1000) % PALETTES.length];
+    const grow = easeBack(e / 0.9), s = 0.78 * m * grow, k = 0.8 + 0.2 * Math.sin(t * 2.6), bx = ax, by = ay + 0.27 * m;
+    if (s <= 1) return;
+    ctx.save(); ctx.globalAlpha = Math.min(1, e / 0.4);
+    [-1, 1].forEach((side) => { ctx.save(); ctx.translate(bx + side * 0.02 * m, by); ctx.rotate(side * -0.06 * Math.sin(t * 2.6)); ctx.scale(side * k * s, s); wingSide(side, h1, h2); ctx.restore(); });
     ctx.restore();
-    sparkle(ax, ay, 0.55 * m, t, 16, a);
+    /* ein paar kleine Begleiter und Glitzer */
+    const sp = makeSprites();
+    for (let i = 0; i < 4; i++) { const ang = t * 0.5 + i * 1.57; flutter(sp[(i * 3) % sp.length], bx + Math.cos(ang) * 0.5 * m, by - 0.2 * m + Math.sin(ang) * 0.36 * m, 0.07 * m, t + i, 10, Math.min(1, e), Math.cos(ang) * 0.4); }
+    sparkle(bx, by - 0.15 * m, 0.48 * m, t, 18, Math.min(1, e));
   }
   function sparkle(cx, cy, r, t, n, a) {
     ctx.save();
