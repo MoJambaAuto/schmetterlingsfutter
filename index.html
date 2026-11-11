@@ -32,7 +32,7 @@
     <section class="view active" id="view-home" aria-labelledby="nav-home">
       <div class="heart-wrap" id="heartWrap" role="button" tabindex="0" aria-label="Neue Botschaft anzeigen">
         <div class="pulse-ring"></div>
-        <svg class="big-heart" viewBox="0 -4 100 94" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <svg class="big-heart" viewBox="-22 -12 144 104" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <defs>
             <radialGradient id="hg" cx="38%" cy="32%" r="62%">
               <stop offset="0%" stop-color="var(--accent-2)"/>
@@ -40,10 +40,16 @@
               <stop offset="100%" stop-color="var(--accent-dark)"/>
             </radialGradient>
           </defs>
+          <g class="heart-wings">
+            <path fill="var(--accent-2)" opacity=".62" d="M14 34 C-6 6 -24 16 -19 36 C-16 50 -2 54 16 46 Z"/>
+            <path fill="var(--accent-2)" opacity=".62" d="M86 34 C106 6 124 16 119 36 C116 50 102 54 84 46 Z"/>
+            <path fill="var(--accent)" opacity=".5" d="M18 48 C2 48 -10 60 -4 70 C3 80 18 72 27 60 Z"/>
+            <path fill="var(--accent)" opacity=".5" d="M82 48 C98 48 110 60 104 70 C97 80 82 72 73 60 Z"/>
+          </g>
           <path fill="url(#hg)" d="M50 82 C50 82 5 52 5 28 C5 14 17 5 30 5 C38 5 45 9 50 15 C55 9 62 5 70 5 C83 5 95 14 95 28 C95 52 50 82 50 82Z"/>
           <path fill="rgba(255,255,255,0.16)" d="M24 17 C21 22 20 30 22 37 C22 37 19 26 27 18Z"/>
-          <path fill="var(--accent-dark)" d="M14 14 C8 8 6 1 9 -2 C13 2 17 6 21 9 Z"/>
-          <path fill="var(--accent-dark)" d="M86 14 C92 8 94 1 91 -2 C87 2 83 6 79 9 Z"/>
+          <path fill="none" stroke="var(--accent-2)" stroke-width="2.2" stroke-linecap="round" d="M46 13 C44 4 40 -2 34 -5 M54 13 C56 4 60 -2 66 -5"/>
+          <circle cx="33.5" cy="-5.5" r="2.6" fill="var(--accent-2)"/><circle cx="66.5" cy="-5.5" r="2.6" fill="var(--accent-2)"/>
           <text x="50" y="52" text-anchor="middle" font-size="24" id="heartEmoji">🐰</text>
         </svg>
       </div>

@@ -590,3 +590,10 @@ a.pill-btn { text-decoration:none; display:inline-flex; align-items:center; just
 .promo-list { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; }
 .promo-list li { display:flex; gap:10px; align-items:flex-start; font-size:18px; line-height:1.4; color:var(--text); }
 .promo-list li span { flex:none; width:26px; text-align:center; }
+
+/* 3.12.1 Herz mit Flügeln */
+.big-heart { width:180px; height:130px; }
+.pulse-ring { left:50%; margin-left:-65px; }
+.heart-wings { transform-box:fill-box; transform-origin:center; animation:wingFlap 2.5s ease-in-out infinite; }
+@keyframes wingFlap { 0%,100% { transform:scaleX(1); } 50% { transform:scaleX(.84); } }
+[data-motion="off"] .heart-wings { animation:none; }
