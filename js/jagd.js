@@ -416,7 +416,7 @@
   function css() {
     if (document.getElementById('jagd-css')) return;
     const s = document.createElement('style'); s.id = 'jagd-css';
-    s.textContent = '.jagd{position:fixed;inset:0;z-index:8800;background:#dfe9d8}.jagd .jg-map{position:absolute !important;inset:0;width:100%;height:100%}' +
+    s.textContent = '.jagd{position:fixed;inset:0;z-index:8800;background:#dfe9d8}.jagd .jg-map{position:absolute !important;inset:0;width:100%;height:100%;z-index:0}.jagd:not(.show-map) .jg-map .maplibregl-control-container{display:none}' +
       '.jg-top{position:absolute;left:10px;right:10px;top:calc(10px + env(safe-area-inset-top));display:flex;align-items:center;gap:8px;z-index:2}' +
       '.jg-top button,.jg-me{width:46px;height:46px;border-radius:23px;border:0;background:rgba(40,20,60,.75);color:#fff;font-size:19px;flex:none;box-shadow:0 4px 14px rgba(0,0,0,.3)}' +
       '.jg-info{flex:1;min-width:0;text-align:center;background:rgba(40,20,60,.75);color:#fff;border-radius:16px;padding:9px 12px;font:700 15px Lato,sans-serif;box-shadow:0 4px 14px rgba(0,0,0,.3)}' +
