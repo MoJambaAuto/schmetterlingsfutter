@@ -29,6 +29,7 @@
       '.heide canvas{display:block;width:100%;height:100%}' +
       '.hd-hud{position:absolute;top:calc(10px + env(safe-area-inset-top));left:0;right:0;display:flex;justify-content:center;gap:10px;pointer-events:none}' +
       '.hd-hud span{font-family:var(--serif,serif);font-size:24px;color:#fff;background:rgba(40,20,60,.42);border-radius:14px;padding:3px 12px;min-width:56px;text-align:center}' +
+      '.hd-snd{position:absolute;top:calc(10px + env(safe-area-inset-top));left:10px;width:44px;height:44px;border-radius:22px;border:0;background:rgba(40,20,60,.42);color:#fff;font-size:19px}' +
       '.hd-x{position:absolute;top:calc(10px + env(safe-area-inset-top));right:10px;width:44px;height:44px;border-radius:22px;border:0;background:rgba(40,20,60,.42);color:#fff;font-size:20px}' +
       '.hd-toast{position:absolute;top:calc(64px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);color:#fff;background:rgba(40,20,60,.55);border-radius:14px;padding:6px 14px;font:700 17px Lato,sans-serif;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap}' +
       '.hd-toast.on{opacity:1}.hd-toast.gold{background:rgba(160,110,0,.75)}' +
@@ -58,6 +59,79 @@
       new T.TextureLoader().load('img/falter.webp', (t) => { t.colorSpace = T.SRGBColorSpace || t.colorSpace; t.generateMipmaps = true; t.minFilter = T.LinearMipmapLinearFilter; ok(t); }, undefined, () => { texP = null; ok(null); });
     });
     return texP;
+  }
+
+  /* ---------- Spielmusik ----------
+     Liegt audio/heide.mp3 vor (Suno, „Papillon in der Heide“), läuft sie in Schleife.
+     Sonst entsteht eine ruhige Klangfläche direkt im Handy: Harfentöne (Pentatonik), warme Flächen, Hall, ferne Vögel. */
+  const musicOn = () => L.S.heideMusic !== false;
+  function music() {
+    let audio = null, ctx = null, master = null, timers = [], stopped = false;
+    const later = (fn, ms) => { const t = setTimeout(() => { if (!stopped) fn(); }, ms); timers.push(t); };
+    function fade(el, to, ms) { const from = el.volume, t0 = performance.now(); (function step() { if (!el) return; const k = Math.min(1, (performance.now() - t0) / ms); el.volume = from + (to - from) * k; if (k < 1) requestAnimationFrame(step); })(); }
+    function synth() {
+      if (ctx || stopped) return; /* nur einmal (Fehler-Ereignis und abgelehntes play() kommen beide hierher) */
+      const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+      ctx = new AC(); master = ctx.createGain(); master.gain.value = 0; master.connect(ctx.destination);
+      master.gain.linearRampToValueAtTime(0.0001, ctx.currentTime); master.gain.linearRampToValueAtTime(0.32, ctx.currentTime + 4);
+      /* Hall aus abklingendem Rauschen */
+      const rv = ctx.createConvolver(), len = ctx.sampleRate * 4, ir = ctx.createBuffer(2, len, ctx.sampleRate);
+      for (let ch = 0; ch < 2; ch++) { const d = ir.getChannelData(ch); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3.2); }
+      rv.buffer = ir; const wet = ctx.createGain(); wet.gain.value = 0.55; rv.connect(wet); wet.connect(master);
+      const dry = ctx.createGain(); dry.gain.value = 0.6; dry.connect(master); dry.connect(rv);
+      const dl = ctx.createDelay(1); dl.delayTime.value = 0.42; const fb = ctx.createGain(); fb.gain.value = 0.32; dl.connect(fb); fb.connect(dl); dl.connect(rv);
+      const hz = (m) => 440 * Math.pow(2, (m - 69) / 12);
+      /* Flächen: Cmaj9 – Am7 – Fmaj7 – G6, je 9 s, weich ein- und ausblenden */
+      const CH = [[48, 55, 64, 71, 74], [45, 52, 60, 67, 72], [41, 48, 57, 64, 69], [43, 50, 59, 64, 71]];
+      let ci = 0;
+      function pad() {
+        const t = ctx.currentTime, notes = CH[ci++ % CH.length];
+        const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 900; lp.Q.value = 0.3; lp.connect(dry);
+        notes.forEach((m, k) => [0, 1].forEach((v) => {
+          const o = ctx.createOscillator(), g = ctx.createGain(); o.type = v ? 'triangle' : 'sine'; o.frequency.value = hz(m) * (v ? 1.003 : 0.997);
+          const peak = (k === 0 ? 0.05 : 0.028) * (v ? 0.6 : 1);
+          g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(peak, t + 3.5); g.gain.setValueAtTime(peak, t + 7.5); g.gain.linearRampToValueAtTime(0, t + 12.5);
+          o.connect(g); g.connect(lp); o.start(t); o.stop(t + 13);
+        }));
+        later(pad, 9000);
+      }
+      /* Harfe: einzelne Töne aus der Pentatonik, mal dichter, mal Pause */
+      const PENT = [60, 62, 64, 67, 69, 72, 74, 76, 79, 81];
+      let last = 4;
+      function harp() {
+        if (Math.random() < 0.82) {
+          last = Math.max(0, Math.min(PENT.length - 1, last + Math.round((Math.random() - 0.5) * 4)));
+          const t = ctx.currentTime, f = hz(PENT[last]);
+          [1, 2, 3].forEach((h) => { const o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'sine'; o.frequency.value = f * h; const a = 0.07 / (h * h);
+            g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(a, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t + 3.2 / h);
+            o.connect(g); g.connect(dry); g.connect(dl); o.start(t); o.stop(t + 3.4); });
+        }
+        later(harp, 650 + Math.random() * (Math.random() < 0.2 ? 2600 : 900));
+      }
+      /* ferne Vögel */
+      function bird() {
+        const t = ctx.currentTime, n = 2 + Math.floor(Math.random() * 3);
+        for (let i = 0; i < n; i++) { const o = ctx.createOscillator(), g = ctx.createGain(), p = ctx.createStereoPanner ? ctx.createStereoPanner() : null; const s0 = t + i * 0.16, f0 = 2600 + Math.random() * 900;
+          o.type = 'sine'; o.frequency.setValueAtTime(f0, s0); o.frequency.exponentialRampToValueAtTime(f0 * 1.45, s0 + 0.08); o.frequency.exponentialRampToValueAtTime(f0 * 0.9, s0 + 0.13);
+          g.gain.setValueAtTime(0, s0); g.gain.linearRampToValueAtTime(0.012, s0 + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, s0 + 0.14);
+          o.connect(g); if (p) { p.pan.value = (Math.random() - 0.5) * 1.6; g.connect(p); p.connect(rv); } else g.connect(rv); o.start(s0); o.stop(s0 + 0.16); }
+        later(bird, 5000 + Math.random() * 9000);
+      }
+      pad(); later(harp, 1800); later(bird, 4000);
+    }
+    function start() {
+      stopped = false;
+      audio = new Audio('audio/heide.mp3'); audio.loop = true; audio.volume = 0; audio.preload = 'auto';
+      audio.addEventListener('error', () => { audio = null; if (!stopped) synth(); }, { once: true });
+      const p = audio.play(); if (p && p.then) p.then(() => fade(audio, 0.55, 3000)).catch(() => { if (audio && audio.error) return; audio = null; if (!stopped) synth(); });
+    }
+    function stop() {
+      stopped = true; timers.forEach(clearTimeout); timers = [];
+      if (audio) { const a = audio; audio = null; fade(a, 0, 600); setTimeout(() => { try { a.pause(); a.src = ''; } catch (e) {} }, 650); }
+      if (ctx) { const c = ctx, m = master; ctx = null; try { m.gain.cancelScheduledValues(c.currentTime); m.gain.setValueAtTime(m.gain.value, c.currentTime); m.gain.linearRampToValueAtTime(0, c.currentTime + 0.6); } catch (e) {} setTimeout(() => { try { c.close(); } catch (e) {} }, 800); }
+    }
+    function pause(on) { if (audio) { if (on) audio.pause(); else audio.play().catch(() => {}); } if (ctx) { if (on) ctx.suspend(); else ctx.resume(); } }
+    return { start, stop, pause, get running() { return !stopped && (!!audio || !!ctx); } };
   }
 
   /* ---------- Startbildschirm ---------- */
@@ -93,7 +167,7 @@
     try { renderer = new T.WebGLRenderer({ antialias: true, powerPreference: 'low-power' }); } catch (e) { root.remove(); document.documentElement.classList.remove('cam-open'); L.openSheet('<h3>Hoppla</h3><p class="about">Dieses Handy kann leider keine 3D-Grafik anzeigen.</p><div class="row"><button class="pill-btn primary" data-cancel>OK</button></div>', (sh) => { sh.querySelector('[data-cancel]').onclick = L.closeSheet; }); return; }
     renderer.setPixelRatio(pr); renderer.setSize(root.clientWidth, root.clientHeight);
     root.appendChild(renderer.domElement);
-    root.insertAdjacentHTML('beforeend', '<div class="hd-hud"><span class="hd-pts">🦋 0</span><span class="hd-time">⏱ 2:30</span></div><button type="button" class="hd-x" aria-label="Runde beenden">✕</button><div class="hd-toast"></div><div class="hd-stick"><i></i></div><div class="hd-hint">👈 Links ziehen zum Fliegen · Schmetterling antippen zum Fangen</div>');
+    root.insertAdjacentHTML('beforeend', '<div class="hd-hud"><span class="hd-pts">🦋 0</span><span class="hd-time">⏱ 2:30</span></div><button type="button" class="hd-x" aria-label="Runde beenden">✕</button><button type="button" class="hd-snd" aria-label="Musik an oder aus">' + (musicOn() ? '🔊' : '🔇') + '</button><div class="hd-toast"></div><div class="hd-stick"><i></i></div><div class="hd-hint">👈 Links ziehen zum Fliegen · Schmetterling antippen zum Fangen</div>');
     const $ = (s) => root.querySelector(s);
 
     const scene = new T.Scene();
@@ -328,8 +402,8 @@
     /* Pause bei Tab-/App-Wechsel (Akku) */
     function vis() {
       if (over) return;
-      if (document.hidden) { paused = true; cancelAnimationFrame(raf); }
-      else if (paused) { paused = false; last = performance.now(); raf = requestAnimationFrame(frame); }
+      if (document.hidden) { paused = true; cancelAnimationFrame(raf); mus.pause(true); }
+      else if (paused) { paused = false; last = performance.now(); raf = requestAnimationFrame(frame); mus.pause(false); }
     }
     document.addEventListener('visibilitychange', vis);
     const resize = () => { renderer.setSize(root.clientWidth, root.clientHeight); cam.aspect = root.clientWidth / root.clientHeight; cam.updateProjectionMatrix(); };
@@ -337,7 +411,7 @@
     $('.hd-x').onclick = () => finish();
 
     function cleanup() {
-      over = true; cancelAnimationFrame(raf); clearTimeout(toastT);
+      over = true; cancelAnimationFrame(raf); clearTimeout(toastT); mus.stop();
       document.removeEventListener('visibilitychange', vis); window.removeEventListener('resize', resize);
       window.removeEventListener('keydown', kd); window.removeEventListener('keyup', kd);
       disposables.forEach((d) => { try { d.dispose(); } catch (e) {} });
@@ -364,6 +438,8 @@
         sh.querySelector('[data-again]').onclick = () => { L.closeSheet(); setTimeout(play, 100); };
       });
     }
+    const mus = music(); if (musicOn()) mus.start();
+    $('.hd-snd').onclick = (e) => { e.stopPropagation(); const on = !musicOn(); L.S.heideMusic = on; L.save(); $('.hd-snd').textContent = on ? '🔊' : '🔇'; if (on) mus.start(); else mus.stop(); C('heide_music:' + (on ? 'an' : 'aus')); };
     resize(); raf = requestAnimationFrame(frame);
     window.LZH._dbg = { bfs, player, cam, catchAt: tryCatch, cv };
   }
