@@ -15,6 +15,7 @@
 
   /* ---------- Was es alles gibt: [Gruppe, Symbol, Titel, Suchwörter, Antwort (nur wo nötig), Sprung] ---------- */
   const ITEMS = [
+    ['Zu zweit', '🕸️', 'Falterjagd draußen: echte Falter in der Natur fangen', 'falterjagd draussen draußen natur fangen netz karte spazieren gehen ar pokemon go standort', '', () => { if (window.LZJ) window.LZJ.open(); }],
     ['Jeden Tag', '📖', 'Schmetterlingsbuch: eure entdeckten Falter', 'schmetterlingsbuch buch sammlung falter arten generation kokon raupe ei selten pracht', '', () => { if (window.LZX && window.LZX.book) window.LZX.book(); }],
     ['Jeden Tag', '💝', 'Das mag ich: Interessen für passende Geschenkideen', 'mag ich interessen hobbys vorlieben geschenk passend profil geschmack', '', () => { if (window.LZW) window.LZW.sheet('me'); }],
     ['Jeden Tag', '🎯', 'Was mag mein Schatz? Geschenke passend machen (Budget)', 'geschenk passend budget preis frau mann alter interessen schatz partner', '', () => { if (window.LZW) window.LZW.sheet('them'); }],

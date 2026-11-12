@@ -241,18 +241,20 @@
   /* Schmetterlingsbuch: entdeckte Falter mit Bild und Steckbrief, die nächsten als Schatten */
   function book() {
     const q = pos(total()), have = q.done, show = Math.max(LADDER.length, Math.ceil((have + 1) / LADDER.length) * LADDER.length);
+    const jc = window.LZJ && window.LZJ.counts ? window.LZJ.counts() : {}, wild = Object.values(jc).reduce((a, b) => a + b, 0);
     let grid = '';
     for (let n = 1; n <= show; n++) {
-      const f = falter(n), got = n <= have;
-      grid += '<button type="button" class="fx-cell' + (got ? '' : ' locked') + (n === have + 1 ? ' next' : '') + '" data-n="' + n + '"' + (got ? '' : ' aria-label="Noch nicht entdeckt"') + '>' + falterImg(f, got ? '' : 'shadow') + '<span>' + (got ? esc(f.name) : n === have + 1 ? 'Als Nächstes' : '?') + '</span></button>';
+      const f = falter(n), caught = n <= LADDER.length ? (jc[n - 1] || 0) : 0, got = n <= have || caught > 0;
+      grid += '<button type="button" class="fx-cell' + (got ? '' : ' locked') + (n === have + 1 && !caught ? ' next' : '') + '" data-n="' + n + '"' + (got ? '' : ' aria-label="Noch nicht entdeckt"') + '>' + falterImg(f, got ? '' : 'shadow') + '<span>' + (got ? esc(f.name) : n === have + 1 ? 'Als Nächstes' : '?') + '</span>' + (caught ? '<em class="fx-wild">🕸️ ' + caught + '×</em>' : '') + '</button>';
     }
-    L.openSheet('<h3>📖 Euer Schmetterlingsbuch</h3><p class="about" style="font-size:16px;margin-bottom:10px">' + have + ' entdeckt · Generation ' + q.gen + ' wächst gerade heran. Jeder neue Falter ist seltener als der vorige.</p>' +
+    L.openSheet('<h3>📖 Euer Schmetterlingsbuch</h3><p class="about" style="font-size:16px;margin-bottom:10px">' + have + ' geschlüpft' + (wild ? ' · 🕸️ ' + wild + ' draußen gefangen' : '') + ' · Generation ' + q.gen + ' wächst gerade heran. Jeder neue Falter ist seltener als der vorige.</p>' +
       '<div class="fx-grid">' + grid + '</div>' +
       (have >= LADDER.length ? '' : '<p class="about" style="font-size:15px;color:var(--text-muted);margin-top:8px">Nach allen neun Arten kommen Prachtformen – schillernd, mit Sternenglanz und in Regenbogenfarben.</p>') +
-      '<div class="row" style="margin-top:12px"><button class="pill-btn ghost" data-cancel>Schließen</button></div>', (sh) => {
+      '<div class="row wrap" style="margin-top:12px">' + (window.LZJ ? '<button class="pill-btn primary" data-jagd>🕸️ Draußen fangen</button>' : '') + '<button class="pill-btn ghost" data-cancel>Schließen</button></div>', (sh) => {
       sh.querySelector('[data-cancel]').onclick = L.closeSheet;
+      const jb = sh.querySelector('[data-jagd]'); if (jb) jb.onclick = () => { L.closeSheet(); if (document.querySelector('.jagd')) return; setTimeout(() => window.LZJ.open(), 60); };
       sh.querySelectorAll('.fx-cell').forEach((c) => c.onclick = () => {
-        const n = Number(c.dataset.n); if (n > have) { L.toast(n === have + 1 ? '🥚 Wächst gerade heran – weiter füttern!' : 'Noch nicht entdeckt'); return; }
+        const n = Number(c.dataset.n); if (n > have && !(n <= LADDER.length && jc[n - 1])) { L.toast(n === have + 1 ? '🥚 Wächst gerade heran – weiter füttern!' : 'Noch nicht entdeckt'); return; }
         const f = falter(n);
         L.openSheet('<div class="bfly-party"><div class="fx-hero">' + falterImg(f, 'big') + '</div><h3>' + esc(f.name) + '</h3><p class="fx-name"><span class="fx-rar">' + esc(f.rar) + '</span> · Falter Nr. ' + n + '</p><p class="about" style="margin:8px 0 16px">' + esc(f.fact) + '</p>' +
           '<div class="row wrap" style="justify-content:center"><button class="pill-btn" data-back>← Zum Buch</button><button class="pill-btn" data-share>🖼️ Teilen</button></div></div>', (s2) => {
@@ -274,6 +276,7 @@
       '.fx-name{font-family:var(--serif);font-size:22px;margin:0}.fx-rar{display:inline-block;font:700 13px var(--sans,sans-serif);letter-spacing:.4px;text-transform:uppercase;color:var(--accent-2);border:1px solid var(--accent-2);border-radius:10px;padding:1px 8px;vertical-align:middle}' +
       '.fx-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}' +
       '.fx-cell{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px;border-radius:16px;border:1px solid var(--line);background:var(--glass);color:var(--text);font:inherit;min-height:110px}' +
+      '.fx-cell{position:relative}.fx-wild{position:absolute;top:6px;right:6px;font:700 11px var(--sans,sans-serif);font-style:normal;background:var(--accent-dark);color:#fff;border-radius:8px;padding:1px 5px}' +
       '.fx-cell span{font-size:14px;line-height:1.2;text-align:center;overflow-wrap:anywhere}.fx-cell.locked span{color:var(--text-muted)}.fx-cell.next{border-style:dashed;border-color:var(--accent-2)}' +
       '.fx-last{display:flex;align-items:center;gap:12px}.fx-last span{display:flex;flex-direction:column}.fx-last small{color:var(--text-muted)}' +
       '[data-motion="off"] .fx-t1,[data-motion="off"] .fx-t3,[data-motion="off"] .fx-hero{animation:none}';

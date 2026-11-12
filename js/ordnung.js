@@ -101,6 +101,7 @@
     const mk = (icon, title, sub, go) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'deck'; b.setAttribute('data-oextra', '1'); b.innerHTML = '<span class="d-ico">' + icon + '</span><div class="d-body"><div class="d-title">' + esc(title) + '</div><div class="d-sub">' + esc(sub) + '</div></div><span class="d-go">›</span>'; b.onclick = () => L.showSub('play', go); return b; };
     const anchorEl = Array.from(box.children).find((c) => /^s*(✨ Bald|📜 Zuletzt)/.test(c.textContent));
     const frag = document.createDocumentFragment(); frag.appendChild(h); frag.appendChild(mk('🎵', 'Liebeslied-Pad', 'Eine kleine Melodie spielen und schicken', 'music')); frag.appendChild(mk('🌼', 'Gänseblümchen-Orakel', 'Er/sie liebt mich, liebt mich nicht …', 'oracle'));
+    if (window.LZJ) { const jt = mk('🕸️', 'Falterjagd draußen', 'Echte Falterarten in der Natur finden und fangen', 'spiele'); jt.onclick = () => window.LZJ.open(); frag.insertBefore(jt, frag.children[1]); h.textContent = '🌿 Draußen & zwischendurch'; }
     if (anchorEl) box.insertBefore(frag, anchorEl); else box.appendChild(frag);
   }
   const box = $('spieleList'); if (box && window.MutationObserver) new MutationObserver(() => { if (!box.querySelector('[data-oextra]')) extraTiles(); }).observe(box, { childList: true });
