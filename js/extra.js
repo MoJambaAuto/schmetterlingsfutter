@@ -126,41 +126,48 @@
   /* =====================================================================
      3. Euer Schmetterling: jede liebe Geste ist Futter. Er wächst für euch beide gemeinsam.
      ===================================================================== */
-  const STAGES = [[0, '🥚', 'Ein Ei'], [3, '🐛', 'Eine Raupe'], [10, 'kokon', 'Ein Kokon'], [20, '🦋', 'Euer Schmetterling']];
-  const FIRST_FLY = 20, PER_FLY = 12, DAY_CAP = 6;
-  /* Arten: Farbdrehung der 🦋-Grafik, Gewicht = Häufigkeit */
-  const SPECIES = [
-    { id: 'himmel', n: 'Himmels\u00adfalter', c: ['#6cc4ff', '#3f8fe0'], w: 26 }, { id: 'veilchen', n: 'Veilchen\u00adfalter', c: ['#c29bff', '#8d5fe6'], w: 22 }, { id: 'rosen', n: 'Rosen\u00adfalter', c: ['#ff8fb5', '#f0568a'], w: 22 },
-    { id: 'sonnen', n: 'Sonnen\u00adfalter', c: ['#ffc35c', '#ff8a3d'], w: 14 }, { id: 'klee', n: 'Klee\u00adfalter', c: ['#86e0a0', '#3fae6b'], w: 10 }, { id: 'gold', n: 'Gold\u00adfalter', c: ['#ffe38a', '#f2b632'], w: 5, rare: 1 }, { id: 'sternen', n: 'Sternen\u00adfalter', c: ['#ffffff', '#cfe6ff'], w: 1, rare: 2 }
+  /* 3.32.0 (Idee von Mos Tochter): Es geht nach dem ersten Falter weiter. Jede Generation läuft wieder von Ei über Raupe
+     und Kokon zum Falter – und jeder neue Falter ist eine Stufe seltener und schöner. Alle landen im Schmetterlingsbuch.
+     Reihenfolge: 9 Arten (Bilder aus img/falter.webp, gleiche Tafel wie die 3D-Heide), danach Prachtformen ohne Ende. */
+  const STAGE_UI = [['🥚', 'Ein Ei'], ['🐛', 'Eine Raupe'], ['kokon', 'Ein Kokon']];
+  const DAY_CAP = 6;
+  const LADDER = [
+    { n: 'Kohlweißling', r: 'Häufig', f: 'Der häufigste Tagfalter in unseren Gärten. Seine Raupen lieben Kohl – daher der Name.' },
+    { n: 'Zitronenfalter', r: 'Häufig', f: 'Einer der langlebigsten Falter Europas: Er überwintert als Falter und kann fast ein Jahr alt werden.' },
+    { n: 'Hauhechel-Bläuling', pn: 'Bläuling', r: 'Verbreitet', f: 'Nur die Männchen sind so leuchtend blau, die Weibchen tragen Braun mit orangen Tupfen.' },
+    { n: 'Kleiner Fuchs', pn: 'Fuchs', r: 'Verbreitet', f: 'Seine Raupen fressen Brennnesseln. Im Frühling gehört er zu den ersten Faltern im Garten.' },
+    { n: 'Tagpfauenauge', g: 'n', r: 'Besonders', f: 'Die großen Augenflecken erschrecken Vögel. Er überwintert gern in Kellern und Schuppen.' },
+    { n: 'Admiral', r: 'Besonders', f: 'Ein Wanderfalter: Viele fliegen jedes Jahr aus dem Süden über die Alpen zu uns.' },
+    { n: 'Schwalbenschwanz', r: 'Selten', f: 'Einer der größten Tagfalter Deutschlands und besonders geschützt. Erkennbar an den „Schwänzchen“.' },
+    { n: 'Goldener Falter', pn: 'Goldfalter', r: 'Sehr selten', f: 'Ihn gibt es nur bei euch: Er erscheint, wenn sich zwei lange genug gegenseitig füttern.' },
+    { n: 'Papillon', r: 'Einzigartig', f: 'Der Begleiter aus eurer App. Wer ihn hat, hat die ganze Wiese entdeckt.' }
   ];
+  const TIERS = [['', ''], ['Schillernder ', 'Prachtform: schillert in allen Farben.'], ['Sternen-', 'Prachtform: trägt Sternenglanz.'], ['Regenbogen-', 'Prachtform: leuchtet in Regenbogenfarben.']];
   const KOKON = '<svg viewBox="0 0 48 48" width="1em" height="1em" aria-hidden="true"><path d="M6 8h36" stroke="#c9a27a" stroke-width="3" stroke-linecap="round"/><path d="M24 8v6" stroke="#c9a27a" stroke-width="2"/><ellipse cx="24" cy="28" rx="9" ry="15" fill="#e6c9a0"/><path d="M16 22q8 4 16 0M15.5 29q8.5 4 17 0M17 36q7 3 14 0" stroke="#b98f5f" stroke-width="2" fill="none" stroke-linecap="round"/></svg>';
   function bst() {
     const s = S(); if (!s.bfly) s.bfly = { own: 0, their: 0, days: {}, seen: {}, level: 0, last: 0, synced: 0 };
     const b = s.bfly; if (!b.days) b.days = {}; if (!b.seen) b.seen = {}; return b;
   }
   const total = () => { const b = bst(); return (b.own || 0) + (b.their || 0); };
-  const stageOf = (t) => { let i = 0; STAGES.forEach((x, k) => { if (t >= x[0]) i = k; }); return i; };
-  const flies = (t) => t < FIRST_FLY ? 0 : 1 + Math.floor((t - FIRST_FLY) / PER_FLY);
-  const level = (t) => stageOf(t) + Math.max(0, flies(t) - 1);
-  /* Art des n-ten Schmetterlings: bei beiden gleich, weil aus der gemeinsamen Paar-Kennung berechnet */
-  function speciesOf(n) {
-    let key = ''; try { key = String((P() && P().P && P().P().partner && P().P().partner.pair) || S().deviceId || 'solo'); } catch (e) { key = 'solo'; }
-    let h = 2166136261; const str = key + '#' + n; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
-    const sum = SPECIES.reduce((a, s) => a + s.w, 0); let r = ((h >>> 0) % 1000) / 1000 * sum;
-    for (const s of SPECIES) { if ((r -= s.w) < 0) return s; } return SPECIES[0];
+  /* Generation k braucht etwas mehr Futter als die vorige: 20, 24, 28 … höchstens 60 */
+  const genLen = (k) => Math.min(60, 20 + 4 * (k - 1));
+  function pos(t) {
+    let k = 1, start = 0; while (t >= start + genLen(k)) { start += genLen(k); k++; }
+    const len = genLen(k), p = t - start, cut = [0, Math.ceil(len * 0.15), Math.ceil(len * 0.5)];
+    const stage = p >= cut[2] ? 2 : p >= cut[1] ? 1 : 0;
+    return { done: k - 1, gen: k, p, len, stage, next: stage < 2 ? cut[stage + 1] : len };
   }
-  /* eigene Grafik statt 🦋: das Emoji sieht auf jedem Handy anders aus */
-  const flyHtml = (sp) => '<svg class="fly-svg' + (sp.rare ? ' rare' : '') + '" viewBox="0 0 64 64" width="1em" height="1em" aria-hidden="true">' +
-    '<path d="M31 30C24 12 8 8 5 18c-3 10 8 18 26 14z" fill="' + sp.c[0] + '"/><path d="M33 30c7-18 23-22 26-12 3 10-8 18-26 14z" fill="' + sp.c[0] + '"/>' +
-    '<path d="M31 33c-14 0-22 8-18 17 4 8 15 4 18-13z" fill="' + sp.c[1] + '"/><path d="M33 33c14 0 22 8 18 17-4 8-15 4-18-13z" fill="' + sp.c[1] + '"/>' +
-    '<circle cx="15" cy="20" r="3.2" fill="#fff" opacity=".55"/><circle cx="49" cy="20" r="3.2" fill="#fff" opacity=".55"/><circle cx="22" cy="44" r="2.4" fill="#fff" opacity=".4"/><circle cx="42" cy="44" r="2.4" fill="#fff" opacity=".4"/>' +
-    '<rect x="30" y="18" width="4" height="30" rx="2" fill="#3a2440"/><path d="M31 19c-2-6-5-8-8-9M33 19c2-6 5-8 8-9" stroke="#3a2440" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>';
-  function picHtml(t) { const st = STAGES[stageOf(t)]; return st[1] === 'kokon' ? KOKON : st[1] === '🦋' ? flyHtml(speciesOf(flies(t))) : st[1]; }
+  const level = (t) => { const q = pos(t); return q.done * 3 + q.stage; };
+  /* n-ter Falter (1 = erster): Art aus der Leiter, ab Runde 2 als Prachtform */
+  function falter(n) {
+    const i = (n - 1) % LADDER.length, tier = Math.floor((n - 1) / LADDER.length), t = TIERS[Math.min(tier, TIERS.length - 1)];
+    const base = LADDER[i];
+    return { n, i, tier, name: (tier ? (tier === 1 && base.g === 'n' ? 'Schillerndes ' : t[0]) + (base.pn || base.n) : base.n) + (tier >= TIERS.length ? ' ' + (tier - TIERS.length + 2) : ''), rar: tier ? 'Prachtform' + (tier > 1 ? ' ' + tier : '') : base.r, fact: base.f + (t[1] ? ' ' + t[1] : '') };
+  }
+  /* Bild aus der Falter-Tafel (3×3) */
+  const falterImg = (f, cls) => '<span class="fx-img fx-t' + Math.min(f.tier, 3) + (cls ? ' ' + cls : '') + '" style="--c:' + (f.i % 3) + ';--r:' + Math.floor(f.i / 3) + '" role="img" aria-label="' + esc(f.name) + '"></span>';
+  function picHtml(t) { const q = pos(t); const s = STAGE_UI[q.stage]; return s[0] === 'kokon' ? KOKON : s[0]; }
   function mood() { const b = bst(); const h = (Date.now() - (b.last || 0)) / 36e5; return !b.last ? 'neu' : h < 24 ? 'froh' : h < 72 ? 'hunger' : 'schlaf'; }
-  function nextGoal(t) {
-    const i = stageOf(t); if (i < STAGES.length - 1) return { at: STAGES[i + 1][0], from: STAGES[i][0], what: ['', 'zur Raupe', 'zum Kokon', 'zum Schlüpfen'][i + 1] };
-    const k = flies(t); return { at: FIRST_FLY + k * PER_FLY, from: FIRST_FLY + (k - 1) * PER_FLY, what: 'zum nächsten Schmetterling' };
-  }
   function pop(n) {
     const el = document.createElement('div'); el.className = 'futter-pop'; el.textContent = '🦋 +' + n; el.setAttribute('aria-hidden', 'true');
     document.body.appendChild(el); setTimeout(() => el.remove(), 1700);
@@ -171,16 +178,20 @@
     syncTimer = setTimeout(async () => { const b = bst(); if (b.synced === b.own) return; try { await P().send({ t: 'hello', name: S().sender, pron: S().pron || '', reply: true, food: b.own }); b.synced = b.own; L.save(); } catch (e) {} }, 15000);
   }
   function celebrate() {
-    const b = bst(), t = total(), lv = level(t); if (lv <= (b.level || 0)) { b.level = Math.max(b.level || 0, lv); return; }
-    b.level = lv; L.save();
-    const st = STAGES[stageOf(t)], fl = flies(t), sp = fl ? speciesOf(fl) : null;
-    const title = fl > 1 ? 'Ein neuer Schmetterling!' : fl === 1 ? 'Geschlüpft!' : stageOf(t) === 2 ? 'Die Raupe spinnt sich ein' : 'Aus dem Ei geschlüpft';
-    const line = sp ? sp.n.replace('\u00ad', '') + (sp.rare ? ' · selten' : '') : st[2];
-    const shareText = fl > 1 ? 'Unser Schwarm wächst: ' + fl + ' Schmetterlinge 🦋' : fl === 1 ? 'Unser Schmetterling ist geschlüpft 🦋' : 'Bei uns wächst etwas heran 🐛';
+    const b = bst(), t = total(), lv = level(t); if (lv <= (b.lv2 || 0)) { b.lv2 = Math.max(b.lv2 || 0, lv); return; }
+    const was = b.lv2 || 0; b.lv2 = lv; L.save();
+    const q = pos(t), newFalter = Math.floor(lv / 3) > Math.floor(was / 3);
+    if (!newFalter && q.gen > 1) return; // ab der zweiten Generation nur noch neue Falter feiern, nicht jede Raupe
+    const f = newFalter ? falter(q.done) : null; const nx = falter(q.done + 1);
+    const title = f ? (q.done === 1 ? 'Geschlüpft!' : 'Ein neuer Falter!') : q.stage === 2 ? 'Die Raupe spinnt sich ein' : 'Aus dem Ei geschlüpft';
+    const shareText = f ? 'Neu in unserem Schmetterlingsbuch: ' + f.name + ' 🦋' : 'Bei uns wächst etwas heran 🐛';
     setTimeout(() => {
-      L.openSheet('<div class="bfly-party"><div class="bfly-big">' + picHtml(t) + '</div><h3>' + esc(title) + '</h3><p class="about" style="margin-bottom:16px">' + esc(line) + '</p>' +
-        '<div class="row wrap" style="justify-content:center"><button class="pill-btn primary" data-ok>Weiter</button><button class="pill-btn" data-share>🖼️ Teilen</button></div></div>', (sh) => {
+      L.openSheet('<div class="bfly-party">' + (f ? '<div class="fx-hero">' + falterImg(f, 'big') + '</div><h3>' + esc(title) + '</h3><p class="fx-name">' + esc(f.name) + ' <span class="fx-rar">' + esc(f.rar) + '</span></p><p class="about" style="margin-bottom:10px">' + esc(f.fact) + '</p>' +
+        '<p class="about" style="font-size:16px;color:var(--text-soft);margin-bottom:16px">🥚 Er hat schon ein Ei gelegt. Als Nächstes wartet ein Falter der Stufe <b>„' + esc(nx.rar) + '“</b>.</p>'
+        : '<div class="bfly-big">' + picHtml(t) + '</div><h3>' + esc(title) + '</h3><p class="about" style="margin-bottom:16px">' + esc(STAGE_UI[q.stage][1]) + '</p>') +
+        '<div class="row wrap" style="justify-content:center"><button class="pill-btn primary" data-ok>Weiter</button>' + (f ? '<button class="pill-btn" data-book>📖 Zum Buch</button>' : '') + '<button class="pill-btn" data-share>🖼️ Teilen</button></div></div>', (sh) => {
         sh.querySelector('[data-ok]').onclick = L.closeSheet;
+        const bk = sh.querySelector('[data-book]'); if (bk) bk.onclick = () => { L.closeSheet(); setTimeout(book, 60); };
         sh.querySelector('[data-share]').onclick = () => { L.closeSheet(); shareCard({ text: shareText, label: 'Schmetterlingsfutter', sig: S().sender + ' & ' + you() }); };
       });
       L.spawnHearts(18); L.haptic(30);
@@ -203,35 +214,76 @@
     Object.keys(now).forEach((k) => { if (b.seen[k] === undefined) { b.seen[k] = now[k]; return; } if (now[k] > b.seen[k]) { b.seen[k] = now[k]; feed(k); } else if (now[k] < b.seen[k]) b.seen[k] = now[k]; });
   }
   function render() {
-    const c = $('bflyCard'); if (!c) return; const b = bst(), t = total(), g = nextGoal(t), md = mood();
-    const fl = flies(t), st = STAGES[stageOf(t)];
-    const name = fl > 1 ? 'Euer Schwarm: ' + fl + ' Schmetterlinge' : st[2];
-    const state = md === 'froh' ? (fl ? 'flattert fröhlich' : 'ist satt und zufrieden') : md === 'hunger' ? 'hat Hunger' : md === 'schlaf' ? 'schläft' : 'wartet auf Futter';
-    const pct = Math.max(4, Math.min(100, Math.round((t - g.from) / (g.at - g.from) * 100)));
+    const c = $('bflyCard'); if (!c) return; const b = bst(), t = total(), q = pos(t), md = mood();
+    const name = 'Generation ' + q.gen + ': ' + STAGE_UI[q.stage][1].replace('Ein ', '').replace('Eine ', '');
+    const state = md === 'froh' ? 'ist satt und zufrieden' : md === 'hunger' ? 'hat Hunger' : md === 'schlaf' ? 'schläft' : 'wartet auf Futter';
+    const pct = Math.max(4, Math.min(100, Math.round(q.p / q.len * 100)));
+    const what = q.stage === 0 ? 'zur Raupe' : q.stage === 1 ? 'zum Kokon' : 'zum ' + (q.done ? 'nächsten ' : '') + 'Falter';
     const sig = [t, md, b.days[L.todayKey()] || 0].join('|'); if (c.dataset.sig === sig) return; c.dataset.sig = sig;
     c.innerHTML = '<button type="button" class="bfly ' + md + '" data-open aria-label="Euer Schmetterling öffnen"><span class="bfly-pic">' + picHtml(t) + '</span>' +
-      '<span class="bfly-b"><span class="bfly-t">' + esc(name) + '</span><span class="bfly-s">' + esc(state) + '</span><span class="progress"><i style="width:' + pct + '%"></i></span><span class="bfly-n">Noch ' + (g.at - t) + ' Futter ' + esc(g.what) + '</span></span></button>';
+      '<span class="bfly-b"><span class="bfly-t">' + esc(name) + '</span><span class="bfly-s">' + esc(state) + (q.done ? ' · 📖 ' + q.done + ' im Buch' : '') + '</span><span class="progress"><i style="width:' + pct + '%"></i></span><span class="bfly-n">Noch ' + (q.next - q.p) + ' Futter ' + esc(what) + '</span></span></button>';
     c.querySelector('[data-open]').onclick = sheet;
   }
   function sheet() {
-    const b = bst(), t = total(), fl = flies(t), today = b.days[L.todayKey()] || 0;
-    let swarm = ''; for (let i = 1; i <= fl; i++) { const sp = speciesOf(i); swarm += '<div class="swarm-i">' + flyHtml(sp) + '<small>' + esc(sp.n) + '</small></div>'; }
+    const b = bst(), t = total(), q = pos(t), today = b.days[L.todayKey()] || 0;
     const dots = Array.from({ length: DAY_CAP }, (_, i) => '<i class="' + (i < today ? 'on' : '') + '"></i>').join('');
+    const last = q.done ? falter(q.done) : null;
     L.openSheet('<h3>🦋 Euer Schmetterling</h3><div class="bfly-big">' + picHtml(t) + '</div>' +
-      '<p class="about" style="text-align:center;margin-bottom:14px">Jede liebe Geste ist Futter. Er wächst für euch beide.</p>' +
+      '<p class="about" style="text-align:center;margin-bottom:14px">Generation ' + q.gen + ' · Jede liebe Geste ist Futter. Wird er ein Falter, legt er ein Ei – und der nächste wird noch seltener.</p>' +
       '<div class="field"><label>Dein Futter heute</label><div class="futter-dots" role="img" aria-label="' + today + ' von ' + DAY_CAP + '">' + dots + '</div></div>' +
-      (fl ? '<div class="field"><label>Euer Schwarm</label><div class="swarm">' + swarm + '</div></div>' : '') +
-      '<div class="row wrap"><button class="pill-btn primary" data-feed>Jetzt füttern</button>' + (fl ? '<button class="pill-btn" data-share>🖼️ Teilen</button>' : '') + '<button class="pill-btn ghost" data-cancel>Schließen</button></div>', (sh) => {
+      (last ? '<div class="field"><label>Zuletzt geschlüpft</label><div class="fx-last">' + falterImg(last) + '<span><b>' + esc(last.name) + '</b><small>' + esc(last.rar) + '</small></span></div></div>' : '') +
+      '<div class="row wrap"><button class="pill-btn primary" data-book>📖 Schmetterlingsbuch</button><button class="pill-btn" data-feed>Jetzt füttern</button><button class="pill-btn ghost" data-cancel>Schließen</button></div>', (sh) => {
       sh.querySelector('[data-cancel]').onclick = L.closeSheet;
-      sh.querySelector('[data-feed]').onclick = () => { L.closeSheet(); const tiles = $('btnReasons'); if (tiles) tiles.scrollIntoView({ behavior: 'smooth', block: 'center' }); };
-      const sb = sh.querySelector('[data-share]'); if (sb) sb.onclick = () => { L.closeSheet(); shareCard({ text: fl > 1 ? 'Unser Schwarm: ' + fl + ' Schmetterlinge 🦋' : 'Unser Schmetterling ist geschlüpft 🦋', label: 'Schmetterlingsfutter', sig: S().sender + ' & ' + you() }); };
+      sh.querySelector('[data-book]').onclick = () => { L.closeSheet(); setTimeout(book, 60); };
+      sh.querySelector('[data-feed]').onclick = () => { L.closeSheet(); const m = $('btnMoreSend') || $('btnReasons'); if (m) m.scrollIntoView({ behavior: 'smooth', block: 'center' }); };
     });
   }
+  /* Schmetterlingsbuch: entdeckte Falter mit Bild und Steckbrief, die nächsten als Schatten */
+  function book() {
+    const q = pos(total()), have = q.done, show = Math.max(LADDER.length, Math.ceil((have + 1) / LADDER.length) * LADDER.length);
+    let grid = '';
+    for (let n = 1; n <= show; n++) {
+      const f = falter(n), got = n <= have;
+      grid += '<button type="button" class="fx-cell' + (got ? '' : ' locked') + (n === have + 1 ? ' next' : '') + '" data-n="' + n + '"' + (got ? '' : ' aria-label="Noch nicht entdeckt"') + '>' + falterImg(f, got ? '' : 'shadow') + '<span>' + (got ? esc(f.name) : n === have + 1 ? 'Als Nächstes' : '?') + '</span></button>';
+    }
+    L.openSheet('<h3>📖 Euer Schmetterlingsbuch</h3><p class="about" style="font-size:16px;margin-bottom:10px">' + have + ' entdeckt · Generation ' + q.gen + ' wächst gerade heran. Jeder neue Falter ist seltener als der vorige.</p>' +
+      '<div class="fx-grid">' + grid + '</div>' +
+      (have >= LADDER.length ? '' : '<p class="about" style="font-size:15px;color:var(--text-muted);margin-top:8px">Nach allen neun Arten kommen Prachtformen – schillernd, mit Sternenglanz und in Regenbogenfarben.</p>') +
+      '<div class="row" style="margin-top:12px"><button class="pill-btn ghost" data-cancel>Schließen</button></div>', (sh) => {
+      sh.querySelector('[data-cancel]').onclick = L.closeSheet;
+      sh.querySelectorAll('.fx-cell').forEach((c) => c.onclick = () => {
+        const n = Number(c.dataset.n); if (n > have) { L.toast(n === have + 1 ? '🥚 Wächst gerade heran – weiter füttern!' : 'Noch nicht entdeckt'); return; }
+        const f = falter(n);
+        L.openSheet('<div class="bfly-party"><div class="fx-hero">' + falterImg(f, 'big') + '</div><h3>' + esc(f.name) + '</h3><p class="fx-name"><span class="fx-rar">' + esc(f.rar) + '</span> · Falter Nr. ' + n + '</p><p class="about" style="margin:8px 0 16px">' + esc(f.fact) + '</p>' +
+          '<div class="row wrap" style="justify-content:center"><button class="pill-btn" data-back>← Zum Buch</button><button class="pill-btn" data-share>🖼️ Teilen</button></div></div>', (s2) => {
+          s2.querySelector('[data-back]').onclick = () => { L.closeSheet(); setTimeout(book, 60); };
+          s2.querySelector('[data-share]').onclick = () => { L.closeSheet(); shareCard({ text: 'In unserem Schmetterlingsbuch: ' + f.name + ' 🦋', label: 'Schmetterlingsfutter', sig: S().sender + ' & ' + you() }); };
+        });
+      });
+    });
+  }
+  (function fxCss() {
+    const st = document.createElement('style');
+    st.textContent = '.fx-img{display:inline-block;width:64px;aspect-ratio:1;background:url(img/falter.webp) calc(var(--c) * 50%) calc(var(--r) * 50%)/300% 300% no-repeat;filter:drop-shadow(0 3px 4px rgba(0,0,0,.35));vertical-align:middle}' +
+      '.fx-img.big{width:min(68vw,260px)}.fx-img.shadow{filter:brightness(0) opacity(.28)}' +
+      '.fx-t1{animation:fxShimmer 6s ease-in-out infinite}.fx-t2{filter:drop-shadow(0 0 6px #ffe38a) drop-shadow(0 0 14px rgba(255,227,138,.6))}.fx-t3{animation:fxRainbow 8s linear infinite}' +
+      '@keyframes fxShimmer{0%,100%{filter:drop-shadow(0 0 6px #b9f) hue-rotate(0deg) saturate(1.3)}50%{filter:drop-shadow(0 0 10px #7ef) hue-rotate(40deg) saturate(1.6)}}' +
+      '@keyframes fxRainbow{from{filter:hue-rotate(0deg) saturate(1.4) drop-shadow(0 0 8px #fff)}to{filter:hue-rotate(360deg) saturate(1.4) drop-shadow(0 0 8px #fff)}}' +
+      '.fx-img.shadow.fx-t1,.fx-img.shadow.fx-t2,.fx-img.shadow.fx-t3{animation:none;filter:brightness(0) opacity(.28)}' +
+      '.fx-hero{display:flex;justify-content:center;margin:4px 0 6px;animation:bflyFloat 3s ease-in-out infinite}' +
+      '.fx-name{font-family:var(--serif);font-size:22px;margin:0}.fx-rar{display:inline-block;font:700 13px var(--sans,sans-serif);letter-spacing:.4px;text-transform:uppercase;color:var(--accent-2);border:1px solid var(--accent-2);border-radius:10px;padding:1px 8px;vertical-align:middle}' +
+      '.fx-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}' +
+      '.fx-cell{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px;border-radius:16px;border:1px solid var(--line);background:var(--glass);color:var(--text);font:inherit;min-height:110px}' +
+      '.fx-cell span{font-size:14px;line-height:1.2;text-align:center;overflow-wrap:anywhere}.fx-cell.locked span{color:var(--text-muted)}.fx-cell.next{border-style:dashed;border-color:var(--accent-2)}' +
+      '.fx-last{display:flex;align-items:center;gap:12px}.fx-last span{display:flex;flex-direction:column}.fx-last small{color:var(--text-muted)}' +
+      '[data-motion="off"] .fx-t1,[data-motion="off"] .fx-t3,[data-motion="off"] .fx-hero{animation:none}';
+    document.head.appendChild(st);
+  })();
 
   /* ---------- Verdrahtung ---------- */
   const pt = $('btnPoem'); if (pt) pt.onclick = poemSheet;
-  window.LZX = { shareCard, sharePic, poemSheet, feed, theirFood, render, SHARE_LINE, APP_URL };
-  bst().level = Math.max(bst().level || 0, level(total())); // beim ersten Start nichts nachfeiern
+  window.LZX = { shareCard, sharePic, poemSheet, feed, theirFood, render, book, falter, pos, SHARE_LINE, APP_URL };
+  if (bst().lv2 === undefined) { bst().lv2 = level(total()); L.save(); } // beim Umstieg auf Generationen nichts nachfeiern
   render(); watch(); syncSoon();
   setInterval(() => { if (document.visibilityState === 'visible') { watch(); render(); } }, 3000);
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { watch(); render(); } });
