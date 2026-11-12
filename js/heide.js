@@ -1,4 +1,4 @@
-/* Papillon in der Heide – kleines 3D-Spiel (Three.js r160, lazy geladen).
+/* Papillon in der Heide – kleines 3D-Spiel (Three.js r160, lazy geladen). 3.28.0: Falter aus echter Bildtafel (img/falter.webp, KI-erzeugt), weichere Landschaft.
    Fliegen mit virtuellem Stick, Schmetterlinge antippen zum Fangen. Runde 150 s.
    Ergebnis in S.heide = { best, runden, summe, arten:{id:anzahl}, letzte:{pts,datum,arten} }.
    Schnittstelle für andere Bausteine: window.LZH = { open, ARTEN, stand } */
@@ -49,6 +49,16 @@
     threeP = new Promise((ok, no) => { const sc = document.createElement('script'); sc.src = 'js/vendor/three.min.js'; sc.onload = ok; sc.onerror = () => { threeP = null; no(new Error('three')); }; document.head.appendChild(sc); });
     return threeP;
   }
+  /* Falter-Tafel (3×3, Draufsicht, freigestellt): Reihenfolge wie ARTEN, Feld 9 = Papillon */
+  let texP = null;
+  function loadAtlas() {
+    if (texP) return texP;
+    texP = new Promise((ok) => {
+      const T = window.THREE; if (!T) return ok(null);
+      new T.TextureLoader().load('img/falter.webp', (t) => { t.colorSpace = T.SRGBColorSpace || t.colorSpace; t.generateMipmaps = true; t.minFilter = T.LinearMipmapLinearFilter; ok(t); }, undefined, () => { texP = null; ok(null); });
+    });
+    return texP;
+  }
 
   /* ---------- Startbildschirm ---------- */
   function open() {
@@ -72,65 +82,83 @@
     const root = document.createElement('div'); root.className = 'heide';
     root.innerHTML = '<div class="hd-load">Die Heide blüht auf … 🌸</div>';
     document.body.appendChild(root); document.documentElement.classList.add('cam-open');
-    loadThree().then(() => build(root)).catch(() => { root.remove(); document.documentElement.classList.remove('cam-open'); L.openSheet('<h3>Hoppla</h3><p class="about">Das Spiel konnte nicht geladen werden. Bitte einmal mit Internet öffnen, danach geht es auch offline.</p><div class="row"><button class="pill-btn primary" data-cancel>OK</button></div>', (sh) => { sh.querySelector('[data-cancel]').onclick = L.closeSheet; }); });
+    loadThree().then(loadAtlas).then((tex) => build(root, tex)).catch(() => { root.remove(); document.documentElement.classList.remove('cam-open'); L.openSheet('<h3>Hoppla</h3><p class="about">Das Spiel konnte nicht geladen werden. Bitte einmal mit Internet öffnen, danach geht es auch offline.</p><div class="row"><button class="pill-btn primary" data-cancel>OK</button></div>', (sh) => { sh.querySelector('[data-cancel]').onclick = L.closeSheet; }); });
   }
 
-  function build(root) {
+  function build(root, atlas) {
     const T = window.THREE; root.innerHTML = '';
     C('game_play:heide');
     let pr = Math.min(1.5, window.devicePixelRatio || 1);
     let renderer;
-    try { renderer = new T.WebGLRenderer({ antialias: false, powerPreference: 'low-power' }); } catch (e) { root.remove(); document.documentElement.classList.remove('cam-open'); L.openSheet('<h3>Hoppla</h3><p class="about">Dieses Handy kann leider keine 3D-Grafik anzeigen.</p><div class="row"><button class="pill-btn primary" data-cancel>OK</button></div>', (sh) => { sh.querySelector('[data-cancel]').onclick = L.closeSheet; }); return; }
+    try { renderer = new T.WebGLRenderer({ antialias: true, powerPreference: 'low-power' }); } catch (e) { root.remove(); document.documentElement.classList.remove('cam-open'); L.openSheet('<h3>Hoppla</h3><p class="about">Dieses Handy kann leider keine 3D-Grafik anzeigen.</p><div class="row"><button class="pill-btn primary" data-cancel>OK</button></div>', (sh) => { sh.querySelector('[data-cancel]').onclick = L.closeSheet; }); return; }
     renderer.setPixelRatio(pr); renderer.setSize(root.clientWidth, root.clientHeight);
     root.appendChild(renderer.domElement);
     root.insertAdjacentHTML('beforeend', '<div class="hd-hud"><span class="hd-pts">🦋 0</span><span class="hd-time">⏱ 2:30</span></div><button type="button" class="hd-x" aria-label="Runde beenden">✕</button><div class="hd-toast"></div><div class="hd-stick"><i></i></div><div class="hd-hint">👈 Links ziehen zum Fliegen · Schmetterling antippen zum Fangen</div>');
     const $ = (s) => root.querySelector(s);
 
     const scene = new T.Scene();
-    const SKY = 0xbfe3f2; scene.background = new T.Color(SKY); scene.fog = new T.Fog(SKY, 35, 110);
+    const SKY = 0xdcecf2; scene.background = new T.Color(SKY); scene.fog = new T.Fog(SKY, 40, 120);
     const cam = new T.PerspectiveCamera(62, root.clientWidth / root.clientHeight, 0.5, 140);
-    scene.add(new T.HemisphereLight(0xfff4e0, 0x6b5a7a, 1.1));
-    const sun = new T.DirectionalLight(0xffffff, 1.4); sun.position.set(30, 50, 20); scene.add(sun);
+    scene.add(new T.HemisphereLight(0xdff1ff, 0x5c6b3a, 1.15));
+    const sun = new T.DirectionalLight(0xfff1d6, 1.55); sun.position.set(30, 50, 20); scene.add(sun);
     const R = rng(4711);
     const disposables = [];
     const keep = (o) => { disposables.push(o); return o; };
+    /* Himmelskuppel: oben Blau, am Horizont warmes Licht */
+    {
+      const g = new T.SphereGeometry(135, 24, 14); const p = g.attributes.position, col = new Float32Array(p.count * 3), top = new T.Color(0x5fa9e0), hor = new T.Color(0xf4e6d4), c = new T.Color();
+      for (let i = 0; i < p.count; i++) { const k = Math.max(0, Math.min(1, p.getY(i) / 70)); c.copy(hor).lerp(top, Math.pow(k, 0.7)); col.set([c.r, c.g, c.b], i * 3); }
+      g.setAttribute('color', new T.BufferAttribute(col, 3));
+      const sky = new T.Mesh(keep(g), keep(new T.MeshBasicMaterial({ vertexColors: true, side: T.BackSide, fog: false, depthWrite: false })));
+      sky.renderOrder = -1; scene.add(sky); var skyDome = sky;
+    }
 
     /* Boden: flach schattiert, Farben je Dreieck (Heidekraut lila / Gras grün / Sandweg) */
     {
-      const g = new T.PlaneGeometry(230, 230, 56, 56).toNonIndexed(); g.rotateX(-Math.PI / 2);
+      const g = new T.PlaneGeometry(230, 230, 110, 110); g.rotateX(-Math.PI / 2);
       const p = g.attributes.position, col = new Float32Array(p.count * 3);
       for (let i = 0; i < p.count; i++) p.setY(i, hgt(p.getX(i), p.getZ(i)));
-      const cA = new T.Color(0x9a6aa8), cB = new T.Color(0x7d9a4e), cC = new T.Color(0xd9c38f), c = new T.Color();
-      for (let i = 0; i < p.count; i += 3) {
-        const x = (p.getX(i) + p.getX(i + 1) + p.getX(i + 2)) / 3, z = (p.getZ(i) + p.getZ(i + 1) + p.getZ(i + 2)) / 3;
-        const path = Math.abs(z - 18 * Math.sin(x * 0.04)) < 2.6; const m = Math.sin(x * 0.07) * Math.cos(z * 0.06) + 0.35 * Math.sin(x * 0.3 + z * 0.2);
-        c.copy(path ? cC : m > -0.1 ? cA : cB).offsetHSL(0, 0, (R() - 0.5) * 0.06);
-        for (let k = 0; k < 3; k++) col.set([c.r, c.g, c.b], (i + k) * 3);
+      const cA = new T.Color(0x8e5f9c), cB = new T.Color(0x6f9145), cC = new T.Color(0xcdb68a), c = new T.Color(), c2 = new T.Color();
+      const sm = (e0, e1, x) => { const t = Math.max(0, Math.min(1, (x - e0) / (e1 - e0))); return t * t * (3 - 2 * t); };
+      for (let i = 0; i < p.count; i++) {
+        const x = p.getX(i), z = p.getZ(i);
+        const m = Math.sin(x * 0.07) * Math.cos(z * 0.06) + 0.35 * Math.sin(x * 0.3 + z * 0.2);
+        c.copy(cB).lerp(cA, sm(-0.35, 0.15, m));
+        const pathD = Math.abs(z - 18 * Math.sin(x * 0.04)); c.lerp(cC, 1 - sm(1.6, 3.4, pathD));
+        c2.setHSL(0, 0, 0); c.offsetHSL(0, 0, (Math.sin(x * 1.7) * Math.cos(z * 1.3)) * 0.025 + (R() - 0.5) * 0.03);
+        col.set([c.r, c.g, c.b], i * 3);
       }
       g.setAttribute('color', new T.BufferAttribute(col, 3)); g.computeVertexNormals();
-      scene.add(new T.Mesh(keep(g), keep(new T.MeshLambertMaterial({ vertexColors: true, flatShading: true }))));
+      scene.add(new T.Mesh(keep(g), keep(new T.MeshLambertMaterial({ vertexColors: true }))));
     }
     /* Deko als InstancedMesh: wenige Draw-Calls */
     const dummy = new T.Object3D();
     function scatter(geo, color, n, place, jitter) {
-      const m = new T.InstancedMesh(keep(geo), keep(new T.MeshLambertMaterial({ flatShading: true })), n);
+      const m = new T.InstancedMesh(keep(geo), keep(new T.MeshLambertMaterial({})), n);
       const c = new T.Color();
       for (let i = 0; i < n; i++) { place(dummy, i); dummy.updateMatrix(); m.setMatrixAt(i, dummy.matrix); c.set(color).offsetHSL((R() - 0.5) * jitter, 0, (R() - 0.5) * 0.12); m.setColorAt(i, c); }
       scene.add(m); return m;
     }
     const spot = (o, min) => { let x, z; do { x = (R() - 0.5) * 210; z = (R() - 0.5) * 210; } while (Math.hypot(x, z) < (min || 0)); o.position.set(x, hgt(x, z), z); return o; };
-    scatter(new T.IcosahedronGeometry(1, 0), 0xb05fb5, 420, (o) => { spot(o, 4); const s = 0.6 + R() * 0.9; o.scale.set(s * 1.3, s * 0.7, s * 1.3); o.rotation.set(0, R() * 6, 0); o.position.y += 0.2; }, 0.08);
+    scatter(new T.SphereGeometry(1, 9, 6), 0xa45aae, 520, (o) => { spot(o, 4); const s = 0.6 + R() * 0.9; o.scale.set(s * 1.3, s * 0.7, s * 1.3); o.rotation.set(0, R() * 6, 0); o.position.y += 0.2; }, 0.08);
     scatter(new T.ConeGeometry(0.9, 3.4, 6), 0x3f6b3a, 70, (o) => { spot(o, 8); const s = 0.7 + R() * 0.8; o.scale.set(s, s, s); o.position.y += 1.6 * s; o.rotation.set(0, R() * 6, 0); }, 0.03);
     const trees = []; for (let i = 0; i < 38; i++) { const o = spot(new T.Object3D(), 10); trees.push({ x: o.position.x, y: o.position.y, z: o.position.z, s: 0.8 + R() * 0.6 }); }
     scatter(new T.CylinderGeometry(0.22, 0.3, 6, 5), 0xf0ece2, trees.length, (o, i) => { const t = trees[i]; o.position.set(t.x, t.y + 3 * t.s, t.z); o.scale.setScalar(t.s); }, 0);
-    scatter(new T.IcosahedronGeometry(2.2, 0), 0x8cc152, trees.length, (o, i) => { const t = trees[i]; o.position.set(t.x, t.y + 6.6 * t.s, t.z); o.scale.set(t.s, t.s * 1.35, t.s); o.rotation.set(R(), R(), 0); }, 0.06);
-    scatter(new T.DodecahedronGeometry(0.8, 0), 0x9a958c, 30, (o) => { spot(o, 6); const s = 0.6 + R() * 1.2; o.scale.set(s, s * 0.6, s); o.rotation.set(R(), R(), R()); }, 0.02);
+    scatter(new T.IcosahedronGeometry(2.2, 2), 0x7fb24a, trees.length, (o, i) => { const t = trees[i]; o.position.set(t.x, t.y + 6.6 * t.s, t.z); o.scale.set(t.s, t.s * 1.35, t.s); o.rotation.set(R(), R(), 0); }, 0.06);
+    scatter(new T.DodecahedronGeometry(0.8, 1), 0x9a958c, 30, (o) => { spot(o, 6); const s = 0.6 + R() * 1.2; o.scale.set(s, s * 0.6, s); o.rotation.set(R(), R(), R()); }, 0.02);
+    /* Grashalme (dünne Kegel, 1 Draw-Call) */
+    scatter(new T.ConeGeometry(0.07, 0.9, 3), 0x5f8f3a, 1800, (o) => { spot(o, 2); const s = 0.6 + R() * 0.9; o.scale.set(s, s, s); o.position.y += 0.4 * s; o.rotation.set((R() - 0.5) * 0.5, R() * 6, (R() - 0.5) * 0.5); }, 0.06);
     /* Blumen-Tupfer (Punkte, 1 Draw-Call) */
     {
       const n = 900, pos = new Float32Array(n * 3), col = new Float32Array(n * 3), c = new T.Color(), pal = [0xffffff, 0xffe066, 0xff9ecb, 0xd08bff];
       for (let i = 0; i < n; i++) { const x = (R() - 0.5) * 210, z = (R() - 0.5) * 210; pos.set([x, hgt(x, z) + 0.35, z], i * 3); c.set(pal[i % 4]); col.set([c.r, c.g, c.b], i * 3); }
       const g = new T.BufferGeometry(); g.setAttribute('position', new T.BufferAttribute(pos, 3)); g.setAttribute('color', new T.BufferAttribute(col, 3));
-      scene.add(new T.Points(keep(g), keep(new T.PointsMaterial({ size: 0.35, vertexColors: true }))));
+      /* runde Blüten statt Quadrate */
+      const cv = document.createElement('canvas'); cv.width = cv.height = 32; const cx2 = cv.getContext('2d');
+      for (let k = 0; k < 5; k++) { const a = k / 5 * Math.PI * 2; cx2.beginPath(); cx2.arc(16 + Math.cos(a) * 7, 16 + Math.sin(a) * 7, 6.5, 0, 7); cx2.fillStyle = '#fff'; cx2.fill(); }
+      cx2.beginPath(); cx2.arc(16, 16, 4, 0, 7); cx2.fillStyle = '#ffd34d'; cx2.fill();
+      const ft = keep(new T.CanvasTexture(cv));
+      scene.add(new T.Points(keep(g), keep(new T.PointsMaterial({ size: 0.55, vertexColors: true, map: ft, alphaTest: 0.5 }))));
     }
 
     /* Flügel-Geometrie (rechter Flügel, zeigt nach +x); innen dunkler = Muster */
@@ -145,22 +173,32 @@
       wingGeo.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); wingGeo.setAttribute('color', new T.Float32BufferAttribute(col, 3)); wingGeo.computeVertexNormals();
     }
     const wingMat = keep(new T.MeshLambertMaterial({ vertexColors: true, side: T.DoubleSide }));
+    /* Mit Falter-Tafel: rechter Flügel = rechte Bildhälfte, linker gespiegelt (Draufsicht ist symmetrisch). Oben im Bild = vorn. */
+    const plane = keep(new T.PlaneGeometry(1, 2).translate(0.5, 0, 0).rotateX(-Math.PI / 2));
+    const WGEO = atlas ? plane : wingGeo, WS = atlas ? 1.12 : 1;
+    const mats = ARTEN.concat([{ id: 'papillon', col: 0xff7eb6 }]).map((a, k) => {
+      if (!atlas) return k === ARTEN.length ? null : keep(new T.MeshLambertMaterial({ vertexColors: true, side: T.DoubleSide, color: a.col }));
+      const t = keep(atlas.clone()); t.needsUpdate = true; const c = k % 3, r = Math.floor(k / 3);
+      t.offset.set((c + 0.5) / 3, (2 - r) / 3); t.repeat.set(0.5 / 3, 1 / 3);
+      return keep(new T.MeshLambertMaterial({ map: t, emissiveMap: t, emissive: 0xffffff, emissiveIntensity: a.gold ? 0.45 : 0.28, alphaTest: 0.5, side: T.DoubleSide }));
+    });
 
     /* Papillon (Spielfigur) */
     const pap = new T.Group();
-    const papMat = keep(new T.MeshLambertMaterial({ vertexColors: true, side: T.DoubleSide, color: 0xff7eb6, emissive: 0x3a0a20 }));
-    const wR = new T.Mesh(wingGeo, papMat), wL = new T.Mesh(wingGeo, papMat); wL.scale.x = -1;
+    const papMat = mats[ARTEN.length] || keep(new T.MeshLambertMaterial({ vertexColors: true, side: T.DoubleSide, color: 0xff7eb6, emissive: 0x3a0a20 }));
+    const wR = new T.Mesh(WGEO, papMat), wL = new T.Mesh(WGEO, papMat); wR.scale.setScalar(WS); wL.scale.set(-WS, WS, WS);
     const bodyMat = keep(new T.MeshLambertMaterial({ color: 0x3b2546 }));
-    const body = new T.Mesh(keep(new T.CylinderGeometry(0.13, 0.09, 1.3, 6)), bodyMat); body.rotation.x = Math.PI / 2;
-    const head = new T.Mesh(keep(new T.IcosahedronGeometry(0.2, 1)), bodyMat); head.position.z = -0.75;
+    const body = new T.Mesh(keep(new T.CylinderGeometry(atlas ? 0.07 : 0.13, atlas ? 0.045 : 0.09, atlas ? 1.05 : 1.3, 8)), bodyMat); body.rotation.x = Math.PI / 2;
+    const head = new T.Mesh(keep(new T.SphereGeometry(atlas ? 0.1 : 0.2, 10, 8)), bodyMat); head.position.z = atlas ? -0.58 : -0.75;
     pap.add(wR, wL, body, head); pap.scale.setScalar(1.6); scene.add(pap);
     const shadow = new T.Mesh(keep(new T.CircleGeometry(1.3, 12)), keep(new T.MeshBasicMaterial({ color: 0x2a1a33, transparent: true, opacity: 0.25, depthWrite: false })));
     shadow.rotation.x = -Math.PI / 2; scene.add(shadow);
 
-    /* Schmetterlinge: ein InstancedMesh für alle Flügel + eins für Körper */
-    const wings = new T.InstancedMesh(wingGeo, wingMat, N_BF * 2); wings.instanceMatrix.setUsage(T.DynamicDrawUsage); scene.add(wings);
-    const bodies = new T.InstancedMesh(keep(new T.CylinderGeometry(0.07, 0.05, 0.9, 5).rotateX(Math.PI / 2)), keep(new T.MeshLambertMaterial({ color: 0x2b2030 })), N_BF);
-    bodies.instanceMatrix.setUsage(T.DynamicDrawUsage); scene.add(bodies);
+    /* Schmetterlinge: je eine Gruppe aus zwei Flügeln und Körper (26 × 3 Meshes, für Handys unkritisch) */
+    void wingMat;
+    const bodyGeo = keep(new T.CylinderGeometry(0.06, 0.04, 0.85, 6).rotateX(Math.PI / 2)), bodyMatB = keep(new T.MeshLambertMaterial({ color: 0x2b2030 }));
+    const bfM = [];
+    for (let i = 0; i < N_BF; i++) { const g = new T.Group(); const r = new T.Mesh(WGEO, mats[0]), l = new T.Mesh(WGEO, mats[0]); const bd = new T.Mesh(bodyGeo, bodyMatB); g.add(r, l, bd); scene.add(g); bfM.push({ g, r, l }); }
     const spark = new T.Points(keep(new T.BufferGeometry()), keep(new T.PointsMaterial({ color: 0xfff2a0, size: 0.45, transparent: true, opacity: 0.9, depthWrite: false })));
     const SP = 24; spark.geometry.setAttribute('position', new T.BufferAttribute(new Float32Array(SP * 3), 3)); spark.frustumCulled = false; scene.add(spark);
 
@@ -172,8 +210,7 @@
     function spawn(i, art, near) {
       let x, z; do { const a = Math.random() * Math.PI * 2, d = near ? 14 + Math.random() * 30 : 8 + Math.random() * 80; x = player.x + Math.cos(a) * d; z = player.z + Math.sin(a) * d; } while (Math.hypot(x, z) > WORLD);
       const b = { art, hx: x, hz: z, x, z, y: hgt(x, z) + 1.5, ph: Math.random() * 10, f: 9 + Math.random() * 5, yaw: 0, caught: -1, flee: 0 };
-      bfs[i] = b; colTmp.set(art.col); wings.setColorAt(i * 2, colTmp); wings.setColorAt(i * 2 + 1, colTmp);
-      if (wings.instanceColor) wings.instanceColor.needsUpdate = true;
+      bfs[i] = b; const mm = mats[ARTEN.indexOf(art)] || mats[0]; bfM[i].r.material = mm; bfM[i].l.material = mm; void colTmp;
     }
     for (let i = 0; i < N_BF; i++) spawn(i, i === 0 ? ARTEN[ARTEN.length - 1] : pickArt(0.03), false);
 
@@ -250,14 +287,14 @@
       const pd = Math.hypot(player.x, player.z); if (pd > WORLD) { player.x *= WORLD / pd; player.z *= WORLD / pd; }
       const gy = hgt(player.x, player.z), py = gy + 2.4 + Math.sin(clock * 2.2) * 0.25;
       pap.position.set(player.x, py, player.z); pap.rotation.set(0, player.yaw, 0);
-      flap = Math.max(0, flap - dt * 2); const fa = Math.sin(clock * (9 + flap * 14)) * (0.55 + flap * 0.3) + 0.25;
+      flap = Math.max(0, flap - dt * 2); const fa = Math.sin(clock * (7 + flap * 14)) * (0.42 + flap * 0.3) + 0.12;
       wR.rotation.z = fa; wL.rotation.z = -fa;
       shadow.position.set(player.x, gy + 0.08, player.z);
       /* Kamera folgt sanft von hinten */
       const moving = Math.hypot(player.vx, player.vz) > 2;
       if (moving) camYaw = lerpAng(camYaw, player.yaw, Math.min(1, dt * 1.6));
-      const cx = player.x + Math.sin(camYaw) * 9, cz = player.z + Math.cos(camYaw) * 9;
-      const cy = Math.max(hgt(cx, cz) + 1.5, py + 3.6);
+      const cx = player.x + Math.sin(camYaw) * 8, cz = player.z + Math.cos(camYaw) * 8;
+      const cy = Math.max(hgt(cx, cz) + 1.5, py + 5.2);
       cam.position.set(cx, cy, cz); cam.lookAt(player.x, py + 0.8, player.z);
       /* Schmetterlinge */
       const sArr = spark.geometry.attributes.position.array; let sk = 0;
@@ -280,12 +317,11 @@
           wa = Math.sin(t * b.f) * 0.7 + 0.2;
           if (b.art.gold && sk < SP) { for (let q = 0; q < 6 && sk < SP; q++, sk++) { const a = t * 2 + q; sArr[sk * 3] = b.x + Math.cos(a) * 0.9; sArr[sk * 3 + 1] = b.y + Math.sin(a * 1.7) * 0.5; sArr[sk * 3 + 2] = b.z + Math.sin(a) * 0.9; } }
         }
-        dummy.position.set(b.x, b.y, b.z); dummy.rotation.set(0, b.yaw, wa, 'YZX'); dummy.scale.set(s, s, s); dummy.updateMatrix(); wings.setMatrixAt(i * 2, dummy.matrix);
-        dummy.rotation.set(0, b.yaw, -wa, 'YZX'); dummy.scale.set(-s, s, s); dummy.updateMatrix(); wings.setMatrixAt(i * 2 + 1, dummy.matrix);
-        dummy.rotation.set(0, b.yaw, 0, 'YZX'); dummy.scale.set(s, s, s); dummy.updateMatrix(); bodies.setMatrixAt(i, dummy.matrix);
+        const M = bfM[i]; M.g.position.set(b.x, b.y, b.z); M.g.rotation.set(0, b.yaw, 0); M.g.scale.setScalar(Math.max(0.001, s * WS)); M.r.rotation.z = wa; M.l.rotation.z = -wa; M.l.scale.x = -1;
       }
       for (; sk < SP; sk++) sArr[sk * 3 + 1] = -999;
-      spark.geometry.attributes.position.needsUpdate = true; wings.instanceMatrix.needsUpdate = true; bodies.instanceMatrix.needsUpdate = true;
+      spark.geometry.attributes.position.needsUpdate = true;
+      skyDome.position.set(cam.position.x, 0, cam.position.z);
       $('.hd-time').textContent = '⏱ ' + fmt(left);
       renderer.render(scene, cam);
     }
@@ -304,7 +340,7 @@
       over = true; cancelAnimationFrame(raf); clearTimeout(toastT);
       document.removeEventListener('visibilitychange', vis); window.removeEventListener('resize', resize);
       window.removeEventListener('keydown', kd); window.removeEventListener('keyup', kd);
-      wings.dispose(); bodies.dispose(); disposables.forEach((d) => { try { d.dispose(); } catch (e) {} });
+      disposables.forEach((d) => { try { d.dispose(); } catch (e) {} });
       scene.traverse((o) => { if (o.isInstancedMesh) o.dispose(); });
       renderer.dispose(); try { renderer.forceContextLoss(); } catch (e) {}
       root.remove(); document.documentElement.classList.remove('cam-open');
