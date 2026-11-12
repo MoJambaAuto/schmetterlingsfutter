@@ -15,6 +15,7 @@
 
   /* ---------- Was es alles gibt: [Gruppe, Symbol, Titel, Suchwörter, Antwort (nur wo nötig), Sprung] ---------- */
   const ITEMS = [
+    ['Jeden Tag', '📖', 'Schmetterlingsbuch: eure entdeckten Falter', 'schmetterlingsbuch buch sammlung falter arten generation kokon raupe ei selten pracht', '', () => { if (window.LZX && window.LZX.book) window.LZX.book(); }],
     ['Jeden Tag', '💝', 'Das mag ich: Interessen für passende Geschenkideen', 'mag ich interessen hobbys vorlieben geschenk passend profil geschmack', '', () => { if (window.LZW) window.LZW.sheet('me'); }],
     ['Jeden Tag', '🎯', 'Was mag mein Schatz? Geschenke passend machen (Budget)', 'geschenk passend budget preis frau mann alter interessen schatz partner', '', () => { if (window.LZW) window.LZW.sheet('them'); }],
     ['Jeden Tag', '↩', 'Auf eine Nachricht antworten (mit Bezug)', 'antworten antwort bezug worauf zitat reagieren nachricht postfach', '', () => { if (P()) P().inboxSheet(); }],
