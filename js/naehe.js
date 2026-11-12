@@ -109,9 +109,10 @@
   async function sendJingle(j) {
     const text = L.fmt(j.text);
     if (P.joined()) {
-      try { await P.send({ t: 'jingle', jid: j.id, text, v: voicePref() }); playJingle(j); L.toast('🎶 Jingle unterwegs zu ' + you()); L.spawnHearts(8); }
+      /* 3.31.0 (Mo): beim Versenden nicht noch einmal abspielen – angehört wurde vorher über ▶ */
+      try { if (fileAudio) fileAudio.pause(); await P.send({ t: 'jingle', jid: j.id, text, v: voicePref() }); L.toast('🎶 Jingle unterwegs zu ' + you()); L.spawnHearts(8); }
       catch (e) { L.toast('Senden fehlgeschlagen – ' + (P.online() ? 'später nochmal' : 'offline')); }
-    } else { playJingle(j); L.shareText('🎶 ' + text + '\n— ' + me() + ' ❤'); }
+    } else { L.shareText('🎶 ' + text + '\n— ' + me() + ' ❤'); }
   }
   P.on('jingle', (obj, created) => {
     const j = jingleById(String(obj.jid || '')); const s = st();
