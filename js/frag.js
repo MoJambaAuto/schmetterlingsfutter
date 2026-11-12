@@ -15,6 +15,7 @@
 
   /* ---------- Was es alles gibt: [Gruppe, Symbol, Titel, Suchwörter, Antwort (nur wo nötig), Sprung] ---------- */
   const ITEMS = [
+    ['Spielen', '🔄', 'Spiel neu starten oder beenden: im Spiel oben rechts auf ⋯', 'spiel neu starten neustart abbrechen beenden aufgeben aufhören reset würfelwiese wanderzug blumenbeete raupe wiese menü', '', () => { view('play', 'spiele')(); L.toast('Spiel öffnen, dann oben rechts auf ⋯ tippen'); }],
     ['Zu zweit', '🕸️', 'Falterjagd draußen: echte Falter in der Natur fangen', 'falterjagd draussen draußen natur fangen netz karte spazieren gehen ar pokemon go standort', '', () => { if (window.LZJ) window.LZJ.open(); }],
     ['Jeden Tag', '📖', 'Schmetterlingsbuch: eure entdeckten Falter', 'schmetterlingsbuch buch sammlung falter arten generation kokon raupe ei selten pracht', '', () => { if (window.LZX && window.LZX.book) window.LZX.book(); }],
     ['Jeden Tag', '💝', 'Das mag ich: Interessen für passende Geschenkideen', 'mag ich interessen hobbys vorlieben geschenk passend profil geschmack', '', () => { if (window.LZW) window.LZW.sheet('me'); }],

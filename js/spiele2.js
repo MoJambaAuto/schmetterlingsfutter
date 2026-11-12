@@ -513,7 +513,7 @@
   let curId = null;
   function waitHtml(g) { return '<div class="g2-wait">⏳ ' + esc(you()) + ' ist dran. Du bekommst Bescheid.</div>'; }
   function open(id) {
-    const g = store()[id]; if (!g) return; curId = id;
+    const g = store()[id]; if (!g) return; if (g.ab) { L.toast(KINDS[g.kind].icon + ' Dieses Spiel wurde beendet'); return; } curId = id;
     (S().inbox || []).forEach((m) => { if (m.t === 'spiel' && m.gid === id) m.read = true; }); L.save();
     let el = $('g2Screen');
     if (!el) { el = document.createElement('div'); el.id = 'g2Screen'; el.className = 'g2'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); document.body.appendChild(el); document.documentElement.classList.add('cam-open'); }
@@ -523,14 +523,63 @@
   function render() {
     const el = $('g2Screen'); if (!el) return; const g = store()[curId]; if (!g) return close();
     const K = KINDS[g.kind]; ensureDefs();
-    el.innerHTML = '<div class="g2-top"><button type="button" class="icon-btn" data-x aria-label="Schließen">✕</button><span class="g2-title">' + esc(K.title) + '</span><button type="button" class="icon-btn" data-help aria-label="So geht’s">?</button></div>' +
+    el.innerHTML = '<div class="g2-top"><button type="button" class="icon-btn" data-x aria-label="Schließen – später weiterspielen" title="Schließen – später weiterspielen">✕</button><span class="g2-title">' + esc(K.title) + '</span><button type="button" class="icon-btn" data-menu aria-label="Spiel-Menü: So geht’s, neu starten, beenden" title="Spiel-Menü">⋯</button></div>' +
       (g.prize ? '<div class="g2-prizebar">🎁 Einsatz: ' + esc(g.prize) + '</div>' : '') + '<div class="g2-body g2-' + g.kind + '"></div>';
     el.querySelector('[data-x]').onclick = close;
-    el.querySelector('[data-help]').onclick = () => helpShow(g.kind);
+    el.querySelector('[data-menu]').onclick = () => menu(g);
     RENDER[g.kind](g, el.querySelector('.g2-body'));
     if (!(S().g2help || {})[g.kind] && !el.querySelector('.g2-hand')) helpShow(g.kind);
   }
   function close() { const el = $('g2Screen'); if (el) el.remove(); document.documentElement.classList.remove('cam-open'); curId = null; refreshOutside(); }
+  /* Spiel-Menü: So geht’s · Neu starten · Spiel beenden (3.34.0) */
+  function menu(g) {
+    const el = $('g2Screen'); if (!el) return; const K = KINDS[g.kind], done = g.turn === 'done';
+    const ov = document.createElement('div'); ov.className = 'g2-hand g2-menu';
+    const relay = g.mode === 'relay' && g.n > 0 && !done;
+    const main = () => {
+      ov.innerHTML = '<div class="g2-help-card"><h2>' + K.icon + ' ' + esc(K.title) + '</h2><div class="g2-mlist">' +
+        '<button type="button" class="pill-btn" data-m="help">❓ So geht’s</button>' +
+        '<button type="button" class="pill-btn" data-m="new">🔄 ' + (done ? 'Neues Spiel' : 'Neu starten') + '</button>' +
+        (done ? '' : '<button type="button" class="pill-btn" data-m="end">🏳️ Spiel beenden</button>') +
+        '<button type="button" class="pill-btn ghost" data-m="back">Weiterspielen</button></div>' +
+        '<p class="g2-mhint">✕ oben links schließt nur – das Spiel wartet dann auf euch.</p></div>';
+      ov.querySelector('[data-m="help"]').onclick = () => { ov.remove(); helpShow(g.kind); };
+      ov.querySelector('[data-m="back"]').onclick = () => ov.remove();
+      ov.querySelector('[data-m="new"]').onclick = () => done ? (ov.remove(), restart(g)) : ask('new');
+      const e = ov.querySelector('[data-m="end"]'); if (e) e.onclick = () => ask('end');
+    };
+    const ask = (what) => {
+      const isNew = what === 'new';
+      ov.innerHTML = '<div class="g2-help-card"><div class="g2-big">' + (isNew ? '🔄' : '🏳️') + '</div><h2>' + (isNew ? 'Neu starten?' : 'Spiel beenden?') + '</h2>' +
+        '<p>Der jetzige Spielstand geht verloren' + (g.prize ? ', der Einsatz verfällt' : '') + '.' + (relay ? ' ' + esc(you()) + ' bekommt Bescheid.' : '') + '</p>' +
+        '<div class="g2-mlist"><button type="button" class="pill-btn primary" data-yes>' + (isNew ? 'Ja, neu starten' : 'Ja, beenden') + '</button><button type="button" class="pill-btn ghost" data-no>Zurück</button></div></div>';
+      ov.querySelector('[data-no]').onclick = main;
+      ov.querySelector('[data-yes]').onclick = () => { ov.remove(); abort(g, isNew ? () => restart(g) : null); };
+    };
+    main(); el.appendChild(ov);
+  }
+  /* Beenden: an einem Handy einfach weg; über zwei Handys bekommt der Schatz ein „beendet“ (Zugnummer weit vorn, damit es sicher ankommt) */
+  async function abort(g, then) {
+    const sendIt = g.mode === 'relay' && g.n > 0 && g.turn !== 'done';
+    C('g2_abort:' + g.kind + ':' + g.mode);
+    if (sendIt) {
+      g.ab = true; g.finished = true; g.turn = 'done'; g.winner = null; g.n += 100; g.updated = Date.now(); L.save();
+      try { await P().send({ t: 'spiel', k: g.kind, id: g.id, n: g.n, st: g.st, turn: 'done', prize: g.prize, winner: null, op: 'move', ab: 1 }); }
+      catch (e) { L.toast('Konnte ' + you() + ' nicht Bescheid geben – bei dir ist das Spiel beendet'); }
+    } else delete store()[g.id];
+    (S().inbox || []).forEach((m) => { if (m.t === 'spiel' && m.gid === g.id) m.read = true; });
+    L.save(); close();
+    if (then) then(); else L.toast(KINDS[g.kind].icon + ' Spiel beendet');
+  }
+  /* Neu starten: gleiche Spielweise und gleicher Einsatz, ohne erneutes Auswählen */
+  function restart(g) {
+    const mode = g.mode === 'relay' && !on() ? 'pass' : g.mode;
+    const n = { id: uid('s'), kind: g.kind, mode, mine: true, me: 'a', turn: 'a', n: 0, prize: g.prize || '', created: Date.now(), updated: Date.now(), st: null };
+    INIT[g.kind](n); store()[n.id] = n; L.save(); C('g2_new:' + g.kind + ':' + mode + ':restart');
+    if (g.turn === 'done' && g.mode === 'pass') delete store()[g.id];
+    open(n.id);
+    if (n.mode === 'relay' && n.turn !== n.me) commit(n, { toast: KINDS[g.kind].icon + ' ' + you() + ' beginnt' });
+  }
   /* An einem Handy: Übergabe-Hinweis, damit die andere Person nicht ins Versteck schaut */
   function handover(g, p, soft) {
     const el = $('g2Screen'); if (!el) return;
@@ -546,12 +595,13 @@
     if (!g) { if (obj.op !== 'new') return false; g = gs[obj.id] = { id: obj.id, kind: obj.k, mode: 'relay', mine: false, me: 'b', turn: 'a', n: 0, prize: String(obj.prize || '').slice(0, 60), created: created || Date.now(), updated: Date.now(), st: null }; }
     if (obj.n <= g.n) return false; // schon bekannt
     g.st = obj.st; g.n = obj.n; g.turn = ['a', 'b', 'done'].includes(obj.turn) ? obj.turn : g.turn; g.winner = obj.winner || null; g.updated = Date.now();
+    if (obj.ab) { g.ab = true; g.finished = true; g.turn = 'done'; g.winner = null; }
     const K = KINDS[g.kind], name = you();
-    const text = g.turn === 'done' ? K.icon + ' ' + K.title + ': Spiel vorbei' : g.turn === g.me ? K.icon + ' ' + name + ': ' + K.title + ' – du bist dran' : K.icon + ' ' + K.title + ': ' + name + ' hat gezogen';
+    const text = g.ab ? K.icon + ' ' + name + ' hat ' + K.title + ' beendet' : g.turn === 'done' ? K.icon + ' ' + K.title + ': Spiel vorbei' : g.turn === g.me ? K.icon + ' ' + name + ': ' + K.title + ' – du bist dran' : K.icon + ' ' + K.title + ': ' + name + ' hat gezogen';
     const s = S(); if (!s.inbox) s.inbox = []; s.inbox = s.inbox.filter((m) => !(m.t === 'spiel' && m.gid === g.id));
     s.inbox.push({ id: uid('m'), t: 'spiel', gid: g.id, text, at: created || Date.now(), read: false });
     L.toast(text); L.save();
-    if (curId === g.id) { render(); if (g.turn === 'done') finish(g); }
+    if (curId === g.id) { if (g.ab) close(); else { render(); if (g.turn === 'done') finish(g); } }
     if (G()) G().renderHub();
     return true;
   }
@@ -625,6 +675,9 @@
 .g2-help-b ol { padding-left:20px; margin:0; } .g2-help-b li { margin:0 0 8px; }
 .g2-tip { font-size:15px; background:rgba(242,193,78,.12); border-radius:12px; padding:8px 10px; margin:6px 0 0; }
 .g2-big { font-size:54px; }
+.g2-mlist { display:flex; flex-direction:column; gap:10px; margin:12px 0 4px; }
+.g2-mlist .pill-btn { min-height:50px; font-size:17px; justify-content:center; width:100%; }
+.g2-mhint { font-size:14px !important; color:var(--text-muted) !important; margin:10px 0 0 !important; }
 .g2-prize { font-size:17px; margin:8px 0 12px; }
 .g2-nudge { font-size:16px; color:var(--text-soft); background:var(--glass); border-radius:14px; padding:10px; margin-top:12px; }
 /* Raupe */
