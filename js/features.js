@@ -201,8 +201,19 @@
     if (ctx.state === 'suspended') ctx.resume();
     return ctx;
   }
+  /* 3.30.0: echter Klavierton (Suno-Sound, ausgeschnitten: audio/pad.wav, Grundton D.padBase Hz), je Taste umgestimmt; bis die Datei da ist, der einfache Ton */
+  let padBuf = null, padTried = false;
+  function padSample(c) {
+    if (padTried) return; padTried = true;
+    fetch('audio/pad.wav').then((r) => (r.ok ? r.arrayBuffer() : Promise.reject())).then((b) => new Promise((ok, no) => c.decodeAudioData(b, ok, no))).then((buf) => { padBuf = buf; }).catch(() => {});
+  }
   function tone(freq) {
     const c = audio(); if (!c) return;
+    padSample(c);
+    if (padBuf) {
+      const src = c.createBufferSource(), g = c.createGain(); src.buffer = padBuf; src.playbackRate.value = freq / (D.padBase || 174.61);
+      g.gain.value = 0.9; src.connect(g); g.connect(c.destination); src.start(); return;
+    }
     const t = c.currentTime, g = c.createGain();
     g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.5, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.4);
     const o1 = c.createOscillator(); o1.type = 'sine'; o1.frequency.value = freq;

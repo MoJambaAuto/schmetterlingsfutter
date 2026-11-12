@@ -64,6 +64,8 @@
   const jingleSeconds = (j, v) => (j.voices && j.voices[v || voicePref()] && j.secs && j.secs[v || voicePref()]) || j.sec || Math.round((parseNotes(j).total + 0.6) * 10) / 10;
   let fileAudio = null;
   function playJingle(j, onEnd, v) {
+    /* 3.30.0: keine selbst erzeugten Melodien mehr – fehlt die Aufnahme (z. B. alter Jingle vom Partner), läuft eine gesungene aus demselben Anlass */
+    if (!j.file && j.cat) { const alt = D.jingles.filter((x) => x.sung && x.cat === j.cat); if (alt.length) return playJingle(alt[Math.floor(Math.random() * alt.length)], onEnd, v); }
     if (j.file) { // fertige Aufnahme
       try { if (fileAudio) fileAudio.pause(); fileAudio = new Audio(jingleFile(j, v)); fileAudio.onended = () => onEnd && onEnd(); fileAudio.play().catch(() => onEnd && onEnd()); } catch (e) { if (onEnd) onEnd(); }
       return;
@@ -74,7 +76,8 @@
     if (onEnd) setTimeout(onEnd, (p.total + 0.7) * 1000);
   }
   const jingleById = (id) => D.jingles.find((j) => j.id === id);
-  const gong = () => playJingle({ bpm: 60, timbre: 'bell', notes: 'C5+G5 1,G4+C5 2' });
+  /* Gong: echte Klangschale (Suno-Sound, audio/gong.wav); fehlt die Datei, bleibt es still (nur Vibration) */
+  const gong = () => { try { const a = new Audio('audio/gong.wav'); a.volume = 0.8; a.play().catch(() => {}); } catch (e) {} };
 
   /* ---------- Jingle-Box ---------- */
   const TIPKEY = { morgen: 'morning', nacht: 'night', danke: 'thanks', streit: 'peace', vergessen_jahrestag: 'vergessen', vergessen_geburtstag: 'vergessen', vergessen_feiertag: 'vergessen', jahrestag: 'milestone', lust: 'intim_flirt', einfachso: 'message', vermissen: 'message' };
@@ -476,7 +479,7 @@
       P.tipsHtml(P.tips('peace', 2), 'Sagt es auch ohne Worte'), (sh) => {
       sh.querySelector('[data-cancel]').onclick = L.closeSheet; P.bindTips(sh);
       sh.querySelectorAll('[data-p]').forEach((b) => b.onclick = () => { const t = K.peace[Number(b.dataset.p)]; L.closeSheet(); setTimeout(() => P.sendOrShare(t, 'Friedensangebot 🏳️'), 50); });
-      sh.querySelector('[data-jingle]').onclick = () => { L.closeSheet(); sendJingle(L.pick(D.jingles.filter((j) => j.cat === 'streit'))); };
+      sh.querySelector('[data-jingle]').onclick = () => { L.closeSheet(); sendJingle(L.pick(D.jingles.filter((j) => j.cat === 'streit' && j.sung))); };
       sh.querySelector('[data-pause]').onclick = () => { if (pausing) return; s.pauseUntil = Date.now() + 20 * 60000; L.save(); L.closeSheet(); renderKlartext(); setTimeout(() => P.sendOrShare(K.pauseText, 'Pause ⏸️'), 50); setTimeout(() => { L.toast('⏸️ Pause vorbei. Geh den ersten Schritt.'); gong(); renderKlartext(); }, 20 * 60000); };
     });
   }
