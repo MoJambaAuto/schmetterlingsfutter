@@ -3,7 +3,7 @@
 (function () {
   'use strict';
   const D = window.LUZIFER_DATA;
-  D.version = '3.31.0';
+  D.version = '3.31.1';
   /* Grundton des Klavier-Samples fürs Liebeslied-Pad (audio/pad.wav), wird beim Einbau gemessen */
   D.padBase = 174.61;
 
@@ -334,6 +334,15 @@
   ];
   D.jingles.forEach((j) => { if (!j.sung) return; const base = j.id.replace(/^s-/, '').replace(/-\d+$/, ''); j.voices = {}; j.voices[D.jingleVoiceOf[base] || 'x'] = j.file; j.secs = {}; });
   D.jingleAlt.forEach((a) => { const j = D.jingles.find((x) => x.id === a[0]); if (!j || !j.voices) return; j.voices[a[1]] = 'audio/jingles/' + a[0] + '-' + a[1] + '.mp3'; if (a[2]) j.secs[a[1]] = a[2]; });
+  /* ---- Runde 4 (Suno, 12.11.2026): je Anlass 3 weitere Jingles, meist als Duett (x = gilt für beide Stimmen).
+     Wird nach dem Download von sf-werkzeug/cut4.js gefüllt: [Kennung, Anlass, Titel, Text, Sekunden, Stimme] ---- */
+  D.jinglesR4 = [];
+  D.jinglesR4.forEach((x) => {
+    const j = { id: x[0], cat: x[1], title: x[2], text: x[3], sec: x[4], file: 'audio/jingles/' + x[0] + '.mp3', sung: true, pd: 'Aufnahme: Suno', voices: {}, secs: {} };
+    j.voices[x[5]] = j.file;
+    let at = -1; D.jingles.forEach((k, i) => { if (k.cat === x[1] && k.sung) at = i; });
+    D.jingles.splice(at < 0 ? D.jingles.length : at + 1, 0, j);
+  });
 
   /* ---- Inhalte-Paket 2026-11 (Inhalte-Werkstatt): 40 neue Botschaften für „Heute für dich“ ---- */
   D.messages.push(
