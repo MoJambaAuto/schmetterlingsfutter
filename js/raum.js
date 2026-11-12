@@ -63,21 +63,26 @@
   async function start(opts) {
     if (cur) return false;
     css(); C('raum_start'); compassOn();
-    await loadThree(); const atlas = await loadAtlas(); const T = window.THREE;
     const hunt = typeof opts.targets === 'function';
     const ov = document.createElement('div'); ov.className = 'raum-ov' + (hunt ? ' hunt' : '');
     ov.innerHTML = '<div class="ra-top"><button type="button" class="ra-x" aria-label="Beenden">✕</button><span class="ra-t">' + esc(opts.title || 'Falter im Raum') + '</span><span class="ra-n"></span></div>' +
       (hunt ? '<canvas class="ra-radar" width="240" height="240" aria-hidden="true"></canvas>' : '') + (opts.extraHtml || '') +
-      '<div class="ra-tip">' + esc(opts.sub || 'Schau dich langsam um. Tippe auf einen Falter, wenn er nah ist.') + '</div><div class="ra-flash"></div>';
+      '<div class="ra-aim" aria-hidden="true"></div><div class="ra-tip">Raum wird gesucht … Handy langsam hin und her bewegen.</div><div class="ra-flash"></div>' +
+      '<div class="ra-bar"><button type="button" class="ra-re" aria-label="Falter zu mir holen">⟳</button><button type="button" class="ra-net" disabled>🕸️ Netz werfen</button></div>';
     document.body.appendChild(ov);
     const H0 = opts.heading0 != null ? opts.heading0 : heading(); /* Himmelsrichtung, in die das Handy beim Start zeigt */
+    /* Wie im Codex-Prototyp: die Sitzung als ALLERERSTES anfordern – direkt aus dem Antippen heraus, sonst lehnt Chrome ab */
+    let session;
+    try { session = await navigator.xr.requestSession('immersive-ar', { requiredFeatures: ['local'], optionalFeatures: ['dom-overlay'], domOverlay: { root: ov } }); }
+    catch (e) { ov.remove(); C('raum_fail'); return false; }
+    let T, atlas;
+    try { await loadThree(); atlas = await loadAtlas(); T = window.THREE; } catch (e) { try { await session.end(); } catch (x) {} ov.remove(); C('raum_fail'); return false; }
+    /* Knöpfe im Overlay sollen kein zusätzliches „Antippen im Raum“ auslösen */
+    ov.addEventListener('beforexrselect', (e) => { if (e.target && e.target.closest && e.target.closest('button')) e.preventDefault(); });
     const renderer = new T.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1)); renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.xr.enabled = true; renderer.xr.setReferenceSpaceType('local');
     renderer.domElement.className = 'raum-gl'; document.body.appendChild(renderer.domElement);
-    let session;
-    try { session = await navigator.xr.requestSession('immersive-ar', { requiredFeatures: ['local'], optionalFeatures: ['dom-overlay'], domOverlay: { root: ov } }); }
-    catch (e) { renderer.dispose(); renderer.domElement.remove(); ov.remove(); C('raum_fail'); return false; }
     ov.classList.toggle('dom', !!session.domOverlayState);
     const scene = new T.Scene(), cam = new T.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.02, 60);
     scene.add(new T.HemisphereLight(0xffffff, 0x886677, 1.6)); const dl = new T.DirectionalLight(0xffffff, 0.8); dl.position.set(0.5, 1, 0.3); scene.add(dl);
@@ -98,7 +103,8 @@
       return { key, i, g, r, l, glow, need: HITS[i] || 1, hits: 0, home: new T.Vector3(), ph: Math.random() * 9, sp: 0.6 + i * 0.07, caught: 0, flee: 0, near: true, size: i >= 7 ? 0.11 : 0.09 };
     }
     const bfs = new Map();
-    if (!hunt) opts.list.forEach((i, n) => { const b = make(i, 'k' + n); const a = (n / opts.list.length) * Math.PI * 2 + Math.random(), d = 1.3 + Math.random() * 0.8; b.home.set(Math.sin(a) * d, -0.1 + Math.random() * 0.5, -Math.cos(a) * d); b.g.position.copy(b.home); b.g.scale.setScalar(b.size); bfs.set(b.key, b); });
+    let tracked = false, placed = false, t0 = 0;
+    if (!hunt) opts.list.forEach((i, n) => { const b = make(i, 'k' + n); const a = (n / opts.list.length) * Math.PI * 2 + Math.random(), d = 1.3 + Math.random() * 0.8; b.home.set(Math.sin(a) * d, -0.1 + Math.random() * 0.5, -Math.cos(a) * d); b.g.position.copy(b.home); b.g.scale.setScalar(b.size); b.g.visible = false; bfs.set(b.key, b); });
     const total = hunt ? 0 : opts.list.length;
     const nEl = ov.querySelector('.ra-n'); let got = 0; const showN = () => { nEl.textContent = total > 1 ? '🦋 ' + got + '/' + total : got ? '🦋 ' + got : ''; }; showN();
     const tipEl = ov.querySelector('.ra-tip');
@@ -126,22 +132,35 @@
     const ctrl = renderer.xr.getController(0); scene.add(ctrl);
     const ray = new T.Raycaster();
     let ctrlPose = false; ctrl.addEventListener('connected', () => { ctrlPose = true; });
-    ctrl.addEventListener('select', () => {
+    function tryCatch(useCtrl) {
       /* zwei Strahlen: vom Finger (Bildschirm-Eingabe) und aus der Bildmitte – was näher am Falter liegt, zählt */
       const rays = [];
       const xc = renderer.xr.getCamera(); tmp.setFromMatrixPosition(xc.matrixWorld); dir.set(0, 0, -1).applyQuaternion(xc.getWorldQuaternion(new T.Quaternion())); rays.push([tmp.clone(), dir.clone()]);
-      if (ctrlPose) { const p = new T.Vector3().setFromMatrixPosition(ctrl.matrixWorld); if (p.lengthSq() > 1e-8) rays.push([p, new T.Vector3(0, 0, -1).applyQuaternion(ctrl.getWorldQuaternion(new T.Quaternion()))]); }
+      if (useCtrl && ctrlPose) { const p = new T.Vector3().setFromMatrixPosition(ctrl.matrixWorld); if (p.lengthSq() > 1e-8) rays.push([p, new T.Vector3(0, 0, -1).applyQuaternion(ctrl.getWorldQuaternion(new T.Quaternion()))]); }
       let best = null, bd = 1e9, farHit = null;
       rays.forEach(([o, d]) => { ray.set(o, d); bfs.forEach((b) => { if (b.caught) return; const dist = b.g.position.distanceTo(o); const off = ray.ray.distanceToPoint(b.g.position);
         if (!b.near) { if (off < 1.2) farHit = b; return; }
-        if (dist > 4.5) return; const tol = 0.16 + dist * 0.07; if (off < tol && off < bd) { bd = off; best = b; } }); });
+        if (dist > 4.5) return; const tol = (useCtrl ? 0.16 : 0.24) + dist * 0.08; if (off < tol && off < bd) { bd = off; best = b; } }); });
       if (!best) { flash(farHit ? (falter(farHit.i).name + ': noch ' + Math.round(farHit.dist || 0) + ' m') : 'Daneben – näher ran!'); return; }
       best.hits++; L.haptic && L.haptic(25);
       if (best.hits < best.need) { best.flee = 1.2; best.sp *= 1.3; const a = Math.random() * Math.PI * 2; best.home.set(camPos.x + Math.sin(a) * 1.6, camPos.y - 0.2 + Math.random() * 0.5, camPos.z - Math.cos(a) * 1.6); flash('Treffer! ' + best.hits + '/' + best.need); return; }
       best.caught = performance.now(); got++; showN(); flash('Gefangen: ' + falter(best.i).name); C('raum_catch:' + best.i);
       try { opts.onCatch && opts.onCatch(best.i, best.key); } catch (e) {}
       if (!hunt && got >= total) setTimeout(() => end(), 1600);
-    });
+    }
+    ctrl.addEventListener('select', () => { if (placed) tryCatch(true); });
+    const netBtn = ov.querySelector('.ra-net'), reBtn = ov.querySelector('.ra-re');
+    netBtn.onclick = () => { if (placed) { L.haptic && L.haptic(10); tryCatch(false); } };
+    /* „⟳“: nahe Falter wieder vor die Kamera holen (wenn man sie aus den Augen verloren hat) */
+    reBtn.onclick = () => { if (!placed) return; const yaw = Math.atan2(camDir.x, -camDir.z); let n = 0;
+      bfs.forEach((b) => { if (b.caught || !b.near) return; const a = yaw + [0, 0.6, -0.6, 1.2, -1.2][n++ % 5]; b.home.set(camPos.x + Math.sin(a) * 1.5, camPos.y - 0.05, camPos.z - Math.cos(a) * 1.5); b.flee = 1; });
+      flash(n ? 'Die Falter kommen zu dir' : 'Gerade ist kein Falter nah'); };
+    function place() {
+      const yaw = Math.atan2(camDir.x, -camDir.z);
+      if (!hunt) { let n = 0; bfs.forEach((b) => { const a = yaw + [0, 0.95, -0.95, 1.9, -1.9][n % 5], d = n ? 1.75 : 1.45; b.home.set(camPos.x + Math.sin(a) * d, camPos.y - 0.1 + Math.random() * 0.3, camPos.z - Math.cos(a) * d); b.g.position.copy(b.home); b.g.visible = true; n++; });
+        tipEl.textContent = opts.sub || 'Ziel auf den Falter richten und das Netz werfen.'; }
+      nextSync = 0; flash(hunt ? 'Raum erfasst' : 'Da ist er!');
+    }
     /* Radar unten: Punkte relativ zur Blickrichtung, Ring = 150 m */
     const rc = ov.querySelector('.ra-radar'), rx = rc && rc.getContext('2d');
     function radar(viewH) {
@@ -157,6 +176,12 @@
     renderer.setAnimationLoop((now) => {
       const dt = Math.min(0.05, (now - last) / 1000); last = now;
       const xc = renderer.xr.getCamera(); camPos.setFromMatrixPosition(xc.matrixWorld); camDir.set(0, 0, -1).applyQuaternion(xc.getWorldQuaternion(new T.Quaternion()));
+      if (!t0) t0 = now;
+      const fr = renderer.xr.getFrame(), rs = renderer.xr.getReferenceSpace(), pose = fr && rs ? fr.getViewerPose(rs) : null;
+      const tr = !!(pose && pose.views && pose.views.length && (pose.emulatedPosition === false || now - t0 > 8000));
+      if (tr !== tracked) { tracked = tr; netBtn.disabled = !tr; if (!tr) tipEl.textContent = 'Raum wird gesucht … Handy langsam hin und her bewegen, auf eine helle Fläche mit Mustern richten.'; }
+      if (tracked && !placed) { placed = true; place(); }
+      if (!placed) { renderer.render(scene, cam); return; }
       if (hunt && now > nextSync) { nextSync = now + 1000; sync(); }
       if (hunt && now > nextUi) { nextUi = now + 200;
         const viewH = ((H0 || 0) + (Math.atan2(camDir.x, -camDir.z) * 180) / Math.PI + 360) % 360; radar(viewH);
@@ -179,14 +204,15 @@
       renderer.render(scene, cam);
     });
     function end() { if (ended) return; ended = true; try { session.end(); } catch (e) { cleanup(); } }
+    function cleanupQuiet() { renderer.setAnimationLoop(null); try { renderer.dispose(); } catch (e) {} renderer.domElement.remove(); ov.remove(); cur = null; }
     function cleanup() {
       renderer.setAnimationLoop(null); scene.traverse((o) => { if (o.material) { (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => { if (m.map) m.map.dispose(); m.dispose(); }); } if (o.geometry) o.geometry.dispose(); });
       renderer.dispose(); renderer.domElement.remove(); ov.remove(); cur = null;
       try { opts.onEnd && opts.onEnd(got); } catch (e) {}
     }
-    session.addEventListener('end', () => { ended = true; cleanup(); });
+    let failed = false; session.addEventListener('end', () => { ended = true; if (!failed) cleanup(); });
     ov.querySelector('.ra-x').onclick = end;
-    await renderer.xr.setSession(session);
+    try { await renderer.xr.setSession(session); } catch (e) { C('raum_fail'); ended = true; failed = true; try { await session.end(); } catch (x) {} cleanupQuiet(); return false; }
     cur = { end, flash };
     if (H0 == null && hunt) flash('Kompass fehlt – Richtungen sind ungefähr');
     try { opts.onOverlay && opts.onOverlay(ov, cur); } catch (e) {}
@@ -250,7 +276,12 @@
       '.ra-tip{position:absolute;left:16px;right:16px;bottom:calc(22px + env(safe-area-inset-bottom));text-align:center;font-size:16px;background:rgba(20,8,26,.55);border-radius:16px;padding:10px 12px;backdrop-filter:blur(6px)}' +
       '.ra-flash{position:absolute;left:0;right:0;top:42%;text-align:center;font:700 24px var(--serif,serif);text-shadow:0 2px 10px rgba(0,0,0,.7);opacity:0}.ra-flash.on{animation:raFl 1.4s ease-out}' +
       '@keyframes raFl{0%{opacity:0;transform:translateY(8px)}15%{opacity:1;transform:none}70%{opacity:1}100%{opacity:0;transform:translateY(-12px)}}' +
+      '.raum-ov .ra-tip{bottom:calc(96px + env(safe-area-inset-bottom))}' +
       '.raum-ov.hunt .ra-radar{position:absolute;right:14px;bottom:calc(96px + env(safe-area-inset-bottom));width:140px;height:140px}.raum-ov.hunt .ra-tip{right:170px;text-align:left}' +
+      '.ra-aim{position:absolute;left:50%;top:50%;width:66px;height:66px;margin:-33px 0 0 -33px;border:3px solid rgba(255,255,255,.9);border-radius:50%;box-shadow:0 0 0 2px rgba(0,0,0,.25),inset 0 0 0 2px rgba(0,0,0,.2)}.ra-aim::after{content:"";position:absolute;left:50%;top:50%;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;background:#fff}' +
+      '.ra-bar{pointer-events:auto;position:absolute;left:16px;right:16px;bottom:calc(22px + env(safe-area-inset-bottom));display:flex;gap:12px;justify-content:center}' +
+      '.ra-net{flex:1;max-width:300px;min-height:56px;border:0;border-radius:28px;font:700 19px Lato,sans-serif;color:#fff;background:linear-gradient(135deg,#e8467c,#b04fd0);box-shadow:0 6px 20px rgba(0,0,0,.35)}.ra-net:disabled{opacity:.45}' +
+      '.ra-re{width:56px;height:56px;border:0;border-radius:50%;font-size:24px;color:#fff;background:rgba(20,8,26,.62)}' +
       '.ra-pre{display:flex;justify-content:center;gap:10px;margin:8px 0 10px}.ra-pre .fx-img{width:78px;height:78px}.ra-pre .fx-img.shadow{filter:brightness(0) invert(1);opacity:.4}';
     document.head.appendChild(s);
   }
