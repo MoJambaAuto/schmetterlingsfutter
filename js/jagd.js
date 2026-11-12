@@ -1,4 +1,4 @@
-/* Schmetterlingsfutter – Falterjagd draußen (LZJ, 3.33.0)
+/* Schmetterlingsfutter – Falterjagd draußen (LZJ, 3.33.0; 3.35.0: Raum-AR „Im Raum fangen“ über js/raum.js, Falterspaziergang zu zweit)
    Idee von Mo und seiner Tochter: unterwegs echte Falterarten in der freien Natur finden und fangen –
    besonders für Partner, die gerade allein unterwegs sind: „Für dich gefangen“ schickt den Falter in die App des Schatzes.
    Technik:
@@ -83,13 +83,16 @@
   /* ---------- Start: Hinweise ---------- */
   function open() {
     css();
-    const j = st();
+    const j = st(); if (j.walk && Date.now() - j.walk.t > 4 * 3600e3) { j.walk = null; L.save(); }
+    if (j.walk && j.walk.n < j.walk.goal) { setTimeout(start, 30); return; } /* laufender Spaziergang: direkt weiter */
     L.openSheet('<h3>🕸️ Falterjagd draußen</h3><p class="about" style="font-size:17px;margin-bottom:8px">Geh raus und finde echte Falterarten: im Wald andere als auf der Wiese, am Wasser andere als in den Gärten. Seltene tauchen nur selten auf. Fang sie mit der Kamera und schick sie ' + (on() ? esc(you()) : 'deinem Schatz') + '.</p>' +
       '<div class="jg-safe"><b>Bitte achte unterwegs auf dich:</b><ul><li>Schau auf den Weg und den Verkehr, nicht nur aufs Handy.</li><li>Betritt keine Privatgrundstücke oder gesperrten Flächen.</li><li>Beim Auto- oder Radfahren erscheinen keine Falter.</li></ul></div>' +
       '<p class="about" style="font-size:15px;color:var(--text-muted)">Dein Standort bleibt auf deinem Handy und wird nicht gesendet. Die Karte kommt von OpenFreeMap, Kartendaten © OpenStreetMap.</p>' +
-      '<div class="row" style="margin-top:10px"><button class="pill-btn ghost" data-cancel>Abbrechen</button><button class="pill-btn primary" data-go>Los geht’s</button></div>', (sh) => {
+      '<div class="jg-walkcard"><b>💞 Zu zweit unterwegs?</b><span>Macht einen Falterspaziergang: drei Falter zusammen finden – danach ein kleiner Moment nur für euch.</span><button class="pill-btn primary" data-walk>Zusammen losgehen</button></div>' +
+      '<div class="row" style="margin-top:10px"><button class="pill-btn ghost" data-cancel>Abbrechen</button><button class="pill-btn" data-go>Allein los</button></div>', (sh) => {
       sh.querySelector('[data-cancel]').onclick = L.closeSheet;
-      sh.querySelector('[data-go]').onclick = () => { j.ok = true; L.save(); L.closeSheet(); setTimeout(start, 80); };
+      sh.querySelector('[data-go]').onclick = () => { j.ok = true; j.walk = null; L.save(); L.closeSheet(); setTimeout(start, 80); };
+      sh.querySelector('[data-walk]').onclick = () => { j.ok = true; j.walk = { n: 0, goal: 3, t: Date.now(), list: [] }; L.save(); C('jagd_walk'); L.closeSheet(); setTimeout(start, 80); };
     });
   }
 
@@ -99,15 +102,23 @@
     css(); C('jagd_open');
     root = document.createElement('div'); root.className = 'jagd'; root.setAttribute('role', 'dialog'); root.setAttribute('aria-label', 'Falterjagd');
     root.innerHTML = '<div class="jg-map"></div><div class="jg-top"><button type="button" class="jg-x" aria-label="Schließen">✕</button><span class="jg-info">📍 Suche deinen Standort …</span><button type="button" class="jg-book" aria-label="Fangliste">📖</button></div>' +
-      '<button type="button" class="jg-me" aria-label="Zu mir">◎</button><div class="jg-hint"></div>';
+      '<button type="button" class="jg-me" aria-label="Zu mir">◎</button><div class="jg-hint"></div>' +
+      '<div class="jg-ar"><video playsinline muted autoplay></video><div class="jg-arbg"></div><div class="jg-sprites"></div><canvas class="jg-radar" width="240" height="240" aria-hidden="true"></canvas>' +
+      '<div class="jg-artip">📍 Suche deinen Standort …</div><div class="jg-arbar"><button type="button" class="jg-xrbtn" hidden>✨ Falter in 3D</button><button type="button" class="jg-mapbtn">🗺️ Karte</button></div></div>' +
+      '<button type="button" class="jg-camback">📷 Zurück zur Kamera</button><button type="button" class="jg-walk" hidden></button>';
     document.body.appendChild(root); document.documentElement.classList.add('cam-open', 'jagd-open');
     root.querySelector('.jg-x').onclick = stop;
     root.querySelector('.jg-book').onclick = () => { if (X() && X().book) X().book(); };
+    walkChip(); root.querySelector('.jg-walk').onclick = walkMenu;
     root.querySelector('.jg-me').onclick = () => { follow = true; if (me && map) map.easeTo({ center: [me.lon, me.lat], zoom: 17, duration: 600 }); };
+    root.querySelector('.jg-mapbtn').onclick = () => showMap(true);
+    root.querySelector('.jg-camback').onclick = () => showMap(false);
+    root.querySelector('.jg-xrbtn').onclick = xrStart;
+    arInit();
     try { await loadML(); } catch (e) { info('Die Karte konnte nicht geladen werden. Bitte mit Internet erneut öffnen.'); return; }
     if (!root) return;
     const ml = window.maplibregl;
-    map = new ml.Map({ container: root.querySelector('.jg-map'), style: STYLE, center: [7.1, 50.7], zoom: 15, pitch: 45, attributionControl: { compact: true } });
+    map = new ml.Map({ container: root.querySelector('.jg-map'), style: STYLE, center: [7.1, 50.7], zoom: 16, minZoom: 14, pitch: 30, attributionControl: { compact: true } });
     map.on('dragstart', () => { follow = false; });
     map.on('idle', classify); map.on('moveend', classify);
     if (sim) { gotFix(sim); return; }
@@ -129,7 +140,7 @@
     if (!meMarker) {
       const el = document.createElement('div'); el.className = 'jg-meicon'; el.innerHTML = '<i></i>' + img(8, 'tiny');
       meMarker = new window.maplibregl.Marker({ element: el }).setLngLat([f.lon, f.lat]).addTo(map);
-      map.jumpTo({ center: [f.lon, f.lat], zoom: 17 });
+      map.jumpTo({ center: [f.lon, f.lat], zoom: 16 }); root && root.classList.add('fix');
     } else meMarker.setLngLat([f.lon, f.lat]);
     if (follow) map.easeTo({ center: [f.lon, f.lat], duration: 800 });
     refresh();
@@ -180,6 +191,7 @@
     if (me) el.classList.toggle('near', dist(me, s) <= RANGE);
   }
   function stop() {
+    arStop();
     if (watchId != null) { try { navigator.geolocation.clearWatch(watchId); } catch (e) {} watchId = null; }
     clearInterval(timer); timer = null;
     if (map) { try { map.remove(); } catch (e) {} map = null; }
@@ -191,18 +203,28 @@
 
   /* ---------- Fangen ---------- */
   let fang = null;
-  async function catchScreen(s) {
-    const f = falter(s.i), need = HITS[s.i] || 1;
+  function recordCatch(s) {
+    st().got[s.id] = 1; const rec = { i: s.i, hab: s.hab || 'open', at: Date.now() }; st().caught.push(rec); L.save(); C('jagd_catch:' + s.i);
+    if (markers[s.id]) { markers[s.id].remove(); delete markers[s.id]; } delete spawns[s.id]; refresh();
+    if (X() && X().feed) X().feed('jagd', 1);
+    const w = st().walk; if (w && w.n < w.goal) { w.n++; w.list.push(s.i); L.save(); walkChip(); }
+    return { rec, walkDone: !!(w && w.n >= w.goal) };
+  }
+  async function catchScreen(s, opts) {
+    if (!opts) arPause();
+    const f = falter(s.i), need = HITS[s.i] || 1, A = window.LZA, canAR = !!(A && A.ready());
+    if (canAR) A.preload();
     const el = document.createElement('div'); el.className = 'jagd-fang';
     el.innerHTML = '<video playsinline muted autoplay></video><div class="jf-bg"></div><canvas class="jf-net"></canvas><div class="jf-bf">' + img(s.i, 'fly') + '</div>' +
       '<div class="jf-top"><button type="button" class="jf-x" aria-label="Aufgeben">✕</button><span class="jf-name">' + esc(f.name) + ' <small>' + esc(f.rar) + '</small></span><span class="jf-hits"></span></div>' +
-      '<div class="jf-tip">Schwing das Netz: mit dem Finger über den Falter wischen</div>';
+      '<div class="jf-tip">Schwing das Netz: mit dem Finger über den Falter wischen</div>' + (canAR ? '<button type="button" class="jf-ar">✨ Im Raum fangen</button>' : '');
     document.body.appendChild(el);
     const v = el.querySelector('video'), cv = el.querySelector('.jf-net'), bf = el.querySelector('.jf-bf'), ctx = cv.getContext('2d');
     let stream = null; try { stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false }); v.srcObject = stream; el.classList.add('cam'); } catch (e) { /* ohne Kamera: Wiese als Hintergrund */ }
     const W = () => el.clientWidth, H = () => el.clientHeight; cv.width = W(); cv.height = H();
     let x = W() / 2, y = H() * 0.42, tx = x, ty = y, hits = 0, speed = 0.9 + s.i * 0.12, dead = false, trail = [], raf = 0, t0 = performance.now();
     const hitsEl = el.querySelector('.jf-hits'); const drawHits = () => { hitsEl.textContent = need > 1 ? '🕸️ ' + hits + '/' + need : ''; }; drawHits();
+    let arOn = false;
     function newTarget() { tx = W() * (0.15 + Math.random() * 0.7); ty = H() * (0.18 + Math.random() * 0.5); }
     newTarget();
     function frame(now) {
@@ -213,7 +235,7 @@
       ctx.clearRect(0, 0, cv.width, cv.height);
       if (trail.length > 1) { ctx.lineCap = 'round'; ctx.lineJoin = 'round'; for (let i = 1; i < trail.length; i++) { const a = 1 - (now - trail[i].t) / 350; if (a <= 0) continue; ctx.strokeStyle = 'rgba(255,255,255,' + (a * 0.85).toFixed(2) + ')'; ctx.lineWidth = 26 * a + 4; ctx.beginPath(); ctx.moveTo(trail[i - 1].x, trail[i - 1].y); ctx.lineTo(trail[i].x, trail[i].y); ctx.stroke(); } }
       trail = trail.filter((p) => now - p.t < 350);
-      if (now - t0 > 30000) end(false);
+      if (!arOn && now - t0 > 30000) end(false);
     }
     raf = requestAnimationFrame(frame);
     let lastHit = 0;
@@ -228,27 +250,145 @@
     };
     cv.addEventListener('pointerdown', (e) => { trail = [{ x: e.clientX, y: e.clientY, t: performance.now() }]; cv.setPointerCapture && cv.setPointerCapture(e.pointerId); });
     cv.addEventListener('pointermove', (e) => { if (e.buttons || e.pointerType === 'touch') move(e); });
-    function close() { dead = true; cancelAnimationFrame(raf); if (stream) stream.getTracks().forEach((t) => t.stop()); el.remove(); fang = null; if (!root) document.documentElement.classList.remove('cam-open'); }
+    function close() { dead = true; cancelAnimationFrame(raf); if (stream) stream.getTracks().forEach((t) => t.stop()); el.remove(); fang = null; if (!root) document.documentElement.classList.remove('cam-open'); else setTimeout(arResume, 120); }
     function end(ok) {
       if (dead) return; close();
+      if (opts && opts.done) { C((ok ? 'besuch_catch:' : 'besuch_miss:') + s.i); opts.done(ok); return; }
       if (!ok) { L.toast('🦋 Weggeflattert … vielleicht beim nächsten Mal'); C('jagd_miss:' + s.i); return; }
-      st().got[s.id] = 1; const rec = { i: s.i, hab: s.hab || 'open', at: Date.now() }; st().caught.push(rec); L.save(); C('jagd_catch:' + s.i);
-      if (markers[s.id]) { markers[s.id].remove(); delete markers[s.id]; } delete spawns[s.id]; refresh();
-      if (X() && X().feed) X().feed('jagd', 1);
-      caughtSheet(rec);
+      const r = recordCatch(s); caughtSheet(r.rec, r.walkDone);
     }
     el.querySelector('.jf-x').onclick = () => end(false);
+    const arB = el.querySelector('.jf-ar'); if (arB) arB.onclick = async () => {
+      /* Raum-AR: Kamera hier freigeben, 3D-Falter im Raum; danach zurück in denselben Ablauf */
+      arOn = true; cancelAnimationFrame(raf); if (stream) { stream.getTracks().forEach((t) => t.stop()); stream = null; el.classList.remove('cam'); }
+      el.style.visibility = 'hidden'; C('jagd_ar');
+      const started = await A.start({ list: [s.i], title: f.name, sub: 'Der Falter flattert jetzt um dich herum. Dreh dich langsam und tippe auf ihn, wenn er nah ist.', onEnd: (n) => { el.style.visibility = ''; end(n > 0); } });
+      if (!started) { el.style.visibility = ''; arB.remove(); arOn = false; t0 = performance.now(); raf = requestAnimationFrame(frame); L.toast('Raum-AR ließ sich nicht starten – fang ihn hier mit dem Netz'); }
+    };
     fang = { close, end };
   }
-  function caughtSheet(rec) {
+  function caughtSheet(rec, walkDone) {
     const f = falter(rec.i), where = (HAB[rec.hab] || HAB.open).t;
     L.spawnHearts(14);
     L.openSheet('<div class="bfly-party"><div class="fx-hero">' + img(rec.i, 'big') + '</div><h3>Gefangen!</h3><p class="fx-name">' + esc(f.name) + ' <span class="fx-rar">' + esc(f.rar) + '</span></p><p class="about" style="margin:6px 0 4px">Gefunden ' + esc(where) + '.</p><p class="about" style="font-size:16px;color:var(--text-soft);margin-bottom:14px">' + esc(f.fact) + '</p>' +
-      '<div class="row wrap" style="justify-content:center">' + (on() ? '<button class="pill-btn primary" data-gift>💌 Für ' + esc(you()) + ' gefangen</button>' : '') + '<button class="pill-btn" data-share>🖼️ Teilen</button><button class="pill-btn ghost" data-ok>Weiter jagen</button></div></div>', (sh) => {
+      (walkDone ? '<div class="row" style="justify-content:center;margin-bottom:8px"><button class="pill-btn primary" data-walkend>💞 Spaziergang abschließen</button></div>' : '') +
+      '<div class="row wrap" style="justify-content:center">' + (on() && !walkDone ? '<button class="pill-btn primary" data-gift>💌 Für ' + esc(you()) + ' gefangen</button>' : on() ? '<button class="pill-btn" data-gift>💌 Für ' + esc(you()) + ' gefangen</button>' : '') + '<button class="pill-btn" data-share>🖼️ Teilen</button><button class="pill-btn ghost" data-ok>Weiter jagen</button></div></div>', (sh) => {
       sh.querySelector('[data-ok]').onclick = L.closeSheet;
+      const we = sh.querySelector('[data-walkend]'); if (we) we.onclick = () => { L.closeSheet(); setTimeout(walkEnd, 80); };
       sh.querySelector('[data-share]').onclick = () => { L.closeSheet(); if (X()) X().shareCard({ text: 'Gerade gefangen: ' + f.name + ' ' + where + ' 🦋', label: 'Falterjagd', sig: S().sender }); };
       const g = sh.querySelector('[data-gift]'); if (g) g.onclick = async () => {
         g.disabled = true; try { await P().send({ t: 'falter', i: rec.i, hab: rec.hab, text: f.name }); rec.gift = 1; L.save(); g.textContent = '✓ Unterwegs zu ' + you(); L.toast('💌 ' + f.name + ' fliegt zu ' + you()); C('jagd_gift'); } catch (e) { g.disabled = false; L.toast('Senden fehlgeschlagen'); }
+      };
+    });
+  }
+
+  /* ---------- AR zuerst: Kamera + Kompass + Radar ----------
+     Die Falter der Umgebung erscheinen im Kamerabild in ihrer Himmelsrichtung (Kompass des Handys).
+     Bis 45 m flattern sie groß im Bild und lassen sich fangen, weiter weg leuchten sie klein. Die Karte ist nur Nebenansicht.
+     Auf Handys mit Raum-AR (z. B. Galaxy S23) gibt es „Falter in 3D“: dieselben Falter als echte 3D-Falter um dich herum. */
+  const AR_MAX = 150, HFOV = 62;
+  const A = () => window.LZA;
+  let ar = null;
+  const bearingTo = (a, b) => { const d = Math.PI / 180, y = Math.sin((b.lon - a.lon) * d) * Math.cos(b.lat * d), x = Math.cos(a.lat * d) * Math.sin(b.lat * d) - Math.sin(a.lat * d) * Math.cos(b.lat * d) * Math.cos((b.lon - a.lon) * d); return (Math.atan2(y, x) / d + 360) % 360; };
+  const rel = (d) => ((d % 360) + 540) % 360 - 180;
+  const sideOf = (d) => { d = rel(d); return Math.abs(d) < 25 ? 'vor dir' : Math.abs(d) > 150 ? 'hinter dir' : d < 0 ? 'links von dir' : 'rechts von dir'; };
+  function arTargets(guess) {
+    if (!me || fast) return [];
+    return Object.values(spawns).filter((s) => !s.skip && !st().got[s.id]).map((s) => {
+      if (s.i == null) { if (!guess) return null; s.hab = s.hab || 'open'; s.i = pick('open', s); s.guess = 1; }
+      const d = dist(me, s); return d > AR_MAX ? null : { s, key: s.id, i: s.i, dist: d, bearing: bearingTo(me, s), near: d <= RANGE };
+    }).filter(Boolean).sort((a, b) => a.dist - b.dist);
+  }
+  function arInit() {
+    if (!root) return; const lay = root.querySelector('.jg-ar'); if (!lay) return;
+    ar = { lay, v: lay.querySelector('video'), spr: lay.querySelector('.jg-sprites'), rc: lay.querySelector('.jg-radar'), tip: lay.querySelector('.jg-artip'), stream: null, raf: 0, els: {}, paused: false };
+    if (A()) { A().compassOn(); A().supported().then((v) => { const b = root && root.querySelector('.jg-xrbtn'); if (b) b.hidden = !v; if (v) A().preload(); }); }
+    arCam(); ar.raf = requestAnimationFrame(arTick);
+  }
+  async function arCam() {
+    if (!ar || ar.stream || ar.paused) return;
+    try { ar.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false }); if (!ar || ar.paused) { ar && ar.stream && ar.stream.getTracks().forEach((t) => t.stop()); if (ar) ar.stream = null; return; } ar.v.srcObject = ar.stream; ar.lay.classList.add('cam'); }
+    catch (e) { ar.lay.classList.remove('cam'); }
+  }
+  function arPause() { if (!ar) return; ar.paused = true; if (ar.stream) { ar.stream.getTracks().forEach((t) => t.stop()); ar.stream = null; } ar.lay.classList.remove('cam'); }
+  function arResume() { if (!ar || !root || document.querySelector('.jagd-fang') || document.querySelector('.raum-ov')) return; ar.paused = false; if (!root.classList.contains('show-map')) arCam(); }
+  function arStop() { if (!ar) return; cancelAnimationFrame(ar.raf); arPause(); ar = null; }
+  function showMap(on) {
+    if (!root) return; root.classList.toggle('show-map', on);
+    if (on) { arPause(); if (map) { map.resize(); if (me) map.jumpTo({ center: [me.lon, me.lat], zoom: 17 }); } C('jagd_map'); }
+    else { if (ar) ar.paused = false; arCam(); }
+  }
+  let arLast = 0;
+  function arTick(now) {
+    if (!ar) return; ar.raf = requestAnimationFrame(arTick);
+    if (now - arLast < 33) return; arLast = now;
+    if (!root || root.classList.contains('show-map')) return;
+    const W = ar.lay.clientWidth, H = ar.lay.clientHeight, hd = A() ? A().heading() : null, list = arTargets(false), seen = {};
+    list.forEach((t, k) => {
+      seen[t.key] = 1; let el = ar.els[t.key];
+      if (!el) { el = document.createElement('button'); el.type = 'button'; el.className = 'jg-sp' + (t.i >= 7 ? ' rare' : ''); el.innerHTML = img(t.i, 'fly'); el.setAttribute('aria-label', falter(t.i).name); el.onclick = () => { const s = spawns[t.key]; if (!s || !me) return; const d = dist(me, s); if (d > RANGE) { L.toast(falter(s.i).name + ': noch ' + Math.round(d) + ' m – geh in diese Richtung'); return; } catchScreen(s); }; ar.spr.appendChild(el); ar.els[t.key] = el; }
+      /* Richtung im Bild: mit Kompass echt, ohne Kompass nahe Falter in der Mitte, ferne verteilt */
+      const r = hd != null ? rel(t.bearing - hd) : t.near ? (k % 3 - 1) * 12 : (k % 5 - 2) * 18;
+      const vis = Math.abs(r) < HFOV / 2 + 8; el.style.display = vis ? '' : 'none'; if (!vis) return;
+      const size = t.near ? 120 : Math.max(34, 120 * Math.min(1, 30 / t.dist)), bob = Math.sin(now / 380 + k) * (t.near ? 14 : 5);
+      const x = W / 2 + (r / HFOV) * W - size / 2, y = (t.near ? H * 0.46 : H * 0.34 - Math.min(60, t.dist / 3)) + bob - size / 2;
+      el.style.width = el.style.height = size + 'px'; el.style.transform = 'translate(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px)'; el.classList.toggle('near', t.near);
+    });
+    Object.keys(ar.els).forEach((k) => { if (!seen[k]) { ar.els[k].remove(); delete ar.els[k]; } });
+    /* Radar und Hinweis */
+    const rx = ar.rc.getContext('2d'), RW = 240, RR = 104; rx.clearRect(0, 0, RW, RW);
+    rx.fillStyle = 'rgba(20,8,26,.55)'; rx.beginPath(); rx.arc(RW / 2, RW / 2, RR + 12, 0, 7); rx.fill();
+    rx.strokeStyle = 'rgba(255,255,255,.35)'; rx.lineWidth = 2; [RR, RR * 0.3].forEach((q) => { rx.beginPath(); rx.arc(RW / 2, RW / 2, q, 0, 7); rx.stroke(); });
+    if (hd != null) { rx.fillStyle = 'rgba(255,255,255,.18)'; rx.beginPath(); rx.moveTo(RW / 2, RW / 2); rx.arc(RW / 2, RW / 2, RR, -Math.PI / 2 - 0.54, -Math.PI / 2 + 0.54); rx.fill(); }
+    list.forEach((t) => { const a = ((hd != null ? t.bearing - hd : t.bearing) * Math.PI) / 180, q = Math.min(1, t.dist / AR_MAX) * RR; rx.fillStyle = t.near ? '#ff7eb6' : t.i >= 7 ? '#ffd76a' : '#fff'; rx.beginPath(); rx.arc(RW / 2 + Math.sin(a) * q, RW / 2 - Math.cos(a) * q, t.near ? 11 : 8, 0, 7); rx.fill(); });
+    rx.fillStyle = '#fff'; rx.beginPath(); rx.arc(RW / 2, RW / 2, 6, 0, 7); rx.fill();
+    const near = list.filter((t) => t.near), far = list.find((t) => !t.near);
+    ar.tip.textContent = !me ? '📍 Suche deinen Standort …' : fast ? '🚗 Zu schnell – Falter zeigen sich nur zu Fuß' :
+      near.length ? (near.length === 1 ? '🦋 ' + falter(near[0].i).name + ' ist ganz nah' + (hd != null && Math.abs(rel(near[0].bearing - hd)) > HFOV / 2 ? ' – ' + sideOf(near[0].bearing - hd) : ' – antippen!') : '🦋 ' + near.length + ' Falter ganz nah – antippen!') :
+      far ? 'Nächster Falter: ' + falter(far.i).name + ', ' + Math.round(far.dist) + ' m' + (hd != null ? ' ' + sideOf(far.bearing - hd) : '') :
+      Object.keys(spawns).length && !Object.values(spawns).some((s) => s.i != null) ? '🔎 Schaue nach Faltern in der Umgebung …' : '🌿 Hier fliegt gerade keiner – geh ein Stück weiter';
+    if (hd == null && me && !ar.noCompass) { ar.noCompass = 1; L.toast('Kein Kompass gefunden – Richtungen sind ungefähr'); }
+  }
+  /* Raum-AR: dieselben Falter als echte 3D-Falter um dich herum */
+  async function xrStart() {
+    if (!A() || document.querySelector('.raum-ov')) return; const caught = [];
+    arPause(); C('jagd_xr');
+    const ok3d = await A().start({ title: 'Falterjagd', sub: 'Schau dich um – das Radar zeigt, wo Falter sind.', heading0: A().heading(),
+      targets: () => arTargets(true).map((t) => ({ key: t.key, i: t.i, dist: t.dist, bearing: t.bearing, near: t.near })),
+      onCatch: (i, key) => { const s = spawns[key]; if (!s) return; caught.push(recordCatch(s)); },
+      onEnd: () => { arResume(); if (!caught.length) return; const last = caught[caught.length - 1]; if (last.walkDone) setTimeout(walkEnd, 200); else setTimeout(() => caughtSheet(last.rec, false), 200); } });
+    if (!ok3d) { arResume(); L.toast('3D ließ sich nicht starten – die Falter bleiben im Kamerabild'); const b = root && root.querySelector('.jg-xrbtn'); if (b) b.hidden = true; }
+  }
+
+  /* ---------- Falterspaziergang zu zweit ---------- */
+  const WALK_Q = ['Was hat dir an unserem Spaziergang gefallen?', 'Welcher Moment draußen bleibt dir heute im Kopf?', 'Wohin gehen wir beim nächsten Mal?', 'Was hast du heute an mir bemerkt?', 'Worüber hast du dich unterwegs gefreut?'];
+  function walkChip() {
+    const b = root && root.querySelector('.jg-walk'); if (!b) return; const w = st().walk;
+    b.hidden = !w; if (!w) return;
+    b.textContent = w.n >= w.goal ? '💞 Spaziergang geschafft – antippen' : '💞 Spaziergang · ' + w.n + ' von ' + w.goal + ' Faltern';
+  }
+  function walkMenu() {
+    const w = st().walk; if (!w) return;
+    if (w.n >= w.goal) return walkEnd();
+    L.openSheet('<h3>💞 Falterspaziergang</h3><p class="about" style="font-size:17px">' + w.n + ' von ' + w.goal + ' Faltern gefunden. Lasst euch Zeit – schaut auch mal hoch und nicht nur aufs Handy.</p><div class="row wrap" style="margin-top:12px"><button class="pill-btn ghost" data-stop>Spaziergang beenden</button><button class="pill-btn primary" data-ok>Weiter</button></div>', (sh) => {
+      sh.querySelector('[data-ok]').onclick = L.closeSheet;
+      sh.querySelector('[data-stop]').onclick = () => { L.closeSheet(); if (w.n) setTimeout(walkEnd, 80); else { st().walk = null; L.save(); walkChip(); } };
+    });
+  }
+  function walkEnd() {
+    const w = st().walk; if (!w) return; C('jagd_walk_done:' + w.n);
+    const min = Math.max(1, Math.round((Date.now() - w.t) / 60000)), q = WALK_Q[Math.floor(Math.random() * WALK_Q.length)];
+    st().walk = null; L.save(); walkChip(); L.spawnHearts(16);
+    L.openSheet('<div class="bfly-party"><h3>Schöner Spaziergang!</h3><div class="jg-walkimgs">' + w.list.map((i) => img(i)).join('') + '</div>' +
+      '<p class="about" style="margin:4px 0 10px">' + w.list.length + (w.list.length === 1 ? ' Falter' : ' Falter') + ' in ' + min + (min === 1 ? ' Minute – ' : ' Minuten – ') + esc(w.list.map((i) => falter(i).name).join(', ')) + '.</p>' +
+      '<div class="jg-walkq"><b>' + esc(q) + '</b><span>Erzählt es euch – oder schreib es auf.</span>' + (on() ? '<textarea id="jgWalkA" maxlength="300" rows="3" placeholder="Deine Antwort (freiwillig)"></textarea>' : '') + '</div>' +
+      '<div class="row wrap" style="justify-content:center;margin-top:10px">' + (on() ? '<button class="pill-btn primary" data-send>💌 An ' + esc(you()) + ' schicken</button>' : '') + '<button class="pill-btn ghost" data-ok>Fertig</button></div></div>', (sh) => {
+      sh.querySelector('[data-ok]').onclick = () => { L.closeSheet(); stop(); };
+      const sb = sh.querySelector('[data-send]'); if (sb) sb.onclick = async () => {
+        const a = (sh.querySelector('#jgWalkA').value || '').trim(); if (!a) { L.toast('Schreib erst ein paar Worte'); return; }
+        sb.disabled = true;
+        try { await P().send({ t: 'msg', text: '💞 Unser Falterspaziergang – ' + q + '\n' + a, label: '💞 Falterspaziergang' }); C('jagd_walk_send'); L.toast('💌 Unterwegs zu ' + you()); L.closeSheet(); stop(); }
+        catch (e) { sb.disabled = false; L.toast('Senden fehlgeschlagen'); }
       };
     });
   }
@@ -297,6 +437,20 @@
       '.jf-x{width:46px;height:46px;border-radius:23px;border:0;background:rgba(40,20,60,.7);color:#fff;font-size:19px}.jf-name{flex:1;text-align:center;color:#fff;font:400 22px var(--serif,serif);text-shadow:0 2px 6px rgba(0,0,0,.6)}.jf-name small{display:block;font:700 12px Lato,sans-serif;letter-spacing:.5px;text-transform:uppercase;opacity:.9}' +
       '.jf-hits{min-width:46px;color:#fff;font:700 16px Lato,sans-serif;text-shadow:0 2px 6px rgba(0,0,0,.6)}' +
       '.jf-tip{position:absolute;left:0;right:0;bottom:calc(30px + env(safe-area-inset-bottom));text-align:center;color:#fff;font:700 16px Lato,sans-serif;text-shadow:0 2px 6px rgba(0,0,0,.7);z-index:4;pointer-events:none}' +
+      '.jg-ar{position:absolute;inset:0;z-index:1;background:#1d3a24;overflow:hidden}.jagd.show-map .jg-ar{display:none}.jg-ar video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none}.jg-ar.cam video{display:block}' +
+      '.jg-arbg{position:absolute;inset:0;background:linear-gradient(180deg,#9fd3f0 0%,#cfe9c8 52%,#6fae4e 53%,#3f7d34 100%)}.jg-ar.cam .jg-arbg{display:none}' +
+      '.jg-sprites{position:absolute;inset:0}.jg-sp{position:absolute;left:0;top:0;border:0;background:none;padding:0;opacity:.85;transition:opacity .3s}.jg-sp .fx-img{width:100%;height:100%;animation:jgFlap .24s ease-in-out infinite alternate}.jg-sp.near{opacity:1;filter:drop-shadow(0 0 12px rgba(255,255,255,.85))}.jg-sp.rare .fx-img{filter:drop-shadow(0 0 10px #ffe38a)}' +
+      '.jg-radar{position:absolute;right:12px;bottom:calc(92px + env(safe-area-inset-bottom));width:132px;height:132px;pointer-events:none}' +
+      '.jg-artip{position:absolute;left:12px;right:156px;bottom:calc(98px + env(safe-area-inset-bottom));color:#fff;font:700 16px Lato,sans-serif;background:rgba(40,20,60,.72);border-radius:16px;padding:10px 12px;text-shadow:none}' +
+      '.jg-arbar{position:absolute;left:12px;right:12px;bottom:calc(22px + env(safe-area-inset-bottom));display:flex;gap:10px;justify-content:center}.jg-arbar button{min-height:52px;border:0;border-radius:26px;padding:0 20px;font:700 17px Lato,sans-serif;color:#fff;background:rgba(40,20,60,.78);box-shadow:0 4px 14px rgba(0,0,0,.3)}' +
+      '.jg-arbar .jg-xrbtn{background:linear-gradient(135deg,#e8467c,#b04fd0);flex:1;max-width:260px}' +
+      '.jg-camback{display:none;position:absolute;left:50%;transform:translateX(-50%);bottom:calc(22px + env(safe-area-inset-bottom));z-index:2;min-height:52px;border:0;border-radius:26px;padding:0 22px;font:700 17px Lato,sans-serif;color:#fff;background:linear-gradient(135deg,#e8467c,#b04fd0);box-shadow:0 4px 14px rgba(0,0,0,.3)}.jagd.show-map .jg-camback{display:block}' +
+      '.jagd:not(.show-map) .jg-me,.jagd:not(.show-map) .jg-hint{display:none}.jagd.show-map .jg-hint{bottom:calc(86px + env(safe-area-inset-bottom))}' +
+      '.jf-ar{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(70px + env(safe-area-inset-bottom));z-index:5;border:0;border-radius:24px;padding:12px 20px;min-height:48px;font:700 17px Lato,sans-serif;color:#fff;background:linear-gradient(135deg,#e8467c,#b04fd0);box-shadow:0 6px 20px rgba(0,0,0,.35)}' +
+      '.jg-walk{position:absolute;left:50%;transform:translateX(-50%);top:calc(64px + env(safe-area-inset-top));z-index:2;border:0;border-radius:18px;padding:8px 14px;min-height:40px;font:700 15px Lato,sans-serif;color:#fff;background:linear-gradient(135deg,rgba(232,70,124,.92),rgba(176,79,208,.92));box-shadow:0 4px 14px rgba(0,0,0,.3);white-space:nowrap}' +
+      '.jg-walkcard{display:flex;flex-direction:column;gap:6px;background:linear-gradient(135deg,rgba(232,70,124,.14),rgba(176,79,208,.14));border:1px solid rgba(232,70,124,.4);border-radius:16px;padding:12px;margin:4px 0 6px;font-size:16px}.jg-walkcard .pill-btn{align-self:flex-start;min-height:46px}' +
+      '.jg-walkimgs{display:flex;justify-content:center;gap:8px;margin:6px 0}.jg-walkimgs .fx-img{width:72px;height:72px}' +
+      '.jg-walkq{display:flex;flex-direction:column;gap:6px;text-align:left;background:var(--glass,rgba(255,255,255,.06));border-radius:16px;padding:12px;font-size:16px}.jg-walkq b{font-family:var(--serif);font-weight:400;font-size:20px}.jg-walkq span{color:var(--text-muted);font-size:15px}.jg-walkq textarea{width:100%;font-size:16px;border-radius:12px;padding:10px;box-sizing:border-box}' +
       '.jg-safe{background:rgba(242,193,78,.12);border:1px solid rgba(242,193,78,.4);border-radius:14px;padding:10px 12px;margin:6px 0 10px;font-size:16px}.jg-safe ul{margin:6px 0 0 18px;padding:0}.jg-safe li{margin:2px 0}' +
       '.fx-img.inbox{width:44px;float:right;margin-left:8px}.fx-img.tiny{width:52px}' +
       /* Fenster, Hinweise und Herzen über der Karte zeigen */
@@ -306,5 +460,7 @@
 
   /* Test ohne Spaziergang: LZJ.sim(lat, lon) setzt einen festen Standort */
   let sim = null;
-  window.LZJ = { open, start, stop, counts, sim: (lat, lon) => { sim = { lat, lon, acc: 10, t: Date.now() }; if (map) gotFix(sim); }, move: (lat, lon) => { if (map) gotFix({ lat, lon, acc: 10, t: Date.now() }); }, teleport: (lat, lon) => { lastFix = null; fastN = 0; fast = false; if (map) gotFix({ lat, lon, acc: 10, t: Date.now() }); }, _spawns: () => spawns, catchAt: (id) => spawns[id] && catchScreen(spawns[id]), fang: () => fang, HAB };
+  window.LZJ = { open, start, stop, counts, sim: (lat, lon) => { sim = { lat, lon, acc: 10, t: Date.now() }; if (map) gotFix(sim); }, move: (lat, lon) => { if (map) gotFix({ lat, lon, acc: 10, t: Date.now() }); }, teleport: (lat, lon) => { lastFix = null; fastN = 0; fast = false; if (map) gotFix({ lat, lon, acc: 10, t: Date.now() }); }, _spawns: () => spawns, catchAt: (id) => spawns[id] && catchScreen(spawns[id]), fang: () => fang, HAB,
+    _ar: () => ar, xrStart, showMap, arTargets,
+    fangen: (i, done, title) => catchScreen({ i, id: 'b' + Date.now(), hab: 'open' }, { done, title }), walkEnd };
 })();

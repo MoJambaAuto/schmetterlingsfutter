@@ -244,8 +244,8 @@
     const jc = window.LZJ && window.LZJ.counts ? window.LZJ.counts() : {}, wild = Object.values(jc).reduce((a, b) => a + b, 0);
     let grid = '';
     for (let n = 1; n <= show; n++) {
-      const f = falter(n), caught = n <= LADDER.length ? (jc[n - 1] || 0) : 0, got = n <= have || caught > 0;
-      grid += '<button type="button" class="fx-cell' + (got ? '' : ' locked') + (n === have + 1 && !caught ? ' next' : '') + '" data-n="' + n + '"' + (got ? '' : ' aria-label="Noch nicht entdeckt"') + '>' + falterImg(f, got ? '' : 'shadow') + '<span>' + (got ? esc(f.name) : n === have + 1 ? 'Als Nächstes' : '?') + '</span>' + (caught ? '<em class="fx-wild">🕸️ ' + caught + '×</em>' : '') + '</button>';
+      const bb = window.LZ.S.besuchBook || {}, f = falter(n), caught = n <= LADDER.length ? (jc[n - 1] || 0) : 0, vis = n <= LADDER.length ? (bb[n - 1] || 0) : 0, got = n <= have || caught > 0 || vis > 0;
+      grid += '<button type="button" class="fx-cell' + (got ? '' : ' locked') + (n === have + 1 && !caught && !vis ? ' next' : '') + '" data-n="' + n + '"' + (got ? '' : ' aria-label="Noch nicht entdeckt"') + '>' + falterImg(f, got ? '' : 'shadow') + '<span>' + (got ? esc(f.name) : n === have + 1 ? 'Als Nächstes' : '?') + '</span>' + (caught ? '<em class="fx-wild">🕸️ ' + caught + '×</em>' : vis ? '<em class="fx-wild">✨ ' + vis + '×</em>' : '') + '</button>';
     }
     L.openSheet('<h3>📖 Euer Schmetterlingsbuch</h3><p class="about" style="font-size:16px;margin-bottom:10px">' + have + ' geschlüpft' + (wild ? ' · 🕸️ ' + wild + ' draußen gefangen' : '') + ' · Generation ' + q.gen + ' wächst gerade heran. Jeder neue Falter ist seltener als der vorige.</p>' +
       '<div class="fx-grid">' + grid + '</div>' +
@@ -254,7 +254,7 @@
       sh.querySelector('[data-cancel]').onclick = L.closeSheet;
       const jb = sh.querySelector('[data-jagd]'); if (jb) jb.onclick = () => { L.closeSheet(); if (document.querySelector('.jagd')) return; setTimeout(() => window.LZJ.open(), 60); };
       sh.querySelectorAll('.fx-cell').forEach((c) => c.onclick = () => {
-        const n = Number(c.dataset.n); if (n > have && !(n <= LADDER.length && jc[n - 1])) { L.toast(n === have + 1 ? '🥚 Wächst gerade heran – weiter füttern!' : 'Noch nicht entdeckt'); return; }
+        const n = Number(c.dataset.n); if (n > have && !(n <= LADDER.length && (jc[n - 1] || (window.LZ.S.besuchBook || {})[n - 1]))) { L.toast(n === have + 1 ? '🥚 Wächst gerade heran – weiter füttern!' : 'Noch nicht entdeckt'); return; }
         const f = falter(n);
         L.openSheet('<div class="bfly-party"><div class="fx-hero">' + falterImg(f, 'big') + '</div><h3>' + esc(f.name) + '</h3><p class="fx-name"><span class="fx-rar">' + esc(f.rar) + '</span> · Falter Nr. ' + n + '</p><p class="about" style="margin:8px 0 16px">' + esc(f.fact) + '</p>' +
           '<div class="row wrap" style="justify-content:center"><button class="pill-btn" data-back>← Zum Buch</button><button class="pill-btn" data-share>🖼️ Teilen</button></div></div>', (s2) => {

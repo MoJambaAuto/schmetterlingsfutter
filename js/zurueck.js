@@ -16,8 +16,9 @@
   function layers() {
     const out = [];
     const add = (el, close, bonus) => { if (vis(el)) out.push({ el, close, z: z(el) + (bonus || 0) }); };
+    document.querySelectorAll('.raum-ov').forEach((el) => add(el, () => click(el.querySelector('.ra-x')), 2));
     document.querySelectorAll('.jagd-fang').forEach((el) => add(el, () => click(el.querySelector('.jf-x')), 1));
-    document.querySelectorAll('.jagd').forEach((el) => add(el, () => click(el.querySelector('.jg-x'))));
+    document.querySelectorAll('.jagd').forEach((el) => add(el, () => click(el.querySelector(el.classList.contains('show-map') ? '.jg-camback' : '.jg-x'))));
     document.querySelectorAll('.heide').forEach((el) => add(el, () => click(el.querySelector('.hd-x'))));
     document.querySelectorAll('#g2Screen .g2-hand, #g2Screen .g2-end').forEach((el) => add(el, () => { if (!click(el.querySelector('[data-close]'))) el.remove(); }, 1));
     add($('g2Screen'), () => click($('g2Screen').querySelector('[data-x]')));
