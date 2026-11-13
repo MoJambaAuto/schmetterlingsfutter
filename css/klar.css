@@ -139,6 +139,18 @@ html[data-view]:not([data-view="home"]) #app .occasion-chip { display:none; }
 #app .hub-done { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
 #app .d-when { font-size:16px; color:var(--text-soft); }
 
+/* ---------- Liebeslied-Pad (3.45.0): 4 × 3 Töne, Pad und Aufnahme passen auf einen Bildschirm ---------- */
+#app .pad { grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; }
+#app .pad button { aspect-ratio:auto; height:64px; font-size:24px; gap:2px; border-radius:14px; touch-action:manipulation; }
+#app .pad button small { font-size:16px; letter-spacing:0; }
+#app .pad-ctrl { flex-wrap:wrap; gap:8px; margin:12px 0 4px; }
+#app .pad-ctrl .pill-btn { flex:1 1 auto; padding:10px 12px; font-size:16px; }
+#app #sub-music > .view-title { margin-bottom:12px; }
+#app #sub-music .hint { margin-top:4px; }
+#app .song { flex-wrap:wrap; }
+#app .song .s-t { flex:1 1 calc(100% - 60px); min-width:0; }
+#app .song .s-t + .icon-btn { margin-left:auto; }
+
 /* ---------- Schnell-Reaktionen (3.44.0) ---------- */
 .react-bar { display:inline-flex; gap:6px; align-items:center; }
 .react-b { width:44px; height:44px; flex:none; border-radius:50%; border:1px solid var(--line-soft); background:var(--glass-2); font-size:22px; line-height:1; display:inline-flex; align-items:center; justify-content:center; padding:0; cursor:pointer; transition:transform .12s, background .15s; }

@@ -202,25 +202,26 @@
     return ctx;
   }
   /* 3.30.0: echter Klavierton (Suno-Sound, ausgeschnitten: audio/pad.wav, Grundton D.padBase Hz), je Taste umgestimmt; bis die Datei da ist, der einfache Ton */
-  let padBuf = null, padTried = false;
+  let padBuf = null, padLoad = null;
   function padSample(c) {
-    if (padTried) return; padTried = true;
-    fetch('audio/pad.wav').then((r) => (r.ok ? r.arrayBuffer() : Promise.reject())).then((b) => new Promise((ok, no) => c.decodeAudioData(b, ok, no))).then((buf) => { padBuf = buf; }).catch(() => {});
+    if (!padLoad) padLoad = fetch('audio/pad.wav').then((r) => (r.ok ? r.arrayBuffer() : Promise.reject())).then((b) => new Promise((ok, no) => c.decodeAudioData(b, ok, no))).then((buf) => { padBuf = buf; }).catch(() => {});
+    return padLoad;
   }
-  function tone(freq) {
-    const c = audio(); if (!c) return;
-    padSample(c);
+  /* Ein Ton auf ein Audio-Ziel: Lautsprecher (AudioContext) oder Datei (OfflineAudioContext); at = Startzeit in Sekunden */
+  function voice(c, freq, at) {
     if (padBuf) {
       const src = c.createBufferSource(), g = c.createGain(); src.buffer = padBuf; src.playbackRate.value = freq / (D.padBase || 174.61);
-      g.gain.value = 0.9; src.connect(g); g.connect(c.destination); src.start(); return;
+      g.gain.value = 0.9; src.connect(g); g.connect(c.destination); src.start(at); return;
     }
-    const t = c.currentTime, g = c.createGain();
-    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.5, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.4);
+    const g = c.createGain();
+    g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(0.5, at + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, at + 1.4);
     const o1 = c.createOscillator(); o1.type = 'sine'; o1.frequency.value = freq;
     const o2 = c.createOscillator(); o2.type = 'triangle'; o2.frequency.value = freq * 2; const g2 = c.createGain(); g2.gain.value = 0.15;
     o1.connect(g); o2.connect(g2); g2.connect(g); g.connect(c.destination);
-    o1.start(t); o2.start(t); o1.stop(t + 1.5); o2.stop(t + 1.5);
+    o1.start(at); o2.start(at); o1.stop(at + 1.5); o2.stop(at + 1.5);
   }
+  function tone(freq) { const c = audio(); if (!c) return; padSample(c); voice(c, freq, c.currentTime); }
+
   function flash(i) { const b = $('pad').children[i]; if (!b) return; b.classList.add('hit'); setTimeout(() => b.classList.remove('hit'), 160); }
   function hit(i) {
     tone(D.pad[i].f); flash(i); L.haptic(6);
@@ -258,16 +259,61 @@
     S().songs.push({ id: uid('s'), name: v.name, seq: rec.slice(), date: new Date().toISOString() }); L.save(); renderSongs(); L.toast('Lied gespeichert 🎵');
   });
   function songCode(seq) { return seq.map((n) => n.i + 1).join('·'); }
+
+  /* ---------- Lied als Datei (3.45.0): dieselben Töne wie beim Abspielen, im Gerät berechnet ---------- */
+  const RATE = 44100;
+  async function renderSong(seq) {
+    const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext; if (!OAC) throw new Error('kein Audio');
+    const c = audio(); if (c) await padSample(c);
+    const t0 = seq[0].t, secs = (seq[seq.length - 1].t - t0) / 1000 + 2.2;
+    const oc = new OAC(1, Math.ceil(secs * RATE), RATE);
+    seq.forEach((n) => voice(oc, D.pad[n.i].f, 0.05 + (n.t - t0) / 1000));
+    return (await oc.startRendering()).getChannelData(0);
+  }
+  function pcm16(f) { const out = new Int16Array(f.length); for (let i = 0; i < f.length; i++) { const s = Math.max(-1, Math.min(1, f[i])); out[i] = s < 0 ? s * 0x8000 : s * 0x7fff; } return out; }
+  function wavBlob(p) {
+    const b = new ArrayBuffer(44 + p.length * 2), v = new DataView(b);
+    const str = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+    str(0, 'RIFF'); v.setUint32(4, 36 + p.length * 2, true); str(8, 'WAVE'); str(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+    v.setUint32(24, RATE, true); v.setUint32(28, RATE * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); str(36, 'data'); v.setUint32(40, p.length * 2, true);
+    new Int16Array(b, 44).set(p);
+    return new Blob([b], { type: 'audio/wav' });
+  }
+  /* MP3 über lamejs (LGPL-3.0), erst beim ersten MP3-Download geladen */
+  const loadLame = () => (window.lamejs ? Promise.resolve() : new Promise((ok, no) => { const s = document.createElement('script'); s.src = 'js/vendor/lamejs.js'; s.onload = ok; s.onerror = no; document.head.appendChild(s); }));
+  async function mp3Blob(p) {
+    await loadLame(); const enc = new window.lamejs.Mp3Encoder(1, RATE, 128), parts = [];
+    for (let i = 0; i < p.length; i += 1152) { const d = enc.encodeBuffer(p.subarray(i, i + 1152)); if (d.length) parts.push(new Uint8Array(d)); }
+    const end = enc.flush(); if (end.length) parts.push(new Uint8Array(end));
+    return new Blob(parts, { type: 'audio/mpeg' });
+  }
+  const fileName = (name, ext) => 'Liebeslied-' + (String(name).replace(/[^\wäöüÄÖÜß-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'Schmetterlingsfutter') + '.' + ext;
+  async function downloadSong(sg, kind) {
+    L.toast('🎵 Lied wird erstellt …');
+    try {
+      const p = pcm16(await renderSong(sg.seq)); const blob = kind === 'mp3' ? await mp3Blob(p) : wavBlob(p);
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = fileName(sg.name, kind);
+      document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+      L.toast('⬇ ' + a.download); if (window.LZS) window.LZS.count('song_dl:' + kind);
+    } catch (e) { L.toast('Herunterladen hat nicht geklappt'); }
+  }
+  function downloadSheet(sg) {
+    L.openSheet('<h3>⬇ „' + L.esc(sg.name) + '“ herunterladen</h3><div class="o-list"><button type="button" class="pill-btn primary" data-k="mp3">🎵 Als MP3</button><button type="button" class="pill-btn" data-k="wav">🎼 Als WAV (beste Qualität)</button></div><div class="row" style="margin-top:12px"><button class="pill-btn ghost" data-cancel>Schließen</button></div>', (sh) => {
+      sh.querySelector('[data-cancel]').onclick = L.closeSheet;
+      sh.querySelectorAll('[data-k]').forEach((b) => b.onclick = () => { L.closeSheet(); downloadSong(sg, b.dataset.k); });
+    });
+  }
   function renderSongs() {
     const l = $('songList'); l.innerHTML = ''; $('songCount').textContent = S().songs.length;
     if (!S().songs.length) { l.innerHTML = '<div class="empty">Noch kein Lied. Nimm eins auf und speichere es.</div>'; return; }
     S().songs.slice().reverse().forEach((sg) => {
       const d = document.createElement('div'); d.className = 'song';
-      d.innerHTML = '<button class="icon-btn" aria-label="Abspielen">▶</button><span class="s-t">' + L.esc(sg.name) + '<span class="s-m">' + sg.seq.length + ' Töne · ' + L.fmtDate(new Date(sg.date)) + '</span></span><button class="icon-btn" aria-label="Teilen">↗</button><button class="reason-del" aria-label="Löschen">✕</button>';
+      d.innerHTML = '<button class="icon-btn" aria-label="Abspielen">▶</button><span class="s-t">' + L.esc(sg.name) + '<span class="s-m">' + sg.seq.length + ' Töne · ' + L.fmtDate(new Date(sg.date)) + '</span></span><button class="icon-btn" aria-label="Herunterladen">⬇</button><button class="icon-btn" aria-label="Teilen">↗</button><button class="reason-del" aria-label="Löschen">✕</button>';
       const btns = d.querySelectorAll('button');
       btns[0].onclick = () => playSeq(sg.seq);
-      btns[1].onclick = () => L.shareText('🎵 Ich habe dir ein Liebeslied komponiert: „' + sg.name + '“\nTöne: ' + songCode(sg.seq) + '\n— ' + S().sender + ' ❤ (Schmetterlingsfutter-App)');
-      btns[2].onclick = () => L.confirmSheet('Lied löschen?', sg.name, 'Löschen', () => { S().songs = S().songs.filter((x) => x.id !== sg.id); L.save(); renderSongs(); }, true);
+      btns[1].onclick = () => downloadSheet(sg);
+      btns[2].onclick = () => L.shareText('🎵 Ich habe dir ein Liebeslied komponiert: „' + sg.name + '“\nTöne: ' + songCode(sg.seq) + '\n— ' + S().sender + ' ❤ (Schmetterlingsfutter-App)');
+      btns[3].onclick = () => L.confirmSheet('Lied löschen?', sg.name, 'Löschen', () => { S().songs = S().songs.filter((x) => x.id !== sg.id); L.save(); renderSongs(); }, true);
       l.appendChild(d);
     });
     if (window.LZP) window.LZP.mountTips($('songTips'), 'song', 'Euer Lied hörbar machen');
