@@ -197,6 +197,7 @@
     if (map) { try { map.remove(); } catch (e) {} map = null; }
     markers = {}; spawns = {}; meMarker = null; me = null; lastFix = null; fast = false; fastN = 0; follow = true;
     if (root) { root.remove(); root = null; }
+    if (A() && A().compassOff) A().compassOff(); /* 3.39.1: Kompass-Sensor aus */
     document.documentElement.classList.remove('jagd-open');
     if (!document.querySelector('.jagd-fang')) document.documentElement.classList.remove('cam-open');
   }
@@ -220,7 +221,10 @@
       '<div class="jf-tip">Schwing das Netz: mit dem Finger über den Falter wischen</div>' + (canAR ? '<button type="button" class="jf-ar">✨ Im Raum fangen</button>' : '');
     document.body.appendChild(el);
     const v = el.querySelector('video'), cv = el.querySelector('.jf-net'), bf = el.querySelector('.jf-bf'), ctx = cv.getContext('2d');
-    let stream = null; try { stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false }); v.srcObject = stream; el.classList.add('cam'); } catch (e) { /* ohne Kamera: Wiese als Hintergrund */ }
+    /* 3.39.1 (Codex-Prüfung): ✕ und Zurück-Taste wirken schon während der Kamerafreigabe */
+    let stream = null, gone = false; el.querySelector('.jf-x').onclick = () => { gone = true; el.style.display = 'none'; };
+    try { stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false }); if (!gone) { v.srcObject = stream; el.classList.add('cam'); } } catch (e) { /* ohne Kamera: Wiese als Hintergrund */ }
+    if (gone) { if (stream) stream.getTracks().forEach((t) => t.stop()); el.remove(); if (!root) document.documentElement.classList.remove('cam-open'); else setTimeout(arResume, 120); if (opts && opts.done) opts.done(false); return; }
     const W = () => el.clientWidth, H = () => el.clientHeight; cv.width = W(); cv.height = H();
     let x = W() / 2, y = H() * 0.42, tx = x, ty = y, hits = 0, speed = 0.9 + s.i * 0.12, dead = false, trail = [], raf = 0, t0 = performance.now();
     const hitsEl = el.querySelector('.jf-hits'); const drawHits = () => { hitsEl.textContent = need > 1 ? '🕸️ ' + hits + '/' + need : ''; }; drawHits();
@@ -262,7 +266,7 @@
       /* Raum-AR: Kamera hier freigeben, 3D-Falter im Raum; danach zurück in denselben Ablauf */
       arOn = true; cancelAnimationFrame(raf); if (stream) { stream.getTracks().forEach((t) => t.stop()); stream = null; el.classList.remove('cam'); }
       el.style.visibility = 'hidden'; C('jagd_ar');
-      const started = await A.start({ list: [s.i], title: f.name, sub: 'Der Falter flattert jetzt um dich herum. Dreh dich langsam und tippe auf ihn, wenn er nah ist.', onEnd: (n) => { el.style.visibility = ''; end(n > 0); } });
+      let started = false; try { started = await A.start({ list: [s.i], title: f.name, sub: 'Der Falter flattert jetzt um dich herum. Dreh dich langsam und tippe auf ihn, wenn er nah ist.', onEnd: (n) => { el.style.visibility = ''; end(n > 0); } }); } catch (e) { started = false; }
       if (!started) { el.style.visibility = ''; arB.remove(); arOn = false; t0 = performance.now(); raf = requestAnimationFrame(frame); L.toast('Raum-AR ließ sich nicht starten – fang ihn hier mit dem Netz'); }
     };
     fang = { close, end };
@@ -357,11 +361,11 @@
   async function xrStart() {
     if (!A() || document.querySelector('.raum-ov')) return; const caught = [];
     arPause(); C('jagd_xr');
-    const ok3d = await A().start({ title: 'Falterjagd', sub: 'Schau dich um – das Radar zeigt, wo Falter sind.', heading0: A().heading(),
+    let ok3d = false; try { ok3d = await A().start({ title: 'Falterjagd', sub: 'Schau dich um – das Radar zeigt, wo Falter sind.', heading0: A().heading(),
       targets: () => arTargets(true).map((t) => ({ key: t.key, i: t.i, dist: t.dist, bearing: t.bearing, near: t.near })),
       onCatch: (i, key) => { const s = spawns[key]; if (!s) return; caught.push(recordCatch(s)); },
-      onEnd: () => { arResume(); if (!caught.length) return; const last = caught[caught.length - 1]; if (last.walkDone) setTimeout(walkEnd, 200); else setTimeout(() => caughtSheet(last.rec, false), 200); } });
-    if (!ok3d) { arResume(); L.toast('3D ließ sich nicht starten – die Falter bleiben im Kamerabild'); const b = root && root.querySelector('.jg-xrbtn'); if (b) b.hidden = true; }
+      onEnd: () => { arResume(); if (!caught.length) return; const last = caught[caught.length - 1]; if (last.walkDone) setTimeout(walkEnd, 200); else setTimeout(() => caughtSheet(last.rec, false), 200); } }); } catch (e) { ok3d = false; }
+    if (!ok3d) { arResume(); L.toast('3D ließ sich nicht starten – die Falter bleiben im Kamerabild'); } /* 3.39.1: Knopf bleibt, ein neuer Versuch ist erlaubt */
   }
 
   /* ---------- Falterspaziergang zu zweit ---------- */

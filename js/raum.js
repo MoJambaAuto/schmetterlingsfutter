@@ -45,11 +45,18 @@
     return h / d;
   }
   const compass = { h: null, on: false, t: 0 };
+  let compFn = null;
   function compassOn() {
     if (compass.on) return; compass.on = true;
-    const fn = (e) => { if (e.alpha == null) return; if (e.type === 'deviceorientation' && !e.absolute) return; const h = camHeading(e.alpha, e.beta || 0, e.gamma || 0); if (!isFinite(h)) return;
+    const fn = compFn = (e) => { if (e.alpha == null) return; if (e.type === 'deviceorientation' && !e.absolute) return; const h = camHeading(e.alpha, e.beta || 0, e.gamma || 0); if (!isFinite(h)) return;
       compass.h = compass.h == null ? h : compass.h + ((((h - compass.h) % 360) + 540) % 360 - 180) * 0.25; compass.h = (compass.h + 360) % 360; compass.t = Date.now(); };
     window.addEventListener('deviceorientationabsolute', fn); window.addEventListener('deviceorientation', fn);
+  }
+  /* 3.39.1 (Codex-Prüfung): Sensor abschalten, sobald weder Falterjagd noch Raum-AR offen ist */
+  function compassOff() {
+    if (!compass.on || document.querySelector('.jagd, .raum-ov')) return;
+    window.removeEventListener('deviceorientationabsolute', compFn); window.removeEventListener('deviceorientation', compFn);
+    compass.on = false; compass.h = null; compFn = null;
   }
   const heading = () => (compass.h != null && Date.now() - compass.t < 3000 ? compass.h : null);
 
@@ -71,15 +78,25 @@
       '<div class="ra-bar"><button type="button" class="ra-re" aria-label="Falter zu mir holen">⟳</button><button type="button" class="ra-net" disabled>🕸️ Netz werfen</button></div>';
     document.body.appendChild(ov);
     const H0 = opts.heading0 != null ? opts.heading0 : heading(); /* Himmelsrichtung, in die das Handy beim Start zeigt */
+    /* 3.39.1 (Codex-Prüfung): ✕ und Zurück-Taste wirken schon während des Starts (Berechtigung, Laden) */
+    let aborted = false, live = null, gl = null, broken = false;
+    const xBtn = ov.querySelector('.ra-x');
+    xBtn.onclick = () => { if (live) return live(); aborted = true; ov.style.display = 'none'; };
+    cur = { end: () => xBtn.click(), flash: () => {} };
+    const quit = () => { ov.remove(); cur = null; compassOff(); };
+    const abort = (ses) => { if (ses) { try { ses.end().catch(() => {}); } catch (e) {} } quit(); C('raum_abort'); try { opts.onEnd && opts.onEnd(0); } catch (e) {} return true; };
     /* Wie im Codex-Prototyp: die Sitzung als ALLERERSTES anfordern – direkt aus dem Antippen heraus, sonst lehnt Chrome ab */
     let session;
     try { session = await navigator.xr.requestSession('immersive-ar', { requiredFeatures: ['local'], optionalFeatures: ['dom-overlay'], domOverlay: { root: ov } }); }
-    catch (e) { ov.remove(); C('raum_fail'); return false; }
+    catch (e) { if (aborted) return abort(null); quit(); C('raum_fail'); return false; }
+    if (aborted) return abort(session);
+    try { /* 3.39.1: alles nach dem Start abgesichert – siehe catch am Ende */
     let T, atlas;
-    try { await loadThree(); atlas = await loadAtlas(); T = window.THREE; } catch (e) { try { await session.end(); } catch (x) {} ov.remove(); C('raum_fail'); return false; }
+    try { await loadThree(); atlas = await loadAtlas(); T = window.THREE; } catch (e) { try { await session.end(); } catch (x) {} if (aborted) return abort(null); quit(); C('raum_fail'); return false; }
+    if (aborted) return abort(session);
     /* Knöpfe im Overlay sollen kein zusätzliches „Antippen im Raum“ auslösen */
     ov.addEventListener('beforexrselect', (e) => { if (e.target && e.target.closest && e.target.closest('button')) e.preventDefault(); });
-    const renderer = new T.WebGLRenderer({ antialias: true, alpha: true });
+    const renderer = gl = new T.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1)); renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.xr.enabled = true; renderer.xr.setReferenceSpaceType('local');
     renderer.domElement.className = 'raum-gl'; document.body.appendChild(renderer.domElement);
@@ -173,7 +190,9 @@
       rx.fillStyle = '#fff'; rx.beginPath(); rx.arc(W / 2, W / 2, 6, 0, 7); rx.fill();
     }
     let last = performance.now(), ended = false, nextSync = 0, nextUi = 0;
-    renderer.setAnimationLoop((now) => {
+    /* 3.39.1: Fehler im Bildaufbau beenden die Sitzung statt sie hängen zu lassen */
+    renderer.setAnimationLoop((now) => { try { frameXR(now); } catch (e) { if (!ended) { C('raum_err'); end(); } } });
+    function frameXR(now) {
       const dt = Math.min(0.05, (now - last) / 1000); last = now;
       const xc = renderer.xr.getCamera(); camPos.setFromMatrixPosition(xc.matrixWorld); camDir.set(0, 0, -1).applyQuaternion(xc.getWorldQuaternion(new T.Quaternion()));
       if (!t0) t0 = now;
@@ -202,21 +221,26 @@
         b.glow.material.opacity = !b.near ? 0.35 + Math.sin(now / 250) * 0.15 : b.i >= 7 ? 0.12 + Math.sin(now / 300) * 0.06 : 0;
       });
       renderer.render(scene, cam);
-    });
+    }
     function end() { if (ended) return; ended = true; try { session.end(); } catch (e) { cleanup(); } }
-    function cleanupQuiet() { renderer.setAnimationLoop(null); try { renderer.dispose(); } catch (e) {} renderer.domElement.remove(); ov.remove(); cur = null; }
+    function cleanupQuiet() { renderer.setAnimationLoop(null); try { renderer.dispose(); } catch (e) {} renderer.domElement.remove(); ov.remove(); cur = null; compassOff(); }
     function cleanup() {
       renderer.setAnimationLoop(null); scene.traverse((o) => { if (o.material) { (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => { if (m.map) m.map.dispose(); m.dispose(); }); } if (o.geometry) o.geometry.dispose(); });
-      renderer.dispose(); renderer.domElement.remove(); ov.remove(); cur = null;
+      renderer.dispose(); renderer.domElement.remove(); ov.remove(); cur = null; compassOff();
       try { opts.onEnd && opts.onEnd(got); } catch (e) {}
     }
-    let failed = false; session.addEventListener('end', () => { ended = true; if (!failed) cleanup(); });
-    ov.querySelector('.ra-x').onclick = end;
-    try { await renderer.xr.setSession(session); } catch (e) { C('raum_fail'); ended = true; failed = true; try { await session.end(); } catch (x) {} cleanupQuiet(); return false; }
-    cur = { end, flash };
+    let failed = false; session.addEventListener('end', () => { ended = true; if (!failed && !broken) cleanup(); });
+    try { await renderer.xr.setSession(session); } catch (e) { C('raum_fail'); ended = true; failed = true; try { await session.end(); } catch (x) {} cleanupQuiet(); if (aborted) { C('raum_abort'); try { opts.onEnd && opts.onEnd(0); } catch (x) {} return true; } return false; }
+    cur = { end, flash }; live = end;
+    if (aborted) { end(); return true; }
     if (H0 == null && hunt) flash('Kompass fehlt – Richtungen sind ungefähr');
     try { opts.onOverlay && opts.onOverlay(ov, cur); } catch (e) {}
     return true;
+    } catch (e) { /* 3.39.1 (Codex-Prüfung): Fehler nach dem Start (WebGL, Szene …) beenden die Sitzung und räumen auf */
+      broken = true; try { session.end().catch(() => {}); } catch (x) {}
+      if (gl) { try { gl.setAnimationLoop(null); gl.dispose(); } catch (x) {} gl.domElement.remove(); }
+      quit(); if (aborted) { C('raum_abort'); try { opts.onEnd && opts.onEnd(0); } catch (x) {} return true; } C('raum_fail'); return false;
+    }
   }
   /* 3.39.0 (Codex-Prüfung): beim Verlassen der Seite 3D-Sitzung sauber beenden */
   window.addEventListener('pagehide', () => { if (cur) { try { cur.end(); } catch (e) {} } });
@@ -288,5 +312,5 @@
     document.head.appendChild(s);
   }
 
-  window.LZA = { supported, start, visit, left, preload, ready: () => ok === true, heading, compassOn, camHeading, side, _state: bst, _compass: compass };
+  window.LZA = { supported, start, visit, left, preload, ready: () => ok === true, heading, compassOn, compassOff, camHeading, side, _state: bst, _compass: compass };
 })();
