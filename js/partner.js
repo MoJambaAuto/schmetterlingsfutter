@@ -90,7 +90,7 @@
     P().partner = null; P().matches = {}; P().inbox = P().inbox.filter((m) => m.t !== 'match'); L.save(); keys = null;
     if (!silent) { L.toast('Verbindung getrennt'); renderAll(); }
   }
-  function pairLink() { const p = P().partner; return location.origin + location.pathname + '?pair=' + fmtCode(p.pair, p.secret); }
+  function pairLink() { const p = P().partner; return (location.hostname === 'mojambaauto.github.io' ? 'https://app.schmetterlingsfutter.de/' : location.origin + location.pathname) + '?pair=' + fmtCode(p.pair, p.secret); }
 
   /* ---------- Nachrichten ---------- */
   const QUIET = { hello: 1, seen: 1, matchdone: 1 }; // kein Anstupsen: Begrüßung, Lesebestätigung, Abgleich

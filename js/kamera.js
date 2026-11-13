@@ -8,7 +8,7 @@
   const D = window.LUZIFER_DATA, L = window.LZ; if (!D || !L) return;
   const S = () => L.S, P = () => window.LZP;
   const esc = L.esc;
-  const APP_URL = 'https://mojambaauto.github.io/schmetterlingsfutter/';
+  const APP_URL = 'https://schmetterlingsfutter.de/';
   const PIC_MAX = 46000, PIC_RE = /^data:image\/(webp|jpeg|png);base64,[A-Za-z0-9+/=]+$/;
   const FX = [['schwarm', '🦋 Schwarm'], ['verwandlung', '✨ Verwandlung'], ['krone', '👑 Krone'], ['herzen', '💕 Herzen'], ['ohne', 'Ohne']];
   const HUES = [0, 35, 80, 140, 190, 230, 280, 320];

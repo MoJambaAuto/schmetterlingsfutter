@@ -1,7 +1,7 @@
 # Schmetterlingsfutter – Beziehungspflege für Paare
 
 Kostenlose Web-App (PWA) von MoJamba: Futter für die Schmetterlinge im Bauch – jeden Tag.
-Live: https://mojambaauto.github.io/schmetterlingsfutter/ · Datenschutz & Impressum: `privacy.html`
+Live: https://app.schmetterlingsfutter.de/ (alte Adresse https://mojambaauto.github.io/schmetterlingsfutter/ bleibt für die Play-App und zieht Browser-Nutzer per `js/umzug.js` + `umzug.html` um) · Datenschutz & Impressum: `privacy.html`
 
 Dieses Repository ist die veröffentlichte Fassung (GitHub Pages, Branch `main`, Ordner `/`).
 Konzept, Store-Texte, Veröffentlichungsplan und Store-Grafiken liegen im privaten Vault-Repo

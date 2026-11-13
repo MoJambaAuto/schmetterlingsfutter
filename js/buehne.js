@@ -11,7 +11,7 @@
   const D = window.LUZIFER_DATA, L = window.LZ; if (!D || !L) return;
   const $ = (id) => document.getElementById(id), esc = L.esc, P = () => window.LZP;
   const C = (k) => window.LZS && window.LZS.count(k);
-  const APP_URL = 'https://mojambaauto.github.io/schmetterlingsfutter/';
+  const APP_URL = 'https://app.schmetterlingsfutter.de/';
   const MAIL = 'info@mojamba.de';
   /* Eigener Spreadshop (seit 13.11.2026): fertige Produkte mit den Klassikern, später mit Gedichten der Woche (Autorenanteil) */
   const SHOP_URL = 'https://schmetterlingsfutter-poesie.myspreadshop.de/all';

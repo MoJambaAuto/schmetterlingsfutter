@@ -262,7 +262,7 @@
   function fillQr(root) { root.querySelectorAll('[data-qr]').forEach((el) => { const svg = qrSvg(el.dataset.qr); if (svg) el.innerHTML = svg; else el.remove(); }); }
   const b64u = (str) => btoa(String.fromCharCode(...new TextEncoder().encode(str))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
   const unb64u = (s) => { s = s.replace(/-/g, '+').replace(/_/g, '/'); while (s.length % 4) s += '='; return new TextDecoder().decode(Uint8Array.from(atob(s), (c) => c.charCodeAt(0))); };
-  const greetLink = (text) => location.origin + location.pathname + '#gruss=' + b64u(JSON.stringify({ t: text, s: me() }));
+  const greetLink = (text) => (location.hostname === 'mojambaauto.github.io' ? 'https://app.schmetterlingsfutter.de/' : location.origin + location.pathname) + '#gruss=' + b64u(JSON.stringify({ t: text, s: me() }));
   function handleGreet() {
     const m = /#gruss=([A-Za-z0-9_-]+)/.exec(location.hash); if (!m) return;
     try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}

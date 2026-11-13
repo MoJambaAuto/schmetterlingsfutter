@@ -5,7 +5,7 @@
   const D = window.LUZIFER_DATA, L = window.LZ; if (!D || !L) return;
   const P = () => window.LZP;
   const $ = (id) => document.getElementById(id), esc = L.esc, S = () => L.S;
-  const APP_URL = 'https://mojambaauto.github.io/schmetterlingsfutter/';
+  const APP_URL = 'https://schmetterlingsfutter.de/'; // Teilen an Dritte: die Website (mit Knopf zur App)
   const SHARE_LINE = 'Guckt mal: Futter für meine Schmetterlinge im Bauch 🦋';
   const joined = () => !!(P() && P().joined && P().joined());
   const you = () => (P() && P().partnerName ? P().partnerName() : S().receiver);

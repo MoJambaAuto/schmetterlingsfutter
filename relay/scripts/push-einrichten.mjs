@@ -46,7 +46,7 @@ const s = wrangler('secret put VAPID_PRIVATE --config wrangler.jsonc', JSON.stri
 if (!s.ok) stop('Cloudflare hat den Schlüssel nicht angenommen.\n' + s.tail);
 
 console.log('3/4 Öffentlichen Schlüssel eintragen …');
-const lines = '"VAPID_PUBLIC": "' + pub + '",\n    "VAPID_SUBJECT": "https://mojambaauto.github.io/schmetterlingsfutter/"';
+const lines = '"VAPID_PUBLIC": "' + pub + '",\n    "VAPID_SUBJECT": "https://app.schmetterlingsfutter.de/"';
 if (cfg.includes('"VAPID_PUBLIC"')) cfg = cfg.replace(/"VAPID_PUBLIC": "[^"]*"/, '"VAPID_PUBLIC": "' + pub + '"');
 else {
   const at = /("ALLOWED_ORIGINS": "[^"]*")/; if (!at.test(cfg)) stop('Stelle in wrangler.jsonc nicht gefunden.');

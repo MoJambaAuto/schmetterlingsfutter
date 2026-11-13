@@ -1,0 +1,31 @@
+# Veröffentlicht die App unter app.schmetterlingsfutter.de (Repo MoJambaAuto/schmetterlingsfutter-app).
+# Im Ursprungs-Repo MoJambaAuto/schmetterlingsfutter läuft weiter GitHub Pages ohne eigene Domain
+# (mojambaauto.github.io/schmetterlingsfutter, für die Play-App) – dort wird dieser Job übersprungen.
+name: Neue Adresse (app.schmetterlingsfutter.de)
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  deploy:
+    if: github.repository == 'MoJambaAuto/schmetterlingsfutter-app'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.d.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: mkdir _site && rsync -a --exclude .git --exclude .github --exclude relay --exclude _site ./ _site/
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: d
+        uses: actions/deploy-pages@v4

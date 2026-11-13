@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#1a0a1e">
+<title>Schmetterlingsfutter zieht um</title>
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<style>
+  @font-face{font-family:'Lato';font-weight:400;font-display:swap;src:url('fonts/Lato-400.woff2') format('woff2')}
+  @font-face{font-family:'Lato';font-weight:700;font-display:swap;src:url('fonts/Lato-700.woff2') format('woff2')}
+  html,body{margin:0;height:100%;background:#1a0a1e;color:#fff4f7;font:16px/1.5 Lato,system-ui,sans-serif}
+  main{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;box-sizing:border-box}
+  .bf{font-size:56px}
+  h1{font-size:21px;font-weight:700;margin:12px 0 4px}
+  p{opacity:.8;margin:0 0 14px;max-width:340px}
+  button{margin:6px;padding:12px 22px;border-radius:999px;border:0;font:700 16px Lato,system-ui,sans-serif;background:#e8305a;color:#fff;cursor:pointer}
+  button.ghost{background:transparent;color:#fff4f7;border:1px solid rgba(255,244,247,.7)}
+</style>
+</head>
+<body>
+<main id="m"><div class="bf">🦋</div><h1>Deine Daten ziehen ein …</h1><p>Einen Moment.</p></main>
+<script>
+/* Neue Adresse: verschlüsselten Umzug vom Relay holen, entschlüsseln, in den Speicher legen, „fertig“ melden, zur App.
+   Link: umzug.html#<id>.<schlüssel>.<alter Rest (Suche + Anker), URL-kodiert>. Der Schlüssel verlässt das Gerät nie. */
+(function () {
+  'use strict';
+  var local = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+  var RELAY = local ? 'http://localhost:8787' : 'https://schmetterlingsfutter-relay.mojamba-automation.workers.dev';
+  var STORE = 'luzifer.v2';
+  var m = document.getElementById('m');
+  var parts = location.hash.slice(1).split('.');
+  var id = parts[0] || '', keyS = parts[1] || '', rest = '';
+  try { rest = decodeURIComponent(parts.slice(2).join('.') || ''); } catch (e) {}
+  if (!/^[?#]/.test(rest)) rest = '';
+  try { history.replaceState(null, '', location.pathname); } catch (e) {}
+  var app = './' + rest;
+
+  function show(h1, p, btns) {
+    m.innerHTML = '<div class="bf">🦋</div><h1>' + h1 + '</h1><p>' + p + '</p>';
+    (btns || []).forEach(function (b) { var e = document.createElement('button'); e.textContent = b[0]; if (b[2]) e.className = 'ghost'; e.onclick = b[1]; m.appendChild(e); });
+  }
+  function unb64u(s) { s = s.replace(/-/g, '+').replace(/_/g, '/'); while (s.length % 4) s += '='; var b = atob(s), o = new Uint8Array(b.length); for (var i = 0; i < b.length; i++) o[i] = b.charCodeAt(i); return o; }
+  async function load() {
+    var r = await fetch(RELAY + '/umzug/get?id=' + id, { cache: 'no-store' });
+    if (r.status === 404) return null;
+    if (!r.ok) throw new Error('relay ' + r.status);
+    var buf = new Uint8Array(await r.arrayBuffer());
+    var key = await crypto.subtle.importKey('raw', unb64u(keyS), 'AES-GCM', false, ['decrypt']);
+    var raw = new Uint8Array(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: buf.slice(1, 13) }, key, buf.slice(13)));
+    if (buf[0] === 1) raw = new Uint8Array(await new Response(new Blob([raw]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
+    var data = JSON.parse(new TextDecoder().decode(raw));
+    if (!data || data.v !== 1 || !data.ls || typeof data.ls !== 'object') throw new Error('format');
+    return data;
+  }
+  function write(data) {
+    var ls = data.ls;
+    /* Mitteilungen hängen an der Adresse: hier neu einschalten lassen (die Karte „Mitteilungen einschalten“ erscheint dann von selbst). */
+    if (ls[STORE]) { try { var s = JSON.parse(ls[STORE]); if (s.push || s.pushEp) { s.push = false; delete s.pushEp; s.pushSnooze = 0; } s.umzugAt = Date.now(); ls[STORE] = JSON.stringify(s); } catch (e) {} }
+    Object.keys(ls).forEach(function (k) { localStorage.setItem(k, ls[k]); });
+  }
+  async function done() { try { await fetch(RELAY + '/umzug/done?id=' + id, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }); } catch (e) {} }
+  function hasOwn() { try { var s = JSON.parse(localStorage.getItem(STORE) || 'null'); return !!(s && s.onboarded); } catch (e) { return false; } }
+
+  async function run() {
+    show('Deine Daten ziehen ein …', 'Einen Moment.');
+    var data;
+    try { data = await load(); }
+    catch (e) { show('Das hat nicht geklappt', 'Bitte prüfe die Internet-Verbindung.', [['Nochmal versuchen', run], ['Zur App', function () { location.replace(app); }, 1]]); return; }
+    if (!data) { show('Umzug schon erledigt', 'Deine Daten sind bereits hier – oder der Umzug ist abgelaufen. Öffne die alte Adresse noch einmal, dann startet er neu.', [['Zur App', function () { location.replace(app); }]]); return; }
+    if (hasOwn()) {
+      show('Hier gibt es schon Daten', 'Auf diesem Gerät wurde die neue Adresse schon benutzt. Welche Daten sollen bleiben?', [
+        ['Die mitgebrachten', function () { write(data); finish(); }],
+        ['Die hier', function () { done().then(function () { location.replace(app); }); }, 1]
+      ]);
+      return;
+    }
+    try { write(data); } catch (e) { show('Speicher ist voll', 'Die Daten passen hier nicht hinein.', [['Zur App', function () { location.replace(app); }]]); return; }
+    finish();
+  }
+  async function finish() { show('Geschafft! 🦋', 'Willkommen unter app.schmetterlingsfutter.de'); await done(); setTimeout(function () { location.replace(app); }, 700); }
+  if (!/^[a-f0-9]{32}$/.test(id) || !keyS) { location.replace('./'); return; }
+  run();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "de.mojamba.schmetterlingsfutter",
+      "sha256_cert_fingerprints": [
+        "33:55:18:35:60:A8:43:AE:B7:6E:2F:6F:35:2B:51:B1:FF:95:9D:5A:BD:35:1B:8B:25:F4:4C:08:50:B7:14:83",
+        "3F:6B:04:84:81:22:79:93:E4:62:DB:01:4F:9E:43:8C:C8:AB:56:F9:E6:F9:5C:D9:B6:87:02:AD:BA:D2:59:7B"
+      ]
+    }
+  }
+]

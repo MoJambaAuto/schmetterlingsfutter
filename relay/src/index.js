@@ -14,6 +14,51 @@ const PAIR_IDLE_DAYS = 180;
 const UNJOINED_HOURS = 48;
 const MSG_DAYS = 30;
 
+/* ---- Umzug auf die neue Adresse ----
+   Die alte Adresse (mojambaauto.github.io) legt den App-Speicher verschlüsselt ab (AES-GCM, Schlüssel nur im Link-Anker),
+   die neue (app.schmetterlingsfutter.de) holt ihn ab und meldet „fertig“. Der Dienst sieht nur Zufallsbytes. */
+const UMZUG_MAX = 10 * 1024 * 1024;   // Bytes je Umzug
+const UMZUG_PART = 1024 * 1024;       // Bytes je D1-Zeile (Grenze 2 MB)
+const UMZUG_PER_DAY = 3000;           // Umzüge insgesamt je Tag
+const UMZUG_KEEP_H = 48;
+const isUmzugId = (s) => typeof s === 'string' && /^[a-f0-9]{32}$/.test(s);
+async function umzug(url, req, env) {
+  const t = now();
+  if (req.method === 'POST' && url.pathname === '/umzug/put') {
+    const len = Number(req.headers.get('Content-Length') || 0);
+    if (len > UMZUG_MAX) return err('too large', 413, req, env);
+    const buf = new Uint8Array(await req.arrayBuffer());
+    if (!buf.length || buf.length > UMZUG_MAX) return err('input', 400, req, env);
+    const day = new Date(t).toISOString().slice(0, 10);
+    const c = await env.DB.prepare('SELECT COUNT(*) AS n FROM umzug_meta WHERE day = ?').bind(day).first();
+    if (c && c.n >= UMZUG_PER_DAY) return err('busy', 429, req, env);
+    const id = randomHex(16), parts = Math.ceil(buf.length / UMZUG_PART), st = [];
+    for (let i = 0; i < parts; i++) st.push(env.DB.prepare('INSERT INTO umzug (id, part, data) VALUES (?, ?, ?)').bind(id, i, buf.slice(i * UMZUG_PART, (i + 1) * UMZUG_PART)));
+    st.push(env.DB.prepare('INSERT INTO umzug_meta (id, parts, created, day, taken) VALUES (?, ?, ?, ?, 0)').bind(id, parts, t, day));
+    await env.DB.batch(st);
+    return json({ id }, 200, req, env);
+  }
+  const id = url.searchParams.get('id');
+  if (!isUmzugId(id)) return err('input', 400, req, env);
+  const m = await env.DB.prepare('SELECT * FROM umzug_meta WHERE id = ?').bind(id).first();
+  if (req.method === 'GET' && url.pathname === '/umzug/status') return json({ state: !m ? 'unknown' : m.taken ? 'taken' : 'waiting' }, 200, req, env);
+  if (req.method === 'GET' && url.pathname === '/umzug/get') {
+    if (!m || m.taken) return err('unknown', 404, req, env);
+    const r = await env.DB.prepare('SELECT part, data FROM umzug WHERE id = ? ORDER BY part').bind(id).all();
+    const rows = (r && r.results) || [];
+    if (rows.length !== m.parts) return err('unknown', 404, req, env);
+    const chunks = rows.map((x) => new Uint8Array(x.data)), total = chunks.reduce((a, b) => a + b.length, 0), out = new Uint8Array(total);
+    let o = 0; for (const ch of chunks) { out.set(ch, o); o += ch.length; }
+    return new Response(out, { status: 200, headers: Object.assign({ 'Content-Type': 'application/octet-stream' }, corsHeaders(req, env)) });
+  }
+  if (req.method === 'POST' && url.pathname === '/umzug/done') {
+    if (!m) return err('unknown', 404, req, env);
+    await env.DB.batch([env.DB.prepare('DELETE FROM umzug WHERE id = ?').bind(id), env.DB.prepare('UPDATE umzug_meta SET taken = 1 WHERE id = ?').bind(id)]);
+    return json({ ok: true }, 200, req, env);
+  }
+  return err('not found', 404, req, env);
+}
+
 function randomCode(len) {
   const b = new Uint8Array(len); crypto.getRandomValues(b);
   let s = ''; for (let i = 0; i < len; i++) s += ALPHABET[b[i] % ALPHABET.length];
@@ -104,7 +149,7 @@ async function vapidHeader(env, endpoint) {
     vapidKey = await crypto.subtle.importKey('jwk', JSON.parse(env.VAPID_PRIVATE), { name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign']); vapidKeyFor = env.VAPID_PRIVATE;
   }
   const head = b64uText(JSON.stringify({ typ: 'JWT', alg: 'ES256' }));
-  const claims = b64uText(JSON.stringify({ aud: new URL(endpoint).origin, exp: Math.floor(Date.now() / 1000) + 12 * 3600, sub: env.VAPID_SUBJECT || 'https://mojambaauto.github.io/schmetterlingsfutter/' }));
+  const claims = b64uText(JSON.stringify({ aud: new URL(endpoint).origin, exp: Math.floor(Date.now() / 1000) + 12 * 3600, sub: env.VAPID_SUBJECT || 'https://app.schmetterlingsfutter.de/' }));
   const sig = await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, vapidKey, new TextEncoder().encode(head + '.' + claims));
   return 'vapid t=' + head + '.' + claims + '.' + b64u(sig) + ', k=' + env.VAPID_PUBLIC;
 }
@@ -289,6 +334,7 @@ async function auth(env, body) {
 async function handle(req, env, ctx) {
   const url = new URL(req.url);
   if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders(req, env) });
+  if (url.pathname.startsWith('/umzug/')) return umzug(url, req, env);
   if (req.method === 'GET') {
     if (url.pathname === '/' || url.pathname === '/health') return json({ ok: true, service: 'schmetterlingsfutter-relay', time: now() }, 200, req, env);
     if (url.pathname === '/push/key') return json({ key: pushReady(env) ? env.VAPID_PUBLIC : '' }, 200, req, env);
@@ -473,6 +519,8 @@ async function cleanup(env) {
     env.DB.prepare('DELETE FROM stats_rate WHERE day < ?').bind(new Date(t).toISOString().slice(0, 10)),
     env.DB.prepare('DELETE FROM buehne_rate WHERE day < ?').bind(new Date(t).toISOString().slice(0, 10)),
     env.DB.prepare('DELETE FROM stats WHERE day < ?').bind(new Date(t - STATS_KEEP_DAYS * 864e5).toISOString().slice(0, 10)),
+    env.DB.prepare('DELETE FROM umzug WHERE id IN (SELECT id FROM umzug_meta WHERE created < ?)').bind(t - UMZUG_KEEP_H * 3600000),
+    env.DB.prepare('DELETE FROM umzug_meta WHERE created < ?').bind(t - 60 * 864e5),
     env.DB.prepare('DELETE FROM stats_q WHERE day < ?').bind(new Date(t - STATS_KEEP_DAYS * 864e5).toISOString().slice(0, 10))
   ]);
 }

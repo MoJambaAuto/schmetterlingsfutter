@@ -12,6 +12,7 @@
 
   /* Was ist neu – kurz, in Alltagssprache. Neueste zuerst. */
   D.news = [
+    { v: '3.42.0', items: ['🏡 Neue Adresse: app.schmetterlingsfutter.de – deine Daten sind mitgekommen', '🔔 Mitteilungen bitte einmal neu einschalten (die neue Adresse fragt neu)'] },
     { v: '3.41.0', items: ['🦋 Neu auf der Startseite: jeden Tag ein Stück Falter-Wissen, passend zur Jahreszeit', '🗓️ Steckbriefe im Schmetterlingsbuch: wann jede Art fliegt und was ihre Raupe frisst', '🧐 Neues Spiel zu zweit: „Wahr oder Falter?“ – echt oder erfunden?', '🌱 Echten Faltern helfen: mitzählen oder spenden, direkt bei den Vereinen'] },
     { v: '3.40.1', items: ['🛍️ Neu: der Schmetterlingsfutter-Poesie-Shop – Goethe, Heine und Rilke fertig auf Tasse, Shirt und Hoodie (unter Bühne → Klassiker → 🎁 Geschenk)'] },
     { v: '3.40.0', items: ['🎤 Neu unter Spielen: die Bühne – Liebesgedichte von euch lesen, applaudieren, Flügel geben und selbst vortragen', '🎁 Aus jedem Gedicht ein Geschenk machen: Tasse, Karte, Poster, Shirt und mehr – mit Vorschau', '🏆 Jede Woche wird das beliebteste Gedicht zum „Gedicht der Woche“'] },
