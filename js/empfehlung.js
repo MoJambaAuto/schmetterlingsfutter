@@ -25,6 +25,7 @@
      Felder: id, cat, icon, name, text, url, only ('single' = nur ohne verbundenen Partner) */
   const LINKS = [
     { id: 'jochen-schweizer', cat: 'erlebnis', icon: '🎈', name: 'Jochen Schweizer', text: 'Erlebnisse und Gutscheine für zwei – vom Dinner bis zum Ballonflug', url: '' },
+    { id: 'js-arena', cat: 'erlebnis', icon: '🪂', name: 'Jochen Schweizer Arena', text: 'Indoor-Fallschirmspringen, Surfen und Erlebnis-Gutscheine – in Taufkirchen bei München', url: 'https://t.adcell.com/p/click?promoId=612128&slotId=121138&param0=https%3A%2F%2Fwww.jochen-schweizer-arena.de%2F', addedAt: '2026-11-13' },
     { id: 'mydays', cat: 'erlebnis', icon: '✨', name: 'mydays', text: 'Erlebnisgeschenke und Kurzurlaube für Paare', url: '' },
     { id: 'fleurop', cat: 'blumen', icon: '💐', name: 'Fleurop', text: 'Blumen am selben Tag nach Hause liefern lassen', url: '' },
     { id: 'bloomy-days', cat: 'blumen', icon: '🌷', name: 'Bloomy Days', text: 'Frische Blumen im Abo oder als Überraschung', url: '' },
