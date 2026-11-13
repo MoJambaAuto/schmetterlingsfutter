@@ -24,10 +24,10 @@ function q(sql) {
   const j = JSON.parse(out.slice(start)); return (j[0] && j[0].results) || [];
 }
 
-const rows = q("SELECT k, SUM(n) AS n FROM stats WHERE day >= '" + since + "' GROUP BY k");
-const perDay = q("SELECT day, SUM(CASE WHEN k = 'app_day' THEN n ELSE 0 END) AS aktiv, SUM(CASE WHEN k = 'paired_day' THEN n ELSE 0 END) AS verbunden FROM stats WHERE day >= '" + since + "' GROUP BY day ORDER BY day");
-const vers = q("SELECT ver, SUM(n) AS n FROM stats WHERE k = 'app_day' AND day >= '" + since + "' GROUP BY ver ORDER BY ver DESC");
-const terms = q("SELECT src, term, SUM(n) AS n FROM stats_q WHERE day >= '" + since + "' GROUP BY src, term ORDER BY n DESC LIMIT 80");
+const rows = q("SELECT k, SUM(n) AS n FROM stats WHERE day BETWEEN '" + since + "' AND '9999' GROUP BY k");
+const perDay = q("SELECT day, SUM(CASE WHEN k = 'app_day' THEN n ELSE 0 END) AS aktiv, SUM(CASE WHEN k = 'paired_day' THEN n ELSE 0 END) AS verbunden FROM stats WHERE day BETWEEN '" + since + "' AND '9999' GROUP BY day ORDER BY day");
+const vers = q("SELECT ver, SUM(n) AS n FROM stats WHERE k = 'app_day' AND day BETWEEN '" + since + "' AND '9999' GROUP BY ver ORDER BY ver DESC");
+const terms = q("SELECT src, term, SUM(n) AS n FROM stats_q WHERE day BETWEEN '" + since + "' AND '9999' GROUP BY src, term ORDER BY n DESC LIMIT 80");
 
 const C = {}; rows.forEach((r) => { C[r.k] = r.n; });
 const get = (k) => C[k] || 0;

@@ -1,8 +1,8 @@
 /* Schmetterlingsfutter Service Worker – App-Shell offline verfügbar machen. */
-const CACHE = 'schmetterlingsfutter-v3.37.0';
+const CACHE = 'schmetterlingsfutter-v3.38.0';
 const ASSETS = [
   './', './index.html', './privacy.html', './manifest.webmanifest',
-  './css/app.css', './js/data.js', './js/data2.js', './js/vendor/qrcode.js', './js/app.js', './js/features.js', './js/antwort.js', './js/geschenk.js', './js/ordnung.js', './js/zurueck.js', './js/jagd.js', './js/raum.js', './js/empfehlung.js', './img/falter.webp', './js/partner.js', './js/naehe.js', './js/extra.js', './js/frag.js', './js/anreiz.js', './js/kamera.js', './js/daten.js', './js/koppeln.js', './js/spiele.js', './js/spiele2.js', './js/stats.js',
+  './css/app.css', './js/data.js', './js/data2.js', './js/vendor/qrcode.js', './js/app.js', './js/features.js', './js/antwort.js', './js/geschenk.js', './js/ordnung.js', './js/zurueck.js', './js/jagd.js', './js/raum.js', './js/empfehlung.js', './js/neu.js', './img/falter.webp', './js/partner.js', './js/naehe.js', './js/extra.js', './js/frag.js', './js/anreiz.js', './js/kamera.js', './js/daten.js', './js/koppeln.js', './js/spiele.js', './js/spiele2.js', './js/stats.js',
   './fonts/PlayfairDisplay-400.woff2', './fonts/PlayfairDisplay-400i.woff2',
   './fonts/Lato-300.woff2', './fonts/Lato-400.woff2', './fonts/Lato-700.woff2',
   './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png', './icons/apple-touch-icon.png'

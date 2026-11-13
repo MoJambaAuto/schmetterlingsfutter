@@ -31,13 +31,13 @@
     { id: 'eventim', cat: 'tickets', icon: '🎤', name: 'Eventim', text: 'Tickets für Konzerte, Comedy und Shows', url: '' },
     { id: 'reservix', cat: 'tickets', icon: '🎭', name: 'Reservix', text: 'Tickets für Veranstaltungen in eurer Nähe', url: '' },
     { id: 'thalia', cat: 'buecher', icon: '📚', name: 'Thalia', text: 'Bücher zum Verschenken oder gemeinsam Lesen', url: '' },
-    { id: 'amorelie', cat: 'zuzweit', icon: '🔥', name: 'Amorelie', text: 'Spielzeug und Ideen für mehr Nähe', url: '' },
-    { id: 'orion', cat: 'zuzweit', icon: '💋', name: 'Orion', text: 'Dessous und Liebesspielzeug', url: '' },
+    { id: 'amorelie', cat: 'zuzweit', icon: '🔥', name: 'Amorelie', text: 'Spielzeug und Ideen für mehr Nähe', url: '', adult: true },
+    { id: 'orion', cat: 'zuzweit', icon: '💋', name: 'Orion', text: 'Dessous, Liebesspielzeug und Massageöle – diskret verpackt', url: 'https://www.awin1.com/cread.php?awinmid=11661&awinaffid=3152437&ued=https%3A%2F%2Fwww.orion.de%2F', adult: true },
     { id: 'zweisamkeit', cat: 'neu', icon: '💞', name: 'Zweisamkeit', text: 'Partnersuche für Menschen, die es ernst meinen', url: '', only: 'single' },
     { id: 'spaete-liebe', cat: 'neu', icon: '🍂', name: 'Späte Liebe', text: 'Partnersuche ab 50', url: '', only: 'single' }
   ];
   const paired = () => !!(P() && P().paired && P().paired());
-  const visible = () => LINKS.filter((e) => /^https:\/\//.test(e.url || '') && (e.only !== 'single' || !paired()));
+  const visible = () => LINKS.filter((e) => /^https:\/\//.test(e.url || '') && (e.only !== 'single' || !paired()) && (!e.adult || !!L.S.intim));
 
   function sheet() {
     const list = visible(); if (!list.length) return;

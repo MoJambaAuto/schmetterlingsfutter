@@ -13,6 +13,9 @@ window.LUZIFER_DATA = {
   affiliateTag: 'schmetterlingsfutter-21',
   /* Kennung auch an Vorschlägen im 18+-Bereich anhängen? Aus = dort normale Suchlinks ohne Kennung. */
   affiliateAdult: false,
+  /* ---- Awin (Publisher-ID von MoJamba) und Shop für Vorschläge im 18+-Bereich (3.38.0: Orion, Awin-Programm 11661, zugelassen 12.11.2026) ---- */
+  awinAffId: '3152437',
+  adultShop: { name: 'Orion', mid: 11661, search: 'https://www.orion.de/katalog?searchterm=' },
 
   messages: [
     "{r}, du bist das Schönste, das mir je passiert ist.",
