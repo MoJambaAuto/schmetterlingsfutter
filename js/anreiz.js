@@ -25,6 +25,8 @@
       if (a && a.game) return { key: 'act_' + a.id, text: name + ' wartet bei „' + a.title + '“ auf dich!', go: 'Los', run: a.open };
       if (a) return { key: 'act_' + a.deck.id, text: a.kind === 'turn' ? name + ' wartet bei „' + a.deck.title + '“ auf dich!' : 'Euer Ergebnis bei „' + a.deck.title + '“ ist da ✨', go: 'Ansehen', run: () => p.openDeckFromStatus(a.deck) };
     }
+    /* 3.39.0: Empfehlungen – neue Partner zuerst, sonst selten (Regeln in empfehlung.js) */
+    if (window.LZE && window.LZE.recoSuggestion) { const rs = window.LZE.recoSuggestion(); if (rs) return rs; }
     /* Noch nicht verbunden: daran erinnert Papillon zuerst (jedes zweite Mal) */
     if (p && !(p.paired() && p.joined()) && p.RELAY && Math.random() < 0.5) return { key: 'pair', text: 'Verbindet eure Handys – dann landet alles direkt bei ' + name + ' 💞', go: 'Verbinden', run: () => p.pairSheet() };
     const pool = [];
@@ -65,13 +67,15 @@
   function fly(sug) {
     if (el || !sug) return;
     shownThisVisit = true; countUp(); S().flyLast = sug.key; L.save(); window.LZS && window.LZS.count('fly_show:' + sug.key);
-    el = document.createElement('div'); el.className = 'fly'; el.setAttribute('role', 'status');
+    el = document.createElement('div'); el.className = 'fly' + (sug.kind === 'reco' ? ' fly-reco' : ''); el.setAttribute('role', 'status');
     el.innerHTML = '<button type="button" class="fly-b" aria-label="Papillon: ' + L.esc(sug.text) + '"><span class="fly-w" style="filter:hue-rotate(' + HUES[Math.floor(Math.random() * HUES.length)] + 'deg) saturate(1.4)">🦋</span></button>' +
       '<div class="fly-bubble"><div class="fly-t">' + L.esc(sug.text) + '</div><div class="row" style="gap:8px;justify-content:flex-start;margin-top:8px"><button type="button" class="pill-btn small primary" data-go>' + L.esc(sug.go) + ' ›</button><button type="button" class="pill-btn small ghost" data-no aria-label="Papillon wegschicken">Später</button></div></div>';
+    if (sug.kind === 'reco') { const d = document.createElement('span'); d.className = 'fly-drop'; d.setAttribute('aria-hidden', 'true'); d.textContent = '🎁'; el.querySelector('.fly-b').appendChild(d); }
     document.body.appendChild(el);
     const go = () => { window.LZS && window.LZS.count('fly_go:' + sug.key); leave(true); try { sug.run(); } catch (e) {} };
     el.querySelector('[data-go]').onclick = go; el.querySelector('.fly-b').onclick = go;
-    el.querySelector('[data-no]').onclick = () => { window.LZS && window.LZS.count('fly_no:' + sug.key); leave(false); };
+    el.querySelector('[data-no]').onclick = () => { window.LZS && window.LZS.count('fly_no:' + sug.key); if (sug.later) { try { sug.later(); } catch (e) {} } leave(false); };
+    if (sug.shown) { try { sug.shown(); } catch (e) {} }
     const b = el.querySelector('.fly-b');
     if (calm()) { el.classList.add('landed'); }
     else {
@@ -106,5 +110,5 @@
   /* Wartet jemand auf dich, kommt Papillon früher */
   setTimeout(() => { const p = P(); const urgent = p && p.joined() && p.activity().some((x) => x.kind !== 'wait'); schedule(urgent ? 6000 : 25000); }, 1500);
   document.addEventListener('visibilitychange', () => { if (!document.hidden && !shownThisVisit) schedule(15000); });
-  window.LZA = { fly: (force) => { shownThisVisit = false; if (force) { const f = S().flyDay; if (f) f.n = 0; } fly(suggestion()); }, leave, suggestion };
+  window.LZFly = { fly: (force) => { shownThisVisit = false; if (force) { const f = S().flyDay; if (f) f.n = 0; } fly(suggestion()); }, leave, suggestion };
 })();

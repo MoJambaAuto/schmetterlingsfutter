@@ -218,6 +218,8 @@
     try { opts.onOverlay && opts.onOverlay(ov, cur); } catch (e) {}
     return true;
   }
+  /* 3.39.0 (Codex-Prüfung): beim Verlassen der Seite 3D-Sitzung sauber beenden */
+  window.addEventListener('pagehide', () => { if (cur) { try { cur.end(); } catch (e) {} } });
   const side = (d) => { d = ((d % 360) + 540) % 360 - 180; return Math.abs(d) < 25 ? 'vor dir' : Math.abs(d) > 150 ? 'hinter dir' : d < 0 ? 'links' : 'rechts'; };
 
   /* ---------- Falter zu Besuch: einmal am Tag drei Falter im Zimmer ---------- */

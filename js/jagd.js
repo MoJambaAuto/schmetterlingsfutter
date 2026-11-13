@@ -314,6 +314,8 @@
   }
   function arPause() { if (!ar) return; ar.paused = true; if (ar.stream) { ar.stream.getTracks().forEach((t) => t.stop()); ar.stream = null; } ar.lay.classList.remove('cam'); }
   function arResume() { if (!ar || !root || document.querySelector('.jagd-fang') || document.querySelector('.raum-ov')) return; ar.paused = false; if (!root.classList.contains('show-map')) arCam(); }
+  /* 3.39.0 (Codex-Prüfung): App im Hintergrund → Kamera aus, beim Zurückkommen wieder an */
+  document.addEventListener('visibilitychange', () => { if (!ar) return; if (document.hidden) { const p = ar.paused; arPause(); ar.paused = p; } else if (!ar.paused) { ar.paused = true; arResume(); } });
   function arStop() { if (!ar) return; cancelAnimationFrame(ar.raf); arPause(); ar = null; }
   function showMap(on) {
     if (!root) return; root.classList.toggle('show-map', on);

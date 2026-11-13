@@ -273,10 +273,10 @@
   /* adult = Vorschlag steht im 18+-Bereich. Dort wird die Partnerkennung nur angehängt, wenn affiliateAdult eingeschaltet ist
      (Amazon-Programmrichtlinien: Seiten mit sexuellen Inhalten gelten als ungeeignet – Entscheidung liegt bei Mo). */
   const ADULT_KEYS = /^(intim_|match_vorlieben)/;
-  function awinUrl(mid, url) { return 'https://www.awin1.com/cread.php?awinmid=' + mid + '&awinaffid=' + encodeURIComponent(D.awinAffId || '') + '&ued=' + encodeURIComponent(url); }
+  function awinUrl(mid, url, ref) { return 'https://www.awin1.com/cread.php?awinmid=' + mid + '&awinaffid=' + encodeURIComponent(D.awinAffId || '') + (ref ? '&clickref=' + encodeURIComponent(ref) : '') + '&ued=' + encodeURIComponent(url); }
   function amazonUrl(q, adult, raw) {
     /* 3.38.0: Vorschläge im 18+-Bereich gehen zum Erotik-Partner (Awin), nicht zu Amazon – dort sind sexuelle Inhalte nicht erlaubt */
-    if (adult && D.adultShop && D.awinAffId) return awinUrl(D.adultShop.mid, D.adultShop.search + encodeURIComponent(q));
+    if (adult && D.adultShop && D.awinAffId) return awinUrl(D.adultShop.mid, D.adultShop.search + encodeURIComponent(q), 'sf-zweisamkeit');
     const tag = (adult && !D.affiliateAdult) ? '' : (D.affiliateTag || '').trim();
     /* 3.26.0: Suchbegriff passend zur Person (nicht bei eigener Suche) und Budget als Preisfilter */
     const W = window.LZW; if (W && !raw && !adult) q = W.query(q);

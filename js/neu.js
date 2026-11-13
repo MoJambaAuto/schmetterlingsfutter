@@ -12,6 +12,7 @@
 
   /* Was ist neu – kurz, in Alltagssprache. Neueste zuerst. */
   D.news = [
+    { v: '3.39.0', items: ['🎁 Papillon bringt ab und zu ein kleines Geschenk vorbei – neue Empfehlungen unserer Partner (als Werbung gekennzeichnet, ganz selten)', '🛠️ Mehrere Verbesserungen an der Falterjagd in 3D'] },
     { v: '3.38.1', items: ['👑 Schmetterlinge fangen: Legt einen Liebesdienst als Wochen-Einsatz fest – wer am Sonntag hinten liegt, schenkt ihn'] },
     { v: '3.38.0', items: [
       '🔥 Neuer Partner Orion: Ideen im Bereich „Zweisamkeit“ (18+) führen jetzt zu einem passenden Erotik-Shop',
