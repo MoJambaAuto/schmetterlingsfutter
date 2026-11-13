@@ -952,7 +952,9 @@
   function activityHtml() {
     const acts = activity(); const tl = timeline();
     const shown = new Set(acts.map((x) => x.id).filter(Boolean));
-    const fresh = tl.find((e) => e.who === 'them' && !e.read && !(e.gid && shown.has(e.gid)));
+    /* die neueste ungelesene Botschaft/Bild/Jingle steht schon groß in „Neu von …“ (naehe.js) – nicht doppelt zeigen */
+    const fp = (P().inbox || []).slice().reverse().find((x) => !x.read && (x.t === 'msg' || x.t === 'pic' || x.t === 'jingle'));
+    const fresh = tl.find((e) => e.who === 'them' && !e.read && !(e.gid && shown.has(e.gid)) && !(fp && e.id === fp.id));
     const mine = tl.find((e) => e.who === 'me' && !{ match: 1, game: 1, spiel: 1 }[e.t] && Date.now() - e.at < 7 * 864e5);
     const extra = [fresh, mine].filter(Boolean);
     const k = Math.min(3, 4 - extra.length);
