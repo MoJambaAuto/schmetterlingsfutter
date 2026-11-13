@@ -13,6 +13,8 @@
   const C = (k) => window.LZS && window.LZS.count(k);
   const APP_URL = 'https://mojambaauto.github.io/schmetterlingsfutter/';
   const MAIL = 'info@mojamba.de';
+  /* Eigener Spreadshop (seit 13.11.2026): fertige Produkte mit den Klassikern, später mit Gedichten der Woche (Autorenanteil) */
+  const SHOP_URL = 'https://schmetterlingsfutter-poesie.myspreadshop.de/all';
 
   /* ---------- Zustand im Gerät ---------- */
   function st() {
@@ -42,9 +44,9 @@
   const theme = () => THEMES[new Date().getMonth()];
   /* Gemeinfreie Klassiker (Autoren seit über 70 Jahren verstorben) */
   const CLASSICS = [
-    { id: 'k1', title: 'Nähe des Geliebten', author: 'Johann Wolfgang von Goethe (1795)', cat: 'sehnsucht', gift: true, body: 'Ich denke dein, wenn mir der Sonne Schimmer\nVom Meere strahlt;\nIch denke dein, wenn sich des Mondes Flimmer\nIn Quellen malt.\n\nIch sehe dich, wenn auf dem fernen Wege\nDer Staub sich hebt;\nIn tiefer Nacht, wenn auf dem schmalen Stege\nDer Wandrer bebt.\n\nIch höre dich, wenn dort mit dumpfem Rauschen\nDie Welle steigt.\nIm stillen Haine geh ich oft zu lauschen,\nWenn alles schweigt.\n\nIch bin bei dir, du seist auch noch so ferne,\nDu bist mir nah!\nDie Sonne sinkt, bald leuchten mir die Sterne.\nO wärst du da!' },
-    { id: 'k2', title: 'Du bist wie eine Blume', author: 'Heinrich Heine (1827)', cat: 'liebe', gift: true, body: 'Du bist wie eine Blume,\nSo hold und schön und rein;\nIch schau dich an, und Wehmut\nSchleicht mir ins Herz hinein.\n\nMir ist, als ob ich die Hände\nAufs Haupt dir legen sollt,\nBetend, dass Gott dich erhalte\nSo rein und schön und hold.' },
-    { id: 'k3', title: 'Liebes-Lied', author: 'Rainer Maria Rilke (1907)', cat: 'liebe', gift: true, body: 'Wie soll ich meine Seele halten, dass\nsie nicht an deine rührt? Wie soll ich sie\nhinheben über dich zu andern Dingen?\nAch gerne möcht ich sie bei irgendwas\nVerlorenem im Dunkel unterbringen\nan einer fremden stillen Stelle, die\nnicht weiterschwingt, wenn deine Tiefen schwingen.\nDoch alles, was uns anrührt, dich und mich,\nnimmt uns zusammen wie ein Bogenstrich,\nder aus zwei Saiten eine Stimme zieht.\nAuf welches Instrument sind wir gespannt?\nUnd welcher Geiger hat uns in der Hand?\nO süßes Lied.' }
+    { id: 'k1', title: 'Nähe des Geliebten', author: 'Johann Wolfgang von Goethe (1795)', cat: 'sehnsucht', gift: true, shop: SHOP_URL, body: 'Ich denke dein, wenn mir der Sonne Schimmer\nVom Meere strahlt;\nIch denke dein, wenn sich des Mondes Flimmer\nIn Quellen malt.\n\nIch sehe dich, wenn auf dem fernen Wege\nDer Staub sich hebt;\nIn tiefer Nacht, wenn auf dem schmalen Stege\nDer Wandrer bebt.\n\nIch höre dich, wenn dort mit dumpfem Rauschen\nDie Welle steigt.\nIm stillen Haine geh ich oft zu lauschen,\nWenn alles schweigt.\n\nIch bin bei dir, du seist auch noch so ferne,\nDu bist mir nah!\nDie Sonne sinkt, bald leuchten mir die Sterne.\nO wärst du da!' },
+    { id: 'k2', title: 'Du bist wie eine Blume', author: 'Heinrich Heine (1827)', cat: 'liebe', gift: true, shop: SHOP_URL, body: 'Du bist wie eine Blume,\nSo hold und schön und rein;\nIch schau dich an, und Wehmut\nSchleicht mir ins Herz hinein.\n\nMir ist, als ob ich die Hände\nAufs Haupt dir legen sollt,\nBetend, dass Gott dich erhalte\nSo rein und schön und hold.' },
+    { id: 'k3', title: 'Liebes-Lied', author: 'Rainer Maria Rilke (1907)', cat: 'liebe', gift: true, shop: SHOP_URL, body: 'Wie soll ich meine Seele halten, dass\nsie nicht an deine rührt? Wie soll ich sie\nhinheben über dich zu andern Dingen?\nAch gerne möcht ich sie bei irgendwas\nVerlorenem im Dunkel unterbringen\nan einer fremden stillen Stelle, die\nnicht weiterschwingt, wenn deine Tiefen schwingen.\nDoch alles, was uns anrührt, dich und mich,\nnimmt uns zusammen wie ein Bogenstrich,\nder aus zwei Saiten eine Stimme zieht.\nAuf welches Instrument sind wir gespannt?\nUnd welcher Geiger hat uns in der Hand?\nO süßes Lied.' }
   ];
 
   /* ---------- Geschenk-Werkstatt: Produkte, Vorschau, Werbelinks ----------
@@ -121,7 +123,8 @@
       '<div class="bu-hint" data-hint></div>' +
       '<div class="bu-pick">' + all.map((l, i) => '<button type="button" data-l="' + i + '">' + esc(l) + '</button>').join('') + '</div>' +
       '<p class="about" style="font-size:15px;color:var(--text-muted);margin:8px 0">Mit Namensnennung „' + esc(p.author) + '“ für private Geschenke freigegeben. Die Links sind Werbelinks: Kaufst du dort, bekommt Schmetterlingsfutter eine kleine Provision – dich kostet es nichts extra.</p>' +
-      '<div class="row wrap"><button class="pill-btn primary" data-amz>Text kopieren &amp; gestalten ↗ <span class="bu-ad">Werbung</span></button><span data-partners></span><button class="pill-btn" data-card>🖼️ Als Bild teilen</button><button class="pill-btn ghost" data-cancel>Schließen</button></div>';
+      (p.shop ? '<div class="row wrap" style="margin-bottom:8px"><button class="pill-btn primary" data-shop>🛍️ Fertig im Poesie-Shop ↗</button></div><p class="about" style="font-size:14px;color:var(--text-muted);margin:0 0 8px">Tassen, Shirts, Hoodies und mehr – gedruckt und verschickt von Spreadshirt. Oder selbst gestalten:</p>' : '') +
+      '<div class="row wrap"><button class="pill-btn' + (p.shop ? '' : ' primary') + '" data-amz>Text kopieren &amp; gestalten ↗ <span class="bu-ad">Werbung</span></button><span data-partners></span><button class="pill-btn" data-card>🖼️ Als Bild teilen</button><button class="pill-btn ghost" data-cancel>Schließen</button></div>';
     L.openSheet(html, (sh) => {
       draw(sh);
       sh.querySelector('[data-cancel]').onclick = L.closeSheet;
@@ -133,6 +136,7 @@
       });
       sh.querySelector('[data-amz]').onclick = async () => { await copyText(); C('bu_gift_click:' + pid + ':amazon'); window.open(P() ? P().amazonUrl(prod().q, false, true) : 'https://www.amazon.de/s?k=' + encodeURIComponent(prod().q), '_blank', 'noopener'); };
       sh.querySelector('[data-card]').onclick = () => { L.closeSheet(); shareImage(p, sel); };
+      const sb = sh.querySelector('[data-shop]'); if (sb) sb.onclick = () => { C('bu_shop_click:' + p.id); window.open(p.shop, '_blank', 'noopener'); };
     });
   }
 
@@ -395,5 +399,5 @@
   handleParam();
   /* Nach der Einrichtung ein geteiltes Gedicht zeigen */
   setInterval(() => { const b = L.S.buehne; if (b && b.pendingPoem && L.S.onboarded && !document.querySelector('#modal.open')) { const id = b.pendingPoem; delete b.pendingPoem; L.save(); history.replaceState(null, '', location.pathname + '?gedicht=' + id); handleParam(); } }, 3000);
-  window.LZBU = { open, load, render, writeSheet, mineSheet, giftSheet, mockup, PRODUCTS, PARTNERS, CLASSICS, _state: st, _data: () => data };
+  window.LZBU = { SHOP_URL, open, load, render, writeSheet, mineSheet, giftSheet, mockup, PRODUCTS, PARTNERS, CLASSICS, _state: st, _data: () => data };
 })();
