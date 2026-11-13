@@ -145,6 +145,7 @@
       if (Array.isArray(obj.likes) && window.LZW) { try { window.LZW.got(obj.likes); } catch (e) {} }
       if (first) { try { await send(Object.assign({ t: 'hello', name: S().sender, pron: S().pron || '', reply: true }, window.LZD ? { dates: window.LZD.payload() } : {})); } catch (e) {} L.toast('💞 Verbunden mit ' + (name || 'deinem Schatz')); L.spawnHearts(14); }
       if (Array.isArray(obj.seen)) gotSeen(obj.seen, created);
+      if (Array.isArray(obj.react)) gotReact(obj.react);
       return true;
     }
     if (obj.t === 'msg') {
@@ -203,13 +204,47 @@
     list.forEach((at) => { const o = s.outbox.find((x) => x.at === at); if (o && !o.seen) { o.seen = true; o.seenAt = created || Date.now(); if (o.t !== 'match') msg = true; } });
     if (msg) L.toast('❤ ' + partnerName() + ' hat deine Nachricht gesehen');
   }
+  /* ---------- Schnell-Reaktionen (3.44.0) ----------
+     Eine Reaktion (❤️ 😂 🥹) auf Empfangenes reist wie „gesehen“ still an der Begrüßung mit: hello.react = [[Sendezeit, Zeichen], …].
+     Keine neue Nachrichtenart – ältere Apps ignorieren das Feld. Leeres Zeichen = Reaktion zurückgenommen. Ohne Uhrzeit, kein Druck. */
+  const REACTS = ['❤️', '😂', '🥹'];
+  const CAN_REACT = { msg: 1, pic: 1, jingle: 1, coupon: 1, falter: 1, gift: 1 };
+  function react(m, e) {
+    if (!m || !CAN_REACT[m.t] || REACTS.indexOf(e) < 0) return;
+    const next = m.react === e ? '' : e;
+    m.react = next; m.reactAcked = false; m.read = true; L.save();
+    L.haptic(15); if (next) L.spawnHearts(5);
+    if (window.LZS) window.LZS.count(next ? 'react:' + m.t : 'react_off');
+    flushSeen(); renderAll();
+  }
+  function gotReact(list) {
+    const s = P(); if (!s.outbox || !Array.isArray(list)) return; let news = '', what = '';
+    list.forEach((x) => {
+      if (!Array.isArray(x) || typeof x[0] !== 'number' || typeof x[1] !== 'string') return;
+      const e = x[1]; if (e && REACTS.indexOf(e) < 0) return;
+      const o = s.outbox.find((y) => y.at === x[0]); if (!o) return;
+      if ((o.react || '') === e) return;
+      if (e) { o.react = e; news = e; what = o.text || ''; } else delete o.react;
+      o.seen = true;
+    });
+    if (news) L.toast(news + ' ' + partnerName() + ' hat reagiert' + (what ? ' auf „' + (what.length > 30 ? what.slice(0, 30) + '…' : what) + '“' : ''));
+  }
+  const reactBar = (m, cls) => CAN_REACT[m.t] ? '<span class="react-bar' + (cls ? ' ' + cls : '') + '" role="group" aria-label="Reagieren">' + REACTS.map((e) => '<button type="button" class="react-b' + (m.react === e ? ' on' : '') + '" data-react="' + e + '" data-rid="' + L.esc(m.id) + '" aria-pressed="' + (m.react === e) + '" aria-label="Mit ' + e + ' reagieren">' + e + '</button>').join('') + '</span>' : '';
+  /* ein Verteiler für alle Reaktions-Knöpfe in der App */
+  document.addEventListener('click', (ev) => {
+    const b = ev.target.closest && ev.target.closest('[data-react][data-rid]'); if (!b) return;
+    ev.stopPropagation(); const m = (P().inbox || []).find((x) => x.id === b.dataset.rid); if (b.closest('#sheet')) L.closeSheet(); if (m) react(m, b.dataset.react);
+  }, true);
   let seenTimer = null;
   function flushSeen() {
     clearTimeout(seenTimer);
     seenTimer = setTimeout(async () => {
       if (!paired() || !joined() || !online()) return;
-      const s = P(); const todo = s.inbox.filter((m) => m.read && m.sat && !m.acked); if (!todo.length) return;
-      try { await send({ t: 'hello', name: S().sender, pron: S().pron || '', seen: todo.map((m) => m.sat).slice(-20) }); todo.forEach((m) => { m.acked = true; }); L.save(); } catch (e) { /* nächstes Mal */ }
+      const s = P(); const todo = s.inbox.filter((m) => m.read && m.sat && !m.acked);
+      const rx = s.inbox.filter((m) => m.sat && m.reactAcked === false); if (!todo.length && !rx.length) return;
+      const hello = { t: 'hello', name: S().sender, pron: S().pron || '', seen: todo.map((m) => m.sat).slice(-20) };
+      if (rx.length) hello.react = rx.slice(-20).map((m) => [m.sat, m.react || '']);
+      try { await send(hello); todo.forEach((m) => { m.acked = true; }); rx.forEach((m) => { m.reactAcked = true; }); L.save(); } catch (e) { /* nächstes Mal */ }
     }, 1500);
   }
   /* Was gerade zwischen euch läuft: wer ist dran, was wartet, was ist fertig */
@@ -837,9 +872,14 @@
     const reply = !compact && e.who === 'them' && CAN_REPLY[e.t] && window.LZR ? '<button type="button" class="pill-btn small ghost tl-reply" data-reply="' + e.id + '">↩ Antworten</button>' : '';
     const av = e.who === 'them' ? '<span class="tl-av" aria-hidden="true">' + L.esc(S().emojiR) + '</span>' : '';
     const more = !compact && e.who === 'them' ? '<button type="button" class="tl-x" data-more="' + e.id + '" aria-label="Weitere Aktionen">⋯</button>' : '';
+    /* 3.44.0: Reaktion – beim Schatz zeigt die eigene Zeile seine Reaktion, bei mir die Zeile vom Schatz meine */
+    const rx = e.who === 'me' ? (e.o && e.o.react) : (e.m && e.m.react);
+    const badge = rx ? '<span class="tl-react" aria-label="' + (e.who === 'me' ? L.esc(partnerName()) + ' hat reagiert' : 'Deine Reaktion') + '">' + rx + '</span>' : '';
+    const bar = !compact && e.who === 'them' && e.m ? reactBar(e.m) : '';
+    const actsLine = bar || reply ? '<div class="tl-acts">' + bar + reply + '</div>' : '';
     return '<div class="tl-row ' + e.who + (unread ? ' new' : '') + (compact ? ' compact' : '') + '" data-id="' + L.esc(e.id) + '" role="button" tabindex="0">' + av +
       '<div class="tl-b">' + (compact ? '' : quote) + '<div class="tl-t"><span class="tl-k">' + icon + '</span> ' + (compact && e.who === 'me' ? 'Du: ' : '') + L.esc(title) + '</div>' + media +
-      '<div class="tl-m"><span class="tl-time">' + (compact ? L.ago(e.at) : tlTime(e.at)) + '</span>' + st + (unread ? '<i class="tl-dot" aria-label="neu"></i>' : '') + (compact ? '' : chipFor(e, acts, shown)) + '</div>' + reply + '</div>' + more + '</div>';
+      '<div class="tl-m"><span class="tl-time">' + (compact ? L.ago(e.at) : tlTime(e.at)) + '</span>' + st + (e.who === 'me' || compact ? badge : '') + (unread ? '<i class="tl-dot" aria-label="neu"></i>' : '') + (compact ? '' : chipFor(e, acts, shown)) + '</div>' + actsLine + '</div>' + more + '</div>';
   }
   /* Öffnen – gleiche Wege wie früher im Postfach-Fenster */
   function openItem(m) {
@@ -873,7 +913,7 @@
     box.querySelectorAll('[data-reply]').forEach((b) => b.onclick = () => replyItem(s.inbox.find((x) => x.id === b.dataset.reply)));
     box.querySelectorAll('[data-more]').forEach((b) => b.onclick = () => {
       const m = s.inbox.find((x) => x.id === b.dataset.more); if (!m) return;
-      L.openSheet('<h3>' + L.esc(rowTitle(byId[m.id] || { t: m.t, text: m.text, who: 'them' }).title.slice(0, 60)) + '</h3><div class="o-list">' +
+      L.openSheet('<h3>' + L.esc(rowTitle(byId[m.id] || { t: m.t, text: m.text, who: 'them' }).title.slice(0, 60)) + '</h3>' + (CAN_REACT[m.t] ? '<div class="react-sheet">' + reactBar(m, 'big') + '</div>' : '') + '<div class="o-list">' +
         (CAN_REPLY[m.t] && window.LZR ? '<button type="button" class="pill-btn" data-r>↩ Antworten</button>' : '') +
         '<button type="button" class="pill-btn" data-o>Öffnen</button><button type="button" class="pill-btn ghost danger" data-d>Löschen</button></div><div class="row" style="margin-top:12px"><button class="pill-btn ghost" data-cancel>Schließen</button></div>', (sh) => {
         sh.querySelector('[data-cancel]').onclick = L.closeSheet;
@@ -1097,7 +1137,7 @@
   setInterval(() => { if (document.visibilityState === 'visible') pull(); }, 45000);
   $('obFinish').addEventListener('click', () => setTimeout(() => { renderAll(); offerPendingPair(); }, 80));
 
-  window.LZP = { createPair, doJoin, searchSheet, searchFormHtml, bindSearch, activity, deckStatus, openDeckFromStatus, explored, lastSent, P, paired, joined, partnerName, sendOrShare, sendCoupon, send, pull, pairSheet, inboxSheet, renderPost, timeline, openItem, playDeck, renderDecks, renderAll, renderGiftRadar, amazonUrl, tips, tipOf, tipsHtml, bindTips, mountTips, leavePair, unread, RELAY, on, inboxType, openMatch, closeMatch, online, pairLink, ideaSheet, reportSheet, iosBrowser, commonSheet, renderCommon, pushOn, pushOff, pushSupported, renderPush, partnerPron: () => (P().partner && P().partner.pron) || '', announce: () => { if (paired() && joined()) send({ t: 'hello', name: S().sender, pron: S().pron || '' }).catch(() => {}); } };
+  window.LZP = { createPair, doJoin, searchSheet, searchFormHtml, bindSearch, activity, deckStatus, openDeckFromStatus, explored, lastSent, P, paired, joined, partnerName, sendOrShare, sendCoupon, send, pull, pairSheet, inboxSheet, renderPost, timeline, openItem, react, reactBar, REACTS, playDeck, renderDecks, renderAll, renderGiftRadar, amazonUrl, tips, tipOf, tipsHtml, bindTips, mountTips, leavePair, unread, RELAY, on, inboxType, openMatch, closeMatch, online, pairLink, ideaSheet, reportSheet, iosBrowser, commonSheet, renderCommon, pushOn, pushOff, pushSupported, renderPush, partnerPron: () => (P().partner && P().partner.pron) || '', announce: () => { if (paired() && joined()) send({ t: 'hello', name: S().sender, pron: S().pron || '' }).catch(() => {}); } };
   renderAll(); handlePairParam();
   if (window.LZF) { window.LZF.renderPiek(); window.LZF.renderGiftRadar && window.LZF.renderGiftRadar(); }
   /* Erst abholen, wenn alle Skripte geladen sind (naehe.js meldet eigene Nachrichtenarten an) */

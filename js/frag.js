@@ -96,6 +96,7 @@
     ['Wir', '🚩', 'Etwas melden', 'melden fehler unpassend funktioniert nicht kaputt', '', () => { if (P()) P().reportSheet(''); }],
     ['Einstellungen', '🔒', 'Datenschutz', 'datenschutz daten privat sicher verschluesselt impressum', '', () => { location.href = 'privacy.html'; }],
     ['Einstellungen', '🦋', 'Papillon fliegt vorbei: ein- oder ausschalten', 'schmetterling fliegt fliegen anreiz einladung ausschalten abschalten nervt stoert papillon', '', spot('settings', 'togFly')],
+    ['Post', '❤️', 'Auf eine Nachricht reagieren: ❤️ 😂 🥹', 'reagieren reaktion herz lachen gerührt emoji smiley like daumen gefällt antworten schnell', 'In „Post“ unter der Nachricht vom Schatz – oder gleich auf der Karte „Neu von …“.', () => L.showView('post')],
     ['Post', '📬', 'Post: alles Gesendete und Empfangene', 'post verlauf gesendet empfangen gesehen zugestellt gelesen nachrichten chat wer was wann reagiert antwort', '', () => L.showView('post')],
     ['Einstellungen', '⚙️', 'Einstellungen (Zahnrad oben rechts)', 'einstellungen zahnrad optionen konfiguration settings mehr verwaltung', '', () => L.showView('settings')],
   ];

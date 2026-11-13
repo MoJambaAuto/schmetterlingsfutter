@@ -12,6 +12,7 @@
 
   /* Was ist neu – kurz, in Alltagssprache. Neueste zuerst. */
   D.news = [
+    { v: '3.44.0', items: ['❤️ 😂 🥹 Schnell reagieren: unter jeder Nachricht vom Schatz – dein Schatz sieht deine Reaktion in „Post“'] },
     { v: '3.43.0', items: ['🧭 Neue Leiste unten: Heute · Post · Schicken · Spielen · Wir – jede Funktion hat ihren festen Platz', '📬 Post zeigt alles zwischen euch: was du geschickt hast, was angekommen ist, und ob es gesehen wurde', '⚙️ Einstellungen oben rechts am Zahnrad – dort stehen jetzt nur noch Einstellungen'] },
     { v: '3.42.0', items: ['🏡 Neue Adresse: app.schmetterlingsfutter.de – deine Daten sind mitgekommen', '🔔 Mitteilungen bitte einmal neu einschalten (die neue Adresse fragt neu)'] },
     { v: '3.41.0', items: ['🦋 Neu auf der Startseite: jeden Tag ein Stück Falter-Wissen, passend zur Jahreszeit', '🗓️ Steckbriefe im Schmetterlingsbuch: wann jede Art fliegt und was ihre Raupe frisst', '🧐 Neues Spiel zu zweit: „Wahr oder Falter?“ – echt oder erfunden?', '🌱 Echten Faltern helfen: mitzählen oder spenden, direkt bei den Vereinen'] },

@@ -229,6 +229,7 @@
       (m.re && window.LZR ? window.LZR.quoteHtml(m.re, 'deine Nachricht') : '') +
       (m.t === 'pic' && m.img ? '<img class="pic-big" src="' + m.img + '" alt="Kritzel-Gruß">' : '') +
       (m.text ? '<div class="fp-text">' + esc(m.text) + '</div>' : '') +
+      (P.reactBar ? '<div class="react-fp">' + P.reactBar(m, 'big') + '</div>' : '') + /* 3.44.0: gleich mit ❤️ 😂 🥹 reagieren */
       '<div class="row wrap" style="margin-top:12px">' + (m.t === 'jingle' && jingleById(m.jid) ? '<button class="pill-btn small primary" data-play>▶ Abspielen</button>' : '') +
       '<button class="pill-btn small' + (m.t === 'jingle' ? '' : ' primary') + '" data-seen>❤ Gesehen</button><button class="pill-btn small ghost" data-reply>Antworten</button>' + (m.t !== 'jingle' && window.LZX ? '<button class="pill-btn small ghost" data-fpshare>🖼️ Teilen</button>' : '') + '</div>';
     const pl = c.querySelector('[data-play]'); if (pl) pl.onclick = () => { pl.textContent = '♪ …'; playJingle(jingleById(m.jid), () => { pl.textContent = '▶ Nochmal'; }, m.v || theirVoice()); L.spawnHearts(8, c); };
