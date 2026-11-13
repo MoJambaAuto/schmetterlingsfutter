@@ -596,7 +596,7 @@
       if (deck.talk) return; // läuft unter „Klartext“
       if (deck.adult && !S().intim) return;
       const rec = P().matches[deck.id]; let state = ''; const st = deckStatus(deck); let chip = '';
-      if (st) chip = st.kind === 'turn' ? '<span class="chip-st turn">🎯 Du bist dran – ' + L.esc(partnerName()) + ' wartet</span>' : st.kind === 'ready' ? '<span class="chip-st ready">✨ Ergebnis da</span>' : '<span class="chip-st wait">⏳ Wartet auf ' + L.esc(partnerName()) + (st.seen ? ' · gesehen 👀' : '') + '</span>';
+      if (st) chip = st.kind === 'turn' ? '<span class="chip-st turn">Du bist dran</span>' : st.kind === 'ready' ? '<span class="chip-st ready">Ergebnis da</span>' : '<span class="chip-st wait">' + L.esc(partnerName()) + ' ist dran</span>'; /* 3.43.0: überall dieselben drei Zustände */
       if (rec) {
         if (deck.daily && rec.date.slice(0, 10) !== L.todayKey()) state = 'Gestern gespielt – heute neu';
         else if (rec.matches === null) state = (rec.stale ? '✨ ' + partnerName() + ' hat geantwortet – antippen' : 'Wartet auf ' + partnerName());

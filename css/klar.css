@@ -111,6 +111,34 @@ html[data-view]:not([data-view="home"]) #app .occasion-chip { display:none; }
 #app .tl-row.compact .tl-t { font-size:19px; }
 #app .re-quote .re-k, #app .re-quote .re-t { font-size:16px; }
 
+/* ---------- Spielen: Katalog mit Regalen ---------- */
+#app .seg[data-seg="play"] { display:none; }
+#app #spieleList { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; width:100%; }
+#app #spieleList > .hub-h, #app #spieleList > .hub-soon, #app #spieleList > .hub-turn, #app #spieleList > details { grid-column:1 / -1; }
+#app #spieleList > .hub-h { margin:14px 0 0; }
+#app #spieleList > .hub-h:first-child, #app #spieleList > .hub-turn + .hub-h { margin-top:4px; }
+#app #spieleList .deck { position:relative; margin:0; min-height:104px; min-width:0; flex-direction:column; justify-content:center; align-items:center; gap:8px; padding:12px 6px; border-radius:18px; border:1px solid var(--line-soft); background:var(--tile-bg); text-align:center; }
+#app #spieleList .deck:active { transform:scale(.96); background:rgba(255,255,255,.1); }
+#app #spieleList .deck .d-ico { width:48px; height:48px; flex:none; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:28px; line-height:1; background:rgba(179,136,255,.18); background:color-mix(in srgb, var(--c-play) 18%, transparent); }
+#app #spieleList .deck .d-body { flex:none; display:flex; flex-direction:column; align-items:center; gap:6px; max-width:100%; }
+#app #spieleList .deck .d-title { font-family:var(--sans); font-size:17px; font-weight:700; line-height:1.25; hyphens:auto; -webkit-hyphens:auto; overflow-wrap:break-word; }
+#app #spieleList .deck .d-sub, #app #spieleList .deck .d-go, #app #spieleList .deck .d-meta, #app #spieleList .deck .d-prog { display:none; }
+#app #spieleList .deck .chip-st { margin-top:0; }
+#app #spieleList .deck .tag { font-size:16px; }
+#app #spieleList .deck.st-turn { border-color:var(--accent-2); }
+#app .hub-turn { margin:0 0 4px; }
+#app .hub-turn .eyebrow { margin:0 0 8px; }
+#app .tl-go { font-size:26px; color:var(--accent-2); line-height:1; }
+#app details.hub-more { border:1px solid var(--line-soft); border-radius:16px; background:var(--glass-2); padding:0 14px; margin-top:14px; }
+#app details.hub-more > summary { min-height:52px; display:flex; align-items:center; justify-content:space-between; font-size:19px; font-weight:700; cursor:pointer; list-style:none; }
+#app details.hub-more > summary::-webkit-details-marker { display:none; }
+#app details.hub-more > summary::after { content:'›'; font-size:26px; color:var(--accent-2); transition:transform .2s; }
+#app details.hub-more[open] > summary::after { transform:rotate(90deg); }
+#app details.hub-more[open] { padding-bottom:14px; }
+#app details.hub-more + details.hub-more { margin-top:10px; }
+#app .hub-done { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+#app .d-when { font-size:16px; color:var(--text-soft); }
+
 /* ---------- Wir ---------- */
 #app .us-hero-box { width:100%; }
 #app .us-hero { width:100%; min-height:104px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:16px; margin:0 0 8px; border-radius:20px; border:1px solid var(--line); background:linear-gradient(135deg, rgba(255,209,102,.14), rgba(255,255,255,.03)); color:var(--text); font-family:var(--sans); cursor:pointer; }

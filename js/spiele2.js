@@ -657,14 +657,14 @@
     const K = KINDS[kind]; const gs = Object.values(store()).filter((g) => g.kind === kind && g.turn !== 'done').sort((a, b) => b.updated - a.updated);
     const turn = gs.find((g) => g.mode === 'relay' && g.turn === g.me), wait = gs.find((g) => g.mode === 'relay' && g.turn !== g.me), pass = gs.find((g) => g.mode === 'pass');
     const b = document.createElement('button'); b.type = 'button'; b.className = 'deck' + (turn ? ' st-turn' : '');
-    const chip = turn ? '<span class="chip-st turn">🎯 Du bist dran</span>' : wait ? '<span class="chip-st wait">⏳ ' + esc(you()) + ' ist dran</span>' : pass ? '<span class="chip-st wait">▶️ Angefangenes Spiel</span>' : '';
+    const chip = turn ? '<span class="chip-st turn">Du bist dran</span>' : wait ? '<span class="chip-st wait">' + esc(you()) + ' ist dran</span>' : ''; /* 3.43.0: überall dieselben drei Zustände */
     b.innerHTML = '<span class="d-ico">' + K.icon + '</span><div class="d-body"><div class="d-title">' + esc(K.title) + '</div>' + (chip || '<div class="d-sub">' + esc(K.sub) + '</div>') + '</div><span class="d-go">›</span>';
     b.onclick = () => { const g = turn || pass || wait; if (g) open(g.id); else newGame(kind); };
     return b;
   }
   function addTiles() {
     const box = $('spieleList'); if (!box || box.querySelector('[data-g2]')) return;
-    const heads = Array.from(box.querySelectorAll('.hub-h')); const h = heads.find((x) => /Gegeneinander/.test(x.textContent)); if (!h) return;
+    const heads = Array.from(box.querySelectorAll('.hub-h')); const h = heads.find((x) => /Duell|Gegeneinander/.test(x.textContent)); if (!h) return;
     const next = heads[heads.indexOf(h) + 1] || null;
     const frag = document.createDocumentFragment(); ['wanderzug', 'quiz', 'wiese', 'raupe', 'wuerfel', 'beete'].forEach((k) => { const t = tileFor(k); t.setAttribute('data-g2', k); frag.appendChild(t); });
     box.insertBefore(frag, next);

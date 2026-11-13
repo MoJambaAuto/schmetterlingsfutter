@@ -393,45 +393,78 @@
     return out;
   }
 
-  /* ======================= Sammlung „🎲 Spiele“ ======================= */
+  /* ======================= Katalog „Spielen“ (3.43.0) =======================
+     Regale statt Reiter: zuerst „Du bist dran“, dann Duell · Miteinander · Draußen · Kreativ · Zweisamkeit – jedes Spiel genau einmal.
+     Die flache Reihenfolge Überschrift → Kacheln bleibt, weil spiele2.js seine Kacheln hinter die Überschrift „Duell“ setzt. */
   const openRounds = (kind) => Object.values(games()).filter((g) => g.kind === kind && g.turn !== 'done').sort((a, b) => b.updated - a.updated);
+  const CHIP = { turn: () => '<span class="chip-st turn">Du bist dran</span>', ready: () => '<span class="chip-st ready">Ergebnis da</span>', wait: () => '<span class="chip-st wait">' + esc(you()) + ' ist dran</span>' };
   function tileState(kind) {
-    const name = esc(you()); const r = openRounds(kind); const mine = r.find((g) => g.turn === 'me'); const wait = r.find((g) => g.turn === 'them');
-    if (mine) return { chip: '<span class="chip-st turn">🎯 Du bist dran</span>', open: () => openGame(mine.id), st: 'turn' };
-    if (wait) return { chip: '<span class="chip-st wait">⏳ ' + name + ' ist dran</span>', open: () => openGame(wait.id), st: 'wait' };
+    const r = openRounds(kind); const mine = r.find((g) => g.turn === 'me'); const wait = r.find((g) => g.turn === 'them');
+    if (mine) return { chip: CHIP.turn(), open: () => openGame(mine.id), st: 'turn' };
+    if (wait) return { chip: CHIP.wait(), open: () => openGame(wait.id), st: 'wait' };
     return null;
   }
   function tile(icon, title, sub, onclick, extra) {
     const b = document.createElement('button'); b.type = 'button'; b.className = 'deck' + (extra && extra.st ? ' st-' + extra.st : '');
     b.innerHTML = '<span class="d-ico">' + icon + '</span><div class="d-body"><div class="d-title">' + esc(title) + '</div>' + (extra && extra.chip ? extra.chip : '<div class="d-sub">' + esc(sub) + '</div>') + '</div><span class="d-go">›</span>';
+    if (sub) b.setAttribute('aria-description', sub);
     b.onclick = onclick; return b;
   }
+  /* Was in Gleichklang, Gemeinsam, Klartext, Zweisamkeit wartet (wie die Punkte an den früheren Reitern) */
+  function deckHot() {
+    const hot = { match: null, gemeinsam: null, klartext: null, intim: null };
+    if (!P() || !P().activity) return hot;
+    P().activity().forEach((a) => { if (a.game || a.kind === 'wait') return; const k = a.deck.adult ? 'intim' : a.deck.talk ? 'klartext' : a.deck.common ? 'gemeinsam' : 'match'; if (hot[k] !== 'turn') hot[k] = a.kind; });
+    return hot;
+  }
+  const hotExtra = (k) => (k ? { chip: CHIP[k](), st: k } : null);
+  const ext = (name, fn) => () => { if (window[name]) fn(window[name]); else L.toast('Lädt noch – gleich nochmal antippen'); };
+  function heide() { if (window.LZH) return window.LZH.open(); const sc = document.createElement('script'); sc.src = 'js/heide.js'; sc.onload = () => window.LZH && window.LZH.open(); document.head.appendChild(sc); }
   function renderHub() {
     const box = $('spieleList'); if (!box) return; box.innerHTML = '';
-    const name = you(), sec = (t) => { const h = document.createElement('div'); h.className = 'eyebrow hub-h'; h.textContent = t; box.appendChild(h); };
-    sec('⚔️ Gegeneinander');
-    const lg = tileState('luege'), sc = score('luege');
-    box.appendChild(tile('🕵️', 'Zwei Wahrheiten, eine Lüge', 'Wer durchschaut wen? Du ' + sc.me + ' · ' + name + ' ' + sc.them, lg ? lg.open : luegeNew, lg));
+    const sec = (t) => { const h = document.createElement('div'); h.className = 'eyebrow hub-h'; h.textContent = t; box.appendChild(h); };
+    /* Du bist dran – alles, was auf dich wartet oder ein Ergebnis hat */
+    const acts = P() && P().activity ? P().activity().filter((a) => a.kind === 'turn' || a.kind === 'ready') : [];
+    if (acts.length) {
+      const t = document.createElement('div'); t.className = 'hub-turn';
+      t.innerHTML = '<div class="eyebrow">Du bist dran</div><div class="tl zw">' + acts.map((a, i) => '<div class="tl-row compact act st-' + a.kind + '" data-hot="' + i + '" role="button" tabindex="0"><div class="tl-b"><div class="tl-t"><span class="tl-k">' + (a.game ? a.icon : a.deck.icon) + '</span> ' + esc(a.game ? a.title : a.deck.title) + '</div><div class="tl-m">' + (a.kind === 'ready' ? CHIP.ready() : '<span class="tl-go" aria-hidden="true">›</span>') + '</div></div></div>').join('') + '</div>';
+      t.querySelectorAll('[data-hot]').forEach((r) => { const a = acts[Number(r.dataset.hot)]; const go = () => { if (a.game && a.open) a.open(); else if (a.deck) P().openDeckFromStatus(a.deck); }; r.onclick = go; r.onkeydown = (e) => { if (e.key === 'Enter') go(); }; });
+      box.appendChild(t);
+    }
+    const hot = deckHot();
+    sec('Duell');
+    const lg = tileState('luege');
+    box.appendChild(tile('🕵️', 'Zwei Wahrheiten, eine Lüge', '', lg ? lg.open : luegeNew, lg));
     const fd = fangState().days[day()]; const fturn = fd.them != null && fd.me == null;
-    box.appendChild(tile('🦋', 'Schmetterlinge fangen', fd.me == null ? 'Tagesduell: 30 Sekunden, gleiche Runde für beide' : 'Heute: Du ' + fd.me + ' · ' + name + ' ' + (fd.them == null ? '–' : fd.them), fangOpen, fturn ? { chip: '<span class="chip-st turn">🎯 ' + esc(name) + ' hat vorgelegt</span>', st: 'turn' } : null));
-    sec('🤝 Miteinander');
-    const st = tileState('story'); box.appendChild(tile('📖', 'Satz für Satz', 'Abwechselnd eine Geschichte schreiben', st ? st.open : storyNew, st));
-    const jg = tileState('jagd'); box.appendChild(tile('🗺️', 'Schnitzeljagd', 'Etwas verstecken, Hinweise schicken', jg ? jg.open : jagdNew, jg));
-    box.appendChild(tile('🎯', 'Gleichklang', 'Heimlich antworten, nur Treffer zählen', () => L.showSub('play', 'match')));
-    box.appendChild(tile('🤝', 'Gemeinsam', 'Was euch verbindet', () => L.showSub('play', 'gemeinsam')));
-    sec('☀️ Täglich');
-    box.appendChild(tile('🔥', 'Worauf habt ihr heute Bock?', 'Jeden Tag neu', () => P().playDeck('bock')));
-    box.appendChild(tile('🌼', 'Gänseblümchen-Orakel', 'Zupfen, bis die Antwort kommt', () => L.showSub('play', 'oracle')));
-    box.appendChild(tile('🎵', 'Musik', 'Lieder füreinander', () => L.showSub('play', 'music')));
-    box.appendChild(tile('🌸', 'Papillon in der Heide', '3D-Ausflug: Schmetterlinge fangen' + (L.S.heide && L.S.heide.best ? ' · Bestwert ' + L.S.heide.best : ''), () => { if (window.LZH) return window.LZH.open(); const sc = document.createElement('script'); sc.src = 'js/heide.js'; sc.onload = () => window.LZH && window.LZH.open(); document.head.appendChild(sc); }));
-    const soon = document.createElement('div'); soon.className = 'hub-soon';
-    soon.innerHTML = '<div class="eyebrow hub-h">✨ Bald</div><div class="chips">' + ['🙋 Wer würde eher …?', '🧠 Wie gut kennst du mich?', '🎨 Malen & Raten', '🎟️ Wochen-Bingo', '🌸 Euer Schmetterlingsgarten'].map((x) => '<span class="chip soon">' + x + '</span>').join('') + '</div>';
+    box.appendChild(tile('🦋', 'Schmetterlinge fangen', '', fangOpen, fturn ? { chip: CHIP.turn(), st: 'turn' } : null));
+    sec('Miteinander');
+    const st = tileState('story'); box.appendChild(tile('📖', 'Satz für Satz', '', st ? st.open : storyNew, st));
+    const jg = tileState('jagd'); box.appendChild(tile('🗺️', 'Schnitzeljagd', '', jg ? jg.open : jagdNew, jg));
+    box.appendChild(tile('🎯', 'Gleichklang', '', () => { L.showSub('play', 'match'); if (P()) P().renderDecks(); window.scrollTo(0, 0); }, hotExtra(hot.match)));
+    box.appendChild(tile('🤝', 'Gemeinsam', '', () => { L.showSub('play', 'gemeinsam'); if (P()) P().renderDecks(); window.scrollTo(0, 0); }, hotExtra(hot.gemeinsam)));
+    box.appendChild(tile('🔥', 'Worauf habt ihr heute Bock?', '', () => P().playDeck('bock')));
+    box.appendChild(tile('💬', 'Klartext', '', () => { L.showSub('play', 'klartext'); if (window.LZN && window.LZN.render) window.LZN.render(); window.scrollTo(0, 0); }, hotExtra(hot.klartext)));
+    sec('Draußen');
+    box.appendChild(tile('🕸️', 'Falterjagd', '', ext('LZJ', (J) => J.open())));
+    box.appendChild(tile('✨', 'Falter zu Besuch', '', ext('LZA', (A) => A.visit())));
+    box.appendChild(tile('🌸', 'Papillon in der Heide', '', heide));
+    sec('Kreativ');
+    box.appendChild(tile('🎤', 'Bühne', '', () => { if (window.LZBU && window.LZBU.open) window.LZBU.open(); else L.showSub('play', 'buehne'); window.scrollTo(0, 0); }));
+    box.appendChild(tile('🎵', 'Musik', '', () => { L.showSub('play', 'music'); window.scrollTo(0, 0); }));
+    box.appendChild(tile('🌼', 'Gänseblümchen-Orakel', '', () => { L.showSub('play', 'oracle'); window.scrollTo(0, 0); }));
+    sec('Zweisamkeit');
+    const zw = tile('🔥', 'Zweisamkeit', '', () => { L.showSub('play', 'intim'); window.scrollTo(0, 0); }, L.S.intim ? hotExtra(hot.intim) : { chip: '<span class="tag">18+</span>' });
+    box.appendChild(zw);
+    /* Bald und Zuletzt gespielt – eingeklappt am Ende */
+    const soon = document.createElement('details'); soon.className = 'hub-soon hub-more';
+    soon.innerHTML = '<summary>Bald</summary><div class="chips">' + ['🙋 Wer würde eher …?', '🧠 Wie gut kennst du mich?', '🎨 Malen & Raten', '🎟️ Wochen-Bingo', '🌸 Euer Schmetterlingsgarten'].map((x) => '<span class="chip soon">' + x + '</span>').join('') + '</div>';
     box.appendChild(soon);
-    /* Abgeschlossene Runden zum Nachlesen */
     const done = Object.values(games()).filter((g) => g.turn === 'done').sort((a, b) => b.updated - a.updated).slice(0, 5);
     if (done.length) {
-      const h = document.createElement('div'); h.className = 'eyebrow hub-h'; h.textContent = '📜 Zuletzt gespielt'; box.appendChild(h);
-      done.forEach((g) => box.appendChild(tile(META[g.kind].icon, META[g.kind].title, g.kind === 'story' ? storyText(g).slice(0, 60) + '…' : L.fmtDate(new Date(g.updated)), () => openGame(g.id))));
+      const d = document.createElement('details'); d.className = 'hub-more'; d.innerHTML = '<summary>Zuletzt gespielt</summary><div class="hub-done"></div>';
+      const list = d.querySelector('.hub-done');
+      done.forEach((g) => list.appendChild(tile(META[g.kind].icon, META[g.kind].title, '', () => openGame(g.id), { chip: '<span class="d-when">' + esc(g.kind === 'story' ? storyText(g).slice(0, 40) + '…' : L.fmtDate(new Date(g.updated))) + '</span>' })));
+      box.appendChild(d);
     }
   }
 

@@ -177,6 +177,7 @@
     });
     document.documentElement.setAttribute('data-view', name);
     const gear = $('btnSettings'); if (gear) { gear.classList.toggle('active', name === 'settings'); gear.setAttribute('aria-pressed', name === 'settings'); }
+    if (name === 'play') { showSub('play', 'spiele'); if (window.LZG) window.LZG.renderHub(); } /* 3.43.0: der Reiter beginnt immer beim Katalog */
     if (name === 'play' && !daisyReady) initDaisy();
     if (name === 'time') { renderTime(); if (window.LZF) window.LZF.renderOccasions(); }
     if (name === 'wishes') { renderCoupons(); if (window.LZF) window.LZF.renderWishes(); }
