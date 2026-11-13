@@ -243,7 +243,7 @@
       const re = $('msgRe'); if (re) re.innerHTML = item.re && window.LZR ? window.LZR.quoteHtml(item.re, 'deine Nachricht') : '';
       const rb = $('btnReplyMsg'); if (rb) { rb.classList.toggle('hidden', !(item.incoming && item.mid)); rb.dataset.mid = item.mid || ''; }
       $('reasonPanel').classList.add('hidden');
-      updateFavBtn();
+      updateFavBtn(); tidyMsg();
       if (window.LZP) window.LZP.mountTips($('msgTips'), tipKeyFor(label), 'Passend dazu');
     });
   }
@@ -344,6 +344,33 @@
   $('btnFav').onclick = toggleFav;
   $('btnShare').onclick = shareCurrent;
   $('btnCopy').onclick = copyCurrent;
+
+  /* ---------- Botschaftskarte (3.43.0, vorher ordnung.js): genau ein beschrifteter Hauptknopf ----------
+     Verbunden: „💌 An {Name} schicken“ · nicht verbunden: „↗ Teilen“ · Nachricht vom Schatz: „↩ Antworten“.
+     Daneben 🤍 und „⋯“ mit Persönlich machen, Kopieren, Melden (und Teilen, wenn es nicht der Hauptknopf ist). */
+  const MAIN_LABEL = { btnShare: '↗ Teilen', btnReplyMsg: '↩ Antworten' };
+  function setCls(b, cls, on) { if (b && b.classList.contains(cls) !== on) b.classList.toggle(cls, on); }
+  function tidyMsg() {
+    const reply = $('btnReplyMsg'), send = $('btnSendPartner'), share = $('btnShare');
+    const main = reply && !reply.classList.contains('hidden') ? reply : send && !send.classList.contains('hidden') ? send : share;
+    [share, send, reply].forEach((b) => {
+      if (!b) return; const on = b === main;
+      setCls(b, 'pill-btn', on); setCls(b, 'primary', on); setCls(b, 'msg-main', on); setCls(b, 'icon-btn', !on);
+      setCls(b, 'o-off', !on && b === share);
+      if (b.dataset.icon === undefined) b.dataset.icon = b.textContent;
+      const label = on ? (b === send ? (b.dataset.label || b.dataset.icon) : MAIN_LABEL[b.id]) : b.dataset.icon;
+      if (b.textContent !== label) b.textContent = label;
+    });
+    ['btnPersonal', 'btnCopy', 'btnReport'].forEach((id) => setCls($(id), 'o-off', true));
+  }
+  const MORE_LABEL = { btnShare: '↗ Teilen', btnPersonal: '✎ Persönlich machen', btnCopy: '⧉ Kopieren', btnReport: '🚩 Melden' };
+  $('btnMsgMore').onclick = () => {
+    const ids = ['btnShare', 'btnPersonal', 'btnCopy', 'btnReport'].filter((id) => { const b = $(id); return b && b.classList.contains('o-off') && !b.classList.contains('hidden'); });
+    openSheet('<h3>Botschaft</h3><div class="o-list">' + ids.map((id) => '<button type="button" class="pill-btn" data-more="' + id + '">' + MORE_LABEL[id] + '</button>').join('') + '</div><div class="row" style="margin-top:12px"><button class="pill-btn ghost" data-cancel>Schließen</button></div>', (sh) => {
+      sh.querySelector('[data-cancel]').onclick = closeSheet;
+      sh.querySelectorAll('[data-more]').forEach((b) => b.onclick = () => { closeSheet(); const t = $(b.dataset.more); if (t) setTimeout(() => t.click(), 60); });
+    });
+  };
 
   /* ---------- Gänseblümchen-Orakel ---------- */
   let TOTAL = 11, petalsLeft = TOTAL, daisyReady = false, busy = false;
@@ -730,7 +757,7 @@
   window.LZ = {
     get S() { return S; }, save, fmt, esc, pick, toast, openSheet, closeSheet, confirmSheet, promptSheet,
     spawnHearts, showMessage, showView, showSub, haptic, fmtDate, parseISODate, atMidnight, todayKey, shareText, renderHeader,
-    setToggle, showEnvelope, renderTime, ago
+    setToggle, showEnvelope, renderTime, ago, tidyMsg
   };
 
   /* Melden: schickt den Wortlaut der Vorlage (ohne eure Namen) an die Redaktion */
@@ -738,7 +765,7 @@
 
   /* ---------- Start ---------- */
   document.documentElement.setAttribute('data-view', 'home');
-  applyTheme(); renderHeader(); refillQueue(); renderFavs();
+  applyTheme(); renderHeader(); refillQueue(); renderFavs(); tidyMsg();
   $('tapCounter').textContent = S.taps >= 10 ? S.taps + ' × Liebe abgeholt' : '';
   if (!S.onboarded) startOnboarding();
   else if (S.giftSealed) { S.giftSealed = false; save(); } // altes „Versiegeln“ gibt es nicht mehr

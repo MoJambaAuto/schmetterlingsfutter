@@ -9,46 +9,7 @@
   const $ = (id) => document.getElementById(id), esc = L.esc;
   const home = $('view-home'); if (!home) return;
 
-  /* 3.43.0: „Eine Reihe Schicken“ und „Mehr zum Schicken“ sind jetzt die Viererreihe und der Reiter „Schicken“ (index.html).
-     Reihenfolge: Neues vom Schatz, Botschaft, Du & …, Flügelschlag, Schicken, (Geschenk-Radar wenn bald), Schmetterling */
-  const msgCard = home.querySelector(':scope > .msg-card');
-  const anchor = $('fromPartner');
-  if (anchor && msgCard) {
-    let last = anchor;
-    [msgCard, $('partnerCard'), $('piekCard')].forEach((el) => { if (el) { last.after(el); last = el; } });
-    const sh = home.querySelector(':scope > .quick-head'); const row = home.querySelector(':scope > .quick-row');
-    [sh, row, $('giftRadar'), $('bflyCard')].forEach((el) => { if (el) { last.after(el); last = el; } });
-  }
-  /* Geschenk-Radar auf der Startseite nur, wenn ein Anlass in höchstens 21 Tagen kommt */
-  function radarGate() {
-    const g = $('giftRadar'); if (!g) return;
-    const o = window.LZF && window.LZF.occasionsAll ? window.LZF.occasionsAll()[0] : null;
-    g.classList.toggle('o-off', !(o && o.days <= 21));
-  }
-  if (window.LZP && window.LZP.renderGiftRadar) { const orig = window.LZP.renderGiftRadar; window.LZP.renderGiftRadar = function () { const r = orig.apply(this, arguments); radarGate(); return r; }; }
-  radarGate();
-
-  /* ---------- Botschaftskarte: drei Knöpfe sichtbar, Rest unter „⋯“ ---------- */
-  const acts = msgCard ? msgCard.querySelector('.msg-actions') : null;
-  if (acts) {
-    const dots = document.createElement('button'); dots.type = 'button'; dots.className = 'icon-btn'; dots.id = 'btnMsgMore'; dots.setAttribute('aria-label', 'Weitere Aktionen'); dots.textContent = '⋯';
-    acts.appendChild(dots);
-    const LESS = ['btnPersonal', 'btnCopy', 'btnReport'];
-    const tidy = () => {
-      const send = $('btnSendPartner'); const sendOn = send && !send.classList.contains('hidden');
-      ['btnShare'].forEach((id) => { const b = $(id); if (b) b.classList.toggle('o-off', !!sendOn); });
-      LESS.forEach((id) => { const b = $(id); if (b) b.classList.add('o-off'); });
-    };
-    tidy(); new MutationObserver(tidy).observe(acts, { subtree: true, attributes: true, attributeFilter: ['class'] });
-    const LABEL = { btnShare: '↗ Teilen', btnPersonal: '✎ Persönlich machen', btnCopy: '⧉ Kopieren', btnReport: '🚩 Melden' };
-    dots.onclick = () => {
-      const ids = ['btnShare', 'btnPersonal', 'btnCopy', 'btnReport'].filter((id) => { const b = $(id); return b && (b.classList.contains('o-off')) && !b.classList.contains('hidden'); });
-      L.openSheet('<h3>Botschaft</h3><div class="o-list">' + ids.map((id) => '<button type="button" class="pill-btn" data-proxy="' + id + '">' + LABEL[id] + '</button>').join('') + '</div><div class="row" style="margin-top:12px"><button class="pill-btn ghost" data-cancel>Schließen</button></div>', (sh) => {
-        sh.querySelector('[data-cancel]').onclick = L.closeSheet;
-        sh.querySelectorAll('[data-proxy]').forEach((b) => b.onclick = () => { L.closeSheet(); const t = $(b.dataset.proxy); if (t) setTimeout(() => t.click(), 60); });
-      });
-    };
-  }
+  /* 3.43.0: Startseite (feste Reihenfolge in index.html), Geschenk-Radar (partner.js) und Botschaftskarte (app.js) sind umgezogen. */
 
   /* ---------- Spielen: 4 Reiter statt 7 – Musik und Orakel als Kacheln in „Spiele“ ---------- */
   const seg = document.querySelector('.seg[data-seg="play"]');
@@ -73,5 +34,5 @@
     '.o-grid .btn{min-height:84px;width:100%;margin:0}' +
     '.o-list{display:flex;flex-direction:column;gap:10px;align-items:stretch}.o-list .pill-btn{min-height:48px;justify-content:flex-start}';
   document.head.appendChild(css);
-  window.LZO = { radarGate };
+  window.LZO = {};
 })();

@@ -838,8 +838,8 @@
     const av = e.who === 'them' ? '<span class="tl-av" aria-hidden="true">' + L.esc(S().emojiR) + '</span>' : '';
     const more = !compact && e.who === 'them' ? '<button type="button" class="tl-x" data-more="' + e.id + '" aria-label="Weitere Aktionen">⋯</button>' : '';
     return '<div class="tl-row ' + e.who + (unread ? ' new' : '') + (compact ? ' compact' : '') + '" data-id="' + L.esc(e.id) + '" role="button" tabindex="0">' + av +
-      '<div class="tl-b">' + (compact ? '' : quote) + '<div class="tl-t"><span class="tl-k">' + icon + '</span> ' + L.esc(title) + '</div>' + media +
-      '<div class="tl-m"><span class="tl-time">' + (compact ? L.ago(e.at) : tlTime(e.at)) + '</span>' + st + (unread ? '<i class="tl-dot" aria-label="neu"></i>' : '') + chipFor(e, acts, shown) + '</div>' + reply + '</div>' + more + '</div>';
+      '<div class="tl-b">' + (compact ? '' : quote) + '<div class="tl-t"><span class="tl-k">' + icon + '</span> ' + (compact && e.who === 'me' ? 'Du: ' : '') + L.esc(title) + '</div>' + media +
+      '<div class="tl-m"><span class="tl-time">' + (compact ? L.ago(e.at) : tlTime(e.at)) + '</span>' + st + (unread ? '<i class="tl-dot" aria-label="neu"></i>' : '') + (compact ? '' : chipFor(e, acts, shown)) + '</div>' + reply + '</div>' + more + '</div>';
   }
   /* Öffnen – gleiche Wege wie früher im Postfach-Fenster */
   function openItem(m) {
@@ -906,22 +906,26 @@
     const nb = $('navBadge'); if (nb) { nb.textContent = n > 9 ? '9+' : (n || ''); nb.classList.toggle('hidden', !n); nb.setAttribute('aria-label', n + ' neu'); }
   }
 
-  /* ---------- Startseite: Verbindung, Bock-auf, Geschenk-Radar ---------- */
+  /* ---------- Startseite: „Zwischen euch“ ganz oben (3.43.0) ----------
+     Wer ist dran, was ist neu, ist meins angekommen – höchstens vier Zeilen im selben Baustein wie in „Post“. */
   function renderHomeCards() {
     const c = $('partnerCard'); if (!c) return;
     const s = P(); const p = s.partner; const n = unread();
     if (!RELAY) { c.classList.add('hidden'); }
     else {
       c.classList.remove('hidden');
-      if (!p) c.innerHTML = '<div class="row between"><div><div class="eyebrow" style="margin:0 0 4px">💞 Zu zweit noch besser</div><div style="font-size:18px">Verbinde deine App mit der von ' + L.esc(S().receiver) + ': Botschaften landen direkt dort, Gleichklang-Spiele laufen geheim auf zwei Handys.</div></div></div><div class="row wrap" style="margin-top:12px;justify-content:flex-start"><button class="pill-btn small primary" data-pair>Jetzt verbinden</button><button class="pill-btn small ghost" data-bock>🎯 Worauf Bock heute?</button></div>';
-      else if (!p.joined) c.innerHTML = '<div class="eyebrow" style="margin:0 0 4px">⏳ Wartet auf ' + L.esc(S().receiver) + '</div><div style="font-size:18px">Dein Code ist bereit. ' + L.esc(S().receiver) + ' muss den Link öffnen oder den Code eingeben.</div><div class="row wrap" style="margin-top:12px;justify-content:flex-start"><button class="pill-btn small primary" data-pair>Link schicken</button><button class="pill-btn small ghost" data-check>Prüfen</button></div>';
-      else c.innerHTML = '<div class="eyebrow" style="margin:0 0 4px">💞 Du &amp; ' + L.esc(partnerName()) + '</div>' + activityHtml(n) + '<div class="row wrap" style="margin-top:12px;justify-content:flex-start"><button class="pill-btn small ' + (n ? 'primary' : '') + '" data-inbox>📬 Postfach <span class="badge' + (n ? '' : ' hidden') + '" id="inboxBadge">' + n + '</span></button><button class="pill-btn small" data-bock>🎯 Worauf Bock heute?</button><button class="pill-btn small ghost" data-pair>Verbindung</button></div>';
+      const head = '<div class="eyebrow zw-head">Zwischen euch</div>';
+      if (!p) c.innerHTML = head + '<p class="zw-one">Verbinde deine App mit der von ' + L.esc(S().receiver) + '.</p><div class="row wrap zw-foot"><button class="pill-btn small primary" data-pair>Jetzt verbinden</button><button class="pill-btn small ghost" data-bock>🔥 Bock heute?</button></div>';
+      else if (!p.joined) c.innerHTML = head + '<p class="zw-one">⏳ Dein Code ist bereit – ' + L.esc(S().receiver) + ' muss ihn noch öffnen.</p><div class="row wrap zw-foot"><button class="pill-btn small primary" data-pair>Link schicken</button><button class="pill-btn small ghost" data-check>Prüfen</button></div>';
+      else {
+        const a = activityHtml(n);
+        c.innerHTML = head + a.html + '<div class="row wrap zw-foot"><button type="button" class="pill-btn small' + (n ? ' primary' : '') + '" data-go="post">📬 Alles ansehen <span class="badge' + (n ? '' : ' hidden') + '" id="inboxBadge">' + (n > 9 ? '9+' : n) + '</span></button><button type="button" class="pill-btn small ghost" data-bock>🔥 Bock heute?</button></div>';
+        bindRows(c, a.list);
+      }
       const pr = c.querySelector('[data-pair]'); if (pr) pr.onclick = pairSheet;
-      const ib = c.querySelector('[data-inbox]'); if (ib) ib.onclick = inboxSheet;
       const bk = c.querySelector('[data-bock]'); if (bk) bk.onclick = () => playDeck('bock');
-      c.querySelectorAll('[data-gact]').forEach((b) => { b.onclick = () => { const a = activity()[Number(b.dataset.gact)]; if (a && a.open) a.open(); }; });
+      c.querySelectorAll('[data-gact]').forEach((b) => { b.onclick = () => { const x = activity()[Number(b.dataset.gact)]; if (x && x.open) x.open(); }; });
       c.querySelectorAll('[data-act]').forEach((b) => { b.onclick = () => { const deck = deckById(b.dataset.act); if (deck) openDeckFromStatus(deck); }; });
-      const mr = c.querySelector('[data-actmore]'); if (mr) mr.onclick = () => { L.showView('play'); L.showSub('play', mr.dataset.actmore); };
       const ck = c.querySelector('[data-check]'); if (ck) ck.onclick = async () => { ck.textContent = '…'; await pull(true); renderAll(); if (!joined()) L.toast('Noch nicht beigetreten'); };
     }
     // Solange die Apps nicht verbunden sind: oben auf der Startseite zeigen, was das Verbinden bringt. „Später“ blendet es für drei Tage aus.
@@ -939,20 +943,23 @@
     }
     renderGiftRadar();
   }
-  /* Startseite: was gerade zwischen euch läuft */
-  function activityHtml(n) {
-    const name = L.esc(partnerName()); const acts = activity(); let html = '';
-    if (n) html += '<div class="act-note">📬 ' + (n === 1 ? 'Eine neue Nachricht wartet im Postfach.' : n + ' neue Nachrichten warten im Postfach.') + '</div>';
-    acts.slice(0, 3).forEach((a, i) => {
-      if (a.game) { html += '<button type="button" class="act-row st-turn" data-gact="' + i + '"><span class="ai">' + a.icon + '</span><span class="ab"><span class="at">' + L.esc(a.title) + '</span><span class="chip-st turn">🎯 Du bist dran</span></span><span class="d-go">›</span></button>'; return; }
-      const label = a.kind === 'turn' ? '<span class="chip-st turn">🎯 Du bist dran</span>' : a.kind === 'ready' ? '<span class="chip-st ready">✨ Ergebnis da</span>' : '<span class="chip-st wait">⏳ ' + name + ' ist dran' + (a.seen ? ' · gesehen 👀' : '') + '</span>';
-      html += '<button type="button" class="act-row st-' + a.kind + '" data-act="' + a.deck.id + '"><span class="ai">' + a.deck.icon + '</span><span class="ab"><span class="at">' + L.esc(a.deck.title) + '</span>' + label + '</span><span class="d-go">›</span></button>';
-    });
-    if (acts.length > 3) html += '<button type="button" class="pill-btn small ghost" data-actmore="' + (acts[3].game ? 'spiele' : acts[3].deck.common ? 'gemeinsam' : 'match') + '" style="margin-top:6px">+ ' + (acts.length - 3) + ' weitere Spiele</button>';
-    const ls = lastSent();
-    if (ls) html += '<div class="act-note sent ' + (ls.seen ? 'seen' : '') + '">' + (ls.seen ? '❤ ' + name + ' hat deine letzte Nachricht gesehen' : '📨 Deine letzte Nachricht ist zugestellt, noch nicht gesehen') + (ls.text ? ' <i>„' + L.esc(ls.text.length > 34 ? ls.text.slice(0, 34) + '…' : ls.text) + '“</i>' : '') + '</div>';
-    if (!html) html = '<div style="font-size:17px;color:var(--text-soft)">Gerade ist nichts offen. Schick ' + name + ' etwas oder startet ein Spiel – Papillon zeigt euch hier, wer dran ist.</div>';
-    return html;
+  function actRow(a, i) {
+    const icon = a.game ? a.icon : a.deck.icon, title = a.game ? a.title : a.deck.title;
+    const chip = a.kind === 'turn' ? '<span class="chip-st turn">Du bist dran</span>' : a.kind === 'ready' ? '<span class="chip-st ready">Ergebnis da</span>' : '<span class="chip-st wait">' + L.esc(partnerName()) + ' ist dran</span>';
+    return '<div class="tl-row compact act st-' + a.kind + '" ' + (a.game ? 'data-gact="' + i + '"' : 'data-act="' + L.esc(a.deck.id) + '"') + ' role="button" tabindex="0"><div class="tl-b"><div class="tl-t"><span class="tl-k">' + icon + '</span> ' + L.esc(title) + '</div><div class="tl-m">' + chip + '</div></div></div>';
+  }
+  /* zuerst wartende Spiele (Du bist dran vor Ergebnis da vor wartet), dann das Neueste vom Schatz, dann deine letzte Sendung */
+  function activityHtml() {
+    const acts = activity(); const tl = timeline();
+    const shown = new Set(acts.map((x) => x.id).filter(Boolean));
+    const fresh = tl.find((e) => e.who === 'them' && !e.read && !(e.gid && shown.has(e.gid)));
+    const mine = tl.find((e) => e.who === 'me' && !{ match: 1, game: 1, spiel: 1 }[e.t] && Date.now() - e.at < 7 * 864e5);
+    const extra = [fresh, mine].filter(Boolean);
+    const k = Math.min(3, 4 - extra.length);
+    let html = acts.slice(0, k).map(actRow).join('');
+    extra.forEach((e) => { html += rowHtml(e, [], {}, true); });
+    if (!html) html = '<p class="zw-one">Gerade ist nichts offen.</p>';
+    return { html: '<div class="tl zw">' + html + '</div>', list: extra };
   }
   /* Punkte an „Spielen“ und an den Reitern, wenn dort jemand wartet oder ein Ergebnis da ist */
   function renderTabDots() {
@@ -970,7 +977,7 @@
     const g = $('giftRadar'); if (!g || !window.LZF || !window.LZF.occasionsAll) return;
     const list = window.LZF.occasionsAll(); const o = list[0]; const s = S();
     const wishes = s.wishes.filter((w) => !w.done && (w.cat || 'wunsch') === 'wunsch');
-    if (!o) { g.classList.add('hidden'); return; }
+    if (!o || o.days > 21) { g.classList.add('hidden'); return; } /* 3.43.0 (vorher ordnung.js): nur, wenn ein Anlass in höchstens 21 Tagen kommt */
     g.classList.remove('hidden');
     const key = /^(jahrestag|hochzeit|kuss|kennenlernen)$/.test(o.id) ? 'jahrestag' : o.id === 'geburtstag' ? 'geburtstag' : (D.gifts[o.id] ? o.id : null);
     const W = window.LZW; const mine = W ? W.ideas(1) : [];
@@ -994,7 +1001,8 @@
   }
   function renderSendButtons() {
     const on = paired() && joined();
-    const b = $('btnSendPartner'); if (b) { b.classList.toggle('hidden', !on); b.setAttribute('aria-label', 'In die App von ' + partnerName() + ' schicken'); }
+    const b = $('btnSendPartner'); if (b) { b.classList.toggle('hidden', !on); b.setAttribute('aria-label', 'In die App von ' + partnerName() + ' schicken'); b.dataset.label = '💌 An ' + partnerName() + ' schicken'; }
+    if (L.tidyMsg) L.tidyMsg();
   }
   function renderAll() { flushSeen(); renderTabDots(); renderHomeCards(); renderSettingsCard(); renderSendButtons(); renderInboxBadge(); renderDecks(); renderPush(); if (window.LZN) window.LZN.render(); const pv = $('view-post'); if (pv && pv.classList.contains('active')) renderPost(); }
 
