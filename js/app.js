@@ -295,7 +295,7 @@
     }
   }
   const REASON_LABEL = 'Warum ich dich liebe';
-  function showReason(r) { spawnHearts(6); showMessage({ text: r, own: true }, REASON_LABEL); }
+  function showReason(r) { if (!$('view-home').classList.contains('active')) showView('home'); spawnHearts(6); showMessage({ text: r, own: true }, REASON_LABEL); }
   /* Gründe, die der Schatz geschickt hat, sammeln sich darunter */
   function renderReasonsFrom() {
     const box = $('reasonFrom'); if (!box) return;
@@ -332,7 +332,7 @@
   $('btnHug').onclick = () => { spawnHearts(5); showMessage({ text: pick(D.hugs), own: false }, 'Eine Umarmung'); };
   $('btnMorning').onclick = () => { spawnHearts(5); showMessage({ text: pick(D.goodmorning), own: false }, 'Guten Morgen'); };
   $('btnNight').onclick = () => { spawnHearts(5); showMessage({ text: pick(D.goodnight), own: false }, 'Gute Nacht'); };
-  $('btnWrite').onclick = () => writeOwn((t) => showMessage({ text: t, own: true }, 'Persönlich für dich'));
+  $('btnWrite').onclick = () => writeOwn((t) => { if (!$('view-home').classList.contains('active')) showView('home'); showMessage({ text: t, own: true }, 'Persönlich für dich'); });
   $('btnReasons').onclick = () => { const p = $('reasonPanel'); const open = p.classList.toggle('hidden'); if (!open) { renderReasons(); if (window.LZP) window.LZP.mountTips($('reasonTips'), 'reasons', 'Gründe schenken'); p.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } };
   $('btnPlayTile').onclick = () => { showView('play'); showSub('play', 'spiele'); if (window.LZG) window.LZG.renderHub(); window.scrollTo(0, 0); };
   $('btnCommonTile').onclick = () => { showView('play'); showSub('play', 'gemeinsam'); window.scrollTo(0, 0); };
@@ -614,8 +614,22 @@
     hilfe: () => { if (window.LZWI && window.LZWI.hilfe) window.LZWI.hilfe(); },
     setdate: () => { $('btnSetDate').click(); },
     send: () => showView('send'),
-    post: () => showView('post')
+    post: () => showView('post'),
+    share: () => { showView('home'); setTimeout(() => { if (!current.text) return; const sig = current.incoming ? S.receiver : S.sender; if (window.LZX && window.LZX.shareCard) window.LZX.shareCard({ text: fmt(current.text), label: $('msgLabel').textContent || '', sig }); else shareCurrent(); }, 120); }
   };
+  /* Stellvertreter-Kacheln klicken den geparkten Knopf in #sendStash. Arten, deren Ergebnis in der
+     Botschaftskarte erscheint, holen dafür erst „Heute“ ins Bild. */
+  const TO_HOME = { btnNext: 1, btnKiss: 1, btnHug: 1, btnMorning: 1, btnNight: 1, btnGen: 1 };
+  function msgIntoView() { const c = document.querySelector('#view-home .msg-card'); if (c) c.scrollIntoView({ behavior: S.motion === false ? 'auto' : 'smooth', block: 'center' }); }
+  document.addEventListener('click', (e) => {
+    const t = e.target.closest && e.target.closest('[data-proxy]'); if (!t || !t.closest('#app')) return;
+    const b = $(t.dataset.proxy); if (!b) return;
+    const area = t.closest('[data-area]'); if (window.LZS) window.LZS.count('open:' + (area ? area.dataset.area : 'home') + ':' + b.id);
+    const home = !!TO_HOME[b.id];
+    if (home && !$('view-home').classList.contains('active')) showView('home');
+    b.click();
+    if (home) setTimeout(msgIntoView, 60);
+  });
   document.addEventListener('click', (e) => {
     const t = e.target.closest && e.target.closest('[data-go]'); if (!t || !t.closest('#app') || !GO[t.dataset.go]) return;
     const area = (t.closest('[data-area]') || t.closest('.view') || {}).dataset; const where = area && area.area ? area.area : 'home';

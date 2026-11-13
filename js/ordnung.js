@@ -9,52 +9,15 @@
   const $ = (id) => document.getElementById(id), esc = L.esc;
   const home = $('view-home'); if (!home) return;
 
-  /* ---------- Startseite: eine Reihe „Schicken“ statt vier Kachelgruppen ---------- */
-  const TOP = ['btnNext', 'btnKiss', 'btnKritzel', 'btnKamera'];
-  const MORE = [
-    ['Schnell gesagt', ['btnHug', 'btnMorning', 'btnNight', 'btnGen']],
-    ['Von Herzen', ['btnReasons', 'btnPoem', 'btnWrite', 'btnGift']],
-    ['Mit Bild und Ton', ['btnJingle', 'btnNah']]
-  ];
-  const stash = document.createElement('div'); stash.id = 'oStash'; stash.hidden = true; home.appendChild(stash);
-  const heads = Array.from(home.querySelectorAll(':scope > .eyebrow.tile-head'));
-  const rows = Array.from(home.querySelectorAll(':scope > .btn-row'));
-  if (heads.length && rows.length) {
-    const sendHead = document.createElement('div'); sendHead.className = 'eyebrow tile-head'; sendHead.textContent = 'Etwas schicken';
-    const sendRow = document.createElement('div'); sendRow.className = 'btn-row o-send';
-    TOP.forEach((id) => { const b = $(id); if (b) sendRow.appendChild(b); });
-    const more = document.createElement('button'); more.type = 'button'; more.className = 'pill-btn ghost o-more'; more.id = 'btnMoreSend'; more.textContent = 'Mehr zum Schicken …';
-    heads[0].before(sendHead); sendHead.after(sendRow); sendRow.after(more);
-    /* übrige Knöpfe sicher verwahren (ihre Funktionen hängen an den Elementen) */
-    rows.forEach((r) => { Array.from(r.children).forEach((b) => stash.appendChild(b)); r.remove(); });
-    heads.forEach((h) => h.remove());
-    more.onclick = moreSheet;
-  }
-  function moreSheet() {
-    let html = '<h3>Mehr zum Schicken</h3>';
-    MORE.forEach(([title, ids]) => {
-      const items = ids.map((id) => $(id)).filter(Boolean);
-      if (!items.length) return;
-      html += '<div class="eyebrow" style="margin-top:6px">' + esc(title) + '</div><div class="o-grid">' + items.map((b) => '<button type="button" class="btn" data-proxy="' + b.id + '">' + b.innerHTML + '</button>').join('') + '</div>';
-    });
-    html += '<div class="eyebrow" style="margin-top:6px">Für euch</div><div class="o-grid"><button type="button" class="btn" data-go="thanks"><span class="btn-icon">🙏</span><span>Danke<br>sagen</span></button><button type="button" class="btn" data-go="fav"><span class="btn-icon">❤️</span><span>Meine<br>Favoriten</span></button></div>';
-    html += '<div class="row" style="margin-top:12px"><button class="pill-btn ghost" data-cancel>Schließen</button></div>';
-    L.openSheet(html, (sh) => {
-      sh.querySelector('[data-cancel]').onclick = L.closeSheet;
-      sh.querySelectorAll('[data-proxy]').forEach((b) => b.onclick = () => { L.closeSheet(); const t = $(b.dataset.proxy); if (t) setTimeout(() => t.click(), 60); });
-      sh.querySelector('[data-go="thanks"]').onclick = () => { L.closeSheet(); L.showView('wishes'); L.showSub('wishes', 'thanks'); };
-      sh.querySelector('[data-go="fav"]').onclick = () => { L.closeSheet(); L.showView('wishes'); setTimeout(() => { const f = $('favPanel'); if (f) f.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 80); };
-    });
-  }
-
-  /* Reihenfolge: Neues vom Schatz, Botschaft, Du & …, Flügelschlag, Schicken, (Geschenk-Radar wenn bald), Schmetterling */
+  /* 3.43.0: „Eine Reihe Schicken“ und „Mehr zum Schicken“ sind jetzt die Viererreihe und der Reiter „Schicken“ (index.html).
+     Reihenfolge: Neues vom Schatz, Botschaft, Du & …, Flügelschlag, Schicken, (Geschenk-Radar wenn bald), Schmetterling */
   const msgCard = home.querySelector(':scope > .msg-card');
   const anchor = $('fromPartner');
   if (anchor && msgCard) {
     let last = anchor;
     [msgCard, $('partnerCard'), $('piekCard')].forEach((el) => { if (el) { last.after(el); last = el; } });
-    const sh = home.querySelector(':scope > .eyebrow.tile-head'); const row = home.querySelector(':scope > .o-send'); const mb = $('btnMoreSend');
-    [sh, row, mb, $('giftRadar'), $('reasonPanel'), $('bflyCard')].forEach((el) => { if (el) { last.after(el); last = el; } });
+    const sh = home.querySelector(':scope > .quick-head'); const row = home.querySelector(':scope > .quick-row');
+    [sh, row, $('giftRadar'), $('bflyCard')].forEach((el) => { if (el) { last.after(el); last = el; } });
   }
   /* Geschenk-Radar auf der Startseite nur, wenn ein Anlass in höchstens 21 Tagen kommt */
   function radarGate() {
@@ -110,5 +73,5 @@
     '.o-grid .btn{min-height:84px;width:100%;margin:0}' +
     '.o-list{display:flex;flex-direction:column;gap:10px;align-items:stretch}.o-list .pill-btn{min-height:48px;justify-content:flex-start}';
   document.head.appendChild(css);
-  window.LZO = { moreSheet, radarGate };
+  window.LZO = { radarGate };
 })();

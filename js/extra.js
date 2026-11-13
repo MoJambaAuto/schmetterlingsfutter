@@ -235,7 +235,7 @@
       '<div class="row wrap"><button class="pill-btn primary" data-book>📖 Schmetterlingsbuch</button><button class="pill-btn" data-feed>Jetzt füttern</button><button class="pill-btn ghost" data-cancel>Schließen</button></div>', (sh) => {
       sh.querySelector('[data-cancel]').onclick = L.closeSheet;
       sh.querySelector('[data-book]').onclick = () => { L.closeSheet(); setTimeout(book, 60); };
-      sh.querySelector('[data-feed]').onclick = () => { L.closeSheet(); const m = $('btnMoreSend') || $('btnReasons'); if (m) m.scrollIntoView({ behavior: 'smooth', block: 'center' }); };
+      sh.querySelector('[data-feed]').onclick = () => { L.closeSheet(); L.showView('send'); }; /* 3.43.0: alle Sende-Arten unter „Schicken“ */
     });
   }
   /* Schmetterlingsbuch: entdeckte Falter mit Bild und Steckbrief, die nächsten als Schatten */

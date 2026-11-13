@@ -74,6 +74,15 @@ html[data-view]:not([data-view="home"]) #app .occasion-chip { display:none; }
 #app .tile.st-turn { border-color:var(--accent-2); box-shadow:0 0 0 1px var(--accent-2), 0 6px 22px var(--glow); }
 #app .tile.st-ready { border-color:rgba(255,214,102,.7); }
 
+/* ---------- Schicken ---------- */
+#app .tiles.four { grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; }
+#app .quick-row .tile { min-height:88px; padding:8px 2px; gap:6px; }
+#app .quick-row .tile-t { font-size:16px; }
+#app .quick-head { align-self:stretch; margin:8px 0 8px; }
+#app .quick-head .eyebrow { margin:0; }
+#app .link-btn { min-height:48px; padding:0 4px 0 12px; border:0; background:transparent; color:var(--accent-2); font-size:19px; font-weight:700; cursor:pointer; }
+#app #view-send #reasonPanel { margin-top:-4px; }
+
 /* ---------- Wir ---------- */
 #app .us-hero-box { width:100%; }
 #app .us-hero { width:100%; min-height:104px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:16px; margin:0 0 8px; border-radius:20px; border:1px solid var(--line); background:linear-gradient(135deg, rgba(255,209,102,.14), rgba(255,255,255,.03)); color:var(--text); font-family:var(--sans); cursor:pointer; }
