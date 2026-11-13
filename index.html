@@ -130,21 +130,7 @@
         <div class="tips-slot" id="reasonTips"></div>
       </div>
 
-      <div class="card soft" id="thanksCard">
-        <div class="eyebrow">🙏 Dankbarkeits-Notiz</div>
-        <div class="field" style="margin-bottom:8px"><label for="thanksInput" id="thanksLabel">Was hat Darling heute gut gemacht?</label><input id="thanksInput" maxlength="120" placeholder="z. B. trotz Stress mit mir gelacht" autocomplete="off"></div>
-        <div class="row wrap" style="justify-content:flex-start">
-          <button class="pill-btn small" id="btnThanksSave">Notieren</button>
-          <button class="pill-btn small primary" id="btnThanksSend">Als Danke senden ↗</button>
-          <span class="hint" style="margin:0 0 0 auto" id="thanksCount"></span>
-        </div>
-        <div class="tips-slot" id="thanksTips"></div>
-      </div>
       <div class="card soft hidden" id="giftRadar"></div>
-      <div class="card soft" id="favPanel">
-        <div class="row between"><div class="eyebrow" style="margin:0">Favoriten</div><span class="tag" id="favCount">0</span></div>
-        <div id="favList" style="margin-top:10px"></div>
-      </div>
       <div class="hint">Tippe auf das Herz für eine neue Botschaft</div>
     </section>
 
@@ -336,6 +322,16 @@
       <div class="sub" id="sub-thanks">
         <div class="view-title">Dankbarkeits-Notizen</div>
         <div class="view-sub" id="thanksSub">Konkret benannt wirkt am stärksten</div>
+        <div class="card soft" id="thanksCard">
+          <div class="eyebrow">🙏 Dankbarkeits-Notiz</div>
+          <div class="field" style="margin-bottom:8px"><label for="thanksInput" id="thanksLabel">Was hat Darling heute gut gemacht?</label><input id="thanksInput" maxlength="120" placeholder="z. B. trotz Stress mit mir gelacht" autocomplete="off"></div>
+          <div class="row wrap" style="justify-content:flex-start">
+            <button class="pill-btn small" id="btnThanksSave">Notieren</button>
+            <button class="pill-btn small primary" id="btnThanksSend">Als Danke senden ↗</button>
+            <span class="hint" style="margin:0 0 0 auto" id="thanksCount"></span>
+          </div>
+          <div class="tips-slot" id="thanksTips"></div>
+        </div>
         <div id="thanksList" style="width:100%"></div>
       </div>
       <div class="sub" id="sub-coupons">
@@ -348,20 +344,24 @@
       </div>
       <div class="card soft" style="margin-top:14px;padding:12px 16px"><div class="tips-slot" id="couponTips" style="margin:0"></div></div>
       </div>
+      <div class="sub" id="sub-fav">
+        <div class="view-title">Favoriten</div>
+        <div class="card soft" id="favPanel">
+          <div class="row between"><div class="eyebrow" style="margin:0">Gespeicherte Botschaften</div><span class="tag" id="favCount">0</span></div>
+          <div id="favList" style="margin-top:10px"></div>
+        </div>
+      </div>
     </section>
 
-    <!-- ===== Einstellungen ===== -->
+    <!-- ===== Einstellungen (Zahnrad oben rechts, 3.43.0: nur noch Einstellungen) ===== -->
     <section class="view settings-list" id="view-settings" aria-label="Einstellungen">
       <button type="button" class="back-row" data-back="home">‹ Zurück</button>
       <div class="sub active" id="sub-prefs">
       <div class="view-title">Einstellungen</div>
       <div class="view-sub">Deine Daten bleiben auf diesem Gerät</div>
 
-      <div class="card" style="padding:18px 20px" id="partnerSettings"></div>
-      <div class="card" style="padding:18px 20px" id="likesSettings"></div>
-
-      <div class="card" style="padding:18px 20px">
-        <div class="eyebrow">Namen</div>
+      <div class="card set-card">
+        <div class="eyebrow">Ihr zwei</div>
         <div class="field"><label for="setSender">Dein Name</label><input id="setSender" maxlength="18" placeholder="z. B. Hase"></div>
         <div class="field"><label>Ich bin</label><div class="chips big" id="setPron"></div></div>
         <div class="field"><label for="setReceiver" id="lblReceiver">Dein Schatz</label><input id="setReceiver" maxlength="18" placeholder="z. B. Darling"></div>
@@ -370,52 +370,49 @@
         <div class="field" style="margin-bottom:4px"><label>Symbol deines Schatzes</label><div class="emoji-grid" id="emojiReceiver"></div></div>
       </div>
 
-      <div class="card" style="padding:18px 20px">
-        <div class="eyebrow">Farbwelt</div>
+      <div class="card set-card" id="partnerSettings"></div>
+
+      <div class="card set-card">
+        <div class="eyebrow">Aussehen</div>
         <div class="theme-grid" id="themeGrid"></div>
+        <div class="switch"><div>Animationen</div><button class="toggle" id="togMotion" role="switch" aria-checked="true" aria-label="Animationen"></button></div>
       </div>
 
-      <div class="card">
-        <div class="switch"><div>Animationen<small>Herzen, Sterne, Pulsieren</small></div><button class="toggle" id="togMotion" role="switch" aria-checked="true" aria-label="Animationen"></button></div>
-        <div class="switch"><div>Vibration<small>Kurzes Feedback beim Antippen, Zupfen und Fangen</small></div><button class="toggle" id="togHaptic" role="switch" aria-checked="true" aria-label="Vibration"></button></div>
+      <div class="card set-card">
+        <div class="eyebrow">Mitteilungen</div>
         <div class="switch hidden" id="pushRow"><div>Mitteilungen aufs Handy<small id="pushHint"></small></div><button class="toggle" id="togPush" role="switch" aria-checked="false" aria-label="Mitteilungen aufs Handy"></button></div>
-        <div class="switch"><div>Bereich „Zweisamkeit“<small>Flirt, Fragen für zwei, Wünsche – nur für Erwachsene</small></div><button class="toggle" id="togIntim" role="switch" aria-checked="false" aria-label="Bereich Zweisamkeit anzeigen"></button></div>
+        <div class="switch"><div>Vibration</div><button class="toggle" id="togHaptic" role="switch" aria-checked="true" aria-label="Vibration"></button></div>
       </div>
 
-      <div class="card" style="padding:18px 20px">
-        <div class="eyebrow">Passend dazu – Werbelinks</div>
-        <p class="about" style="font-size:16px;color:var(--text-muted)">Zu vielen Funktionen zeigt die App Produkt-Vorschläge als Links zur Amazon-Suche. Das sind Werbelinks: Kaufst du darüber etwas, bekommt der Anbieter dieser App eine kleine Provision von Amazon. Für dich ändert sich nichts am Preis. Die Links öffnen sich außerhalb der App. Als Amazon-Partner verdient der Anbieter an qualifizierten Verkäufen.</p>
+      <div class="card set-card">
+        <div class="eyebrow">Inhalte</div>
+        <div class="switch"><div>Bereich „Zweisamkeit“ (18+)</div><button class="toggle" id="togIntim" role="switch" aria-checked="false" aria-label="Bereich Zweisamkeit anzeigen"></button></div>
       </div>
 
-      <div class="card" style="padding:18px 20px">
-        <div class="eyebrow">Eigene Botschaften</div>
-        <div id="ownMsgList"></div>
-        <div class="row" style="margin-top:10px"><button class="pill-btn small" id="btnWrite2">+ Botschaft schreiben</button></div>
-      </div>
-
-      <div class="card" style="padding:18px 20px">
+      <div class="card set-card">
         <div class="eyebrow">Daten</div>
-        <div class="row wrap">
-          <button class="pill-btn small" id="btnExport">Sichern (Export)</button>
+        <div id="privacySlot"></div>
+        <div class="row wrap set-btns">
+          <button class="pill-btn small" id="btnExport">Sichern</button>
           <button class="pill-btn small" id="btnImport">Wiederherstellen</button>
           <input type="file" id="fileImport" accept="application/json,.json" class="hidden">
+          <a href="#" class="pill-btn small" id="btnOnboardingAgain">Einrichtung neu starten</a>
         </div>
-        <div class="row" style="margin-top:10px"><button class="pill-btn small ghost danger" id="btnReset">Alles löschen</button></div>
+        <div class="row set-btns"><button class="pill-btn small ghost danger" id="btnReset">Alles löschen</button></div>
       </div>
 
-      <div class="card about">
-        <div class="hidden" id="ideaRow2"><div class="eyebrow">Mitmachen</div>
-        <div class="row" style="justify-content:flex-start;margin-bottom:18px"><button class="pill-btn" id="btnIdea2">💡 Idee spenden</button><button class="pill-btn ghost" id="btnReport2">🚩 Etwas melden</button></div></div>
-        <div class="eyebrow">Über Schmetterlingsfutter</div>
-        <p style="margin-bottom:8px">Papillon, euer Schmetterling, hält Liebe, Leidenschaft und Spaß in eurer Beziehung lebendig – Futter für die Schmetterlinge im Bauch. Am besten installiert ihr Schmetterlingsfutter beide und tragt euch gegenseitig als Absender ein.</p>
+      <details class="card about" id="aboutCard">
+        <summary>Über die App &amp; Datenschutz</summary>
+        <p style="margin:8px 0">Papillon, euer Schmetterling, hält Liebe, Leidenschaft und Spaß in eurer Beziehung lebendig – Futter für die Schmetterlinge im Bauch. Am besten installiert ihr Schmetterlingsfutter beide und tragt euch gegenseitig als Absender ein.</p>
         <p>Version <span id="aboutVersion"></span>. Diese App speichert alle Eingaben lokal auf deinem Gerät. Es werden keine Konten angelegt und keine Werbeanzeigen eingeblendet. Nur wenn ihr eure Apps freiwillig verbindet, laufen Botschaften verschlüsselt und Spiel-Antworten als Prüfsummen über einen Vermittlungsdienst – mehr dazu im Datenschutz.</p>
-        <p style="margin-top:8px"><a href="privacy.html">Datenschutz &amp; Impressum</a> · <a href="#" id="btnOnboardingAgain">Einrichtung erneut starten</a></p>
-        <p style="margin-top:8px;font-size:16px;color:var(--text-muted)">Schriften: Playfair Display und Lato (SIL Open Font License).</p>
-      </div>
+        <p style="margin-top:8px"><a href="privacy.html">Datenschutz &amp; Impressum</a></p>
+        <p style="margin-top:8px"><b>Werbelinks:</b> Zu vielen Funktionen zeigt die App Produkt-Vorschläge als Links zur Amazon-Suche. Kaufst du darüber etwas, bekommt der Anbieter dieser App eine kleine Provision von Amazon. Für dich ändert sich nichts am Preis. Die Links öffnen sich außerhalb der App. Als Amazon-Partner verdient der Anbieter an qualifizierten Verkäufen.</p>
+        <p style="margin-top:8px">Schriften: Playfair Display und Lato (SIL Open Font License).</p>
+      </details>
       </div>
     </section>
 
-    <!-- ===== Post: alles zwischen euch (3.43.0) ===== -->
+<!-- ===== Post: alles zwischen euch (3.43.0) ===== -->
     <section class="view" id="view-post" data-area="post" aria-labelledby="nav-post">
       <div class="view-title">Post</div>
       <div id="postList" class="tl"></div>
@@ -424,13 +421,48 @@
     <!-- ===== Schicken (3.43.0) ===== -->
     <section class="view" id="view-send" data-area="send" aria-labelledby="nav-send">
       <div class="view-title">Etwas schicken</div>
+      <div class="card set-card own-card" id="ownCard">
+        <div class="eyebrow">Meine Botschaften</div>
+        <div id="ownMsgList"></div>
+        <div class="row" style="margin-top:10px;justify-content:flex-start"><button class="pill-btn small" id="btnWrite2">+ Botschaft schreiben</button></div>
+      </div>
     </section>
 
     <!-- ===== Wir (3.43.0) ===== -->
     <section class="view" id="view-us" data-area="us" aria-labelledby="nav-us">
       <div class="view-title">Wir</div>
+      <div id="usHero" class="us-hero-box"></div>
+
+      <div class="hub-h">Unsere Zeit</div>
+      <div class="tiles">
+        <button type="button" class="tile" data-go="time.days"><span class="tile-i">⏳</span><span class="tile-t">Unsere Zeit</span></button>
+        <button type="button" class="tile" data-go="time.occasions"><span class="tile-i">💘</span><span class="tile-t">Anlässe</span></button>
+        <button type="button" class="tile" data-go="dates"><span class="tile-i">🗓️</span><span class="tile-t">Unsere Daten</span></button>
+      </div>
+
+      <div class="hub-h">Wünsche und Geschenke</div>
+      <div class="tiles">
+        <button type="button" class="tile" data-go="wishes.wishlist"><span class="tile-i">🗺️</span><span class="tile-t">Love Map</span></button>
+        <button type="button" class="tile" data-go="wishes.coupons"><span class="tile-i">🎟️</span><span class="tile-t">Gutscheine</span></button>
+        <button type="button" class="tile" data-go="gift"><span class="tile-i">🔍</span><span class="tile-t">Geschenk suchen</span></button>
+      </div>
+      <div class="card set-card" id="likesSettings"></div>
+
+      <div class="hub-h">Unsere Schätze</div>
+      <div class="tiles">
+        <button type="button" class="tile" data-go="wishes.thanks"><span class="tile-i">🙏</span><span class="tile-t">Danke</span></button>
+        <button type="button" class="tile" data-go="wishes.fav"><span class="tile-i">⭐</span><span class="tile-t">Favoriten</span></button>
+        <button type="button" class="tile" data-go="book"><span class="tile-i">📖</span><span class="tile-t">Schmetterlings&shy;buch</span></button>
+      </div>
+
+      <div class="hub-h">Mitmachen</div>
+      <div class="tiles">
+        <button type="button" class="tile" data-go="news"><span class="tile-i">✨</span><span class="tile-t">Was ist neu?</span></button>
+        <div class="hidden tiles-in" id="ideaRow2"><button type="button" class="tile" id="btnIdea2"><span class="tile-i">💡</span><span class="tile-t">Idee spenden</span></button><button type="button" class="tile" id="btnReport2"><span class="tile-i">🚩</span><span class="tile-t">Etwas melden</span></button></div>
+        <button type="button" class="tile" data-go="hilfe"><span class="tile-i">🌱</span><span class="tile-t">Echten Faltern helfen</span></button>
+      </div>
     </section>
-  </main>
+</main>
 
   <nav class="nav" role="tablist" aria-label="Hauptnavigation">
     <button role="tab" id="nav-home" data-view="home" class="active" aria-selected="true"><span class="ico">🏠</span>Heute</button>

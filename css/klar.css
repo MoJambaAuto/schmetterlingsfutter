@@ -60,6 +60,51 @@ html[data-view]:not([data-view="home"]) #app .occasion-chip { display:none; }
 #app .back-row { align-self:flex-start; min-height:48px; padding:0 14px 0 2px; margin:0 0 4px; border:0; background:transparent; color:var(--accent-2); font-size:19px; font-weight:700; display:inline-flex; align-items:center; gap:4px; cursor:pointer; }
 #app .back-row:active { opacity:.7; }
 
+/* ---------- Kachel-Baustein (Schicken, Spielen, Wir) ---------- */
+#app .hub-h { align-self:stretch; margin:16px 0 8px; }
+#app .tiles { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; width:100%; margin:0 0 16px; }
+#app .tiles.three { grid-template-columns:repeat(3,minmax(0,1fr)); }
+#app .tiles .tiles-in { display:contents; }
+#app .tiles .tiles-in.hidden { display:none !important; }
+#app .tile { position:relative; min-height:104px; min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:12px 6px; border-radius:18px; border:1px solid var(--line-soft); background:var(--tile-bg); color:var(--text); text-align:center; font-family:var(--sans); cursor:pointer; transition:transform .15s, background .15s, border-color .15s; }
+#app .tile:active { transform:scale(.96); background:rgba(255,255,255,.1); border-color:var(--accent-2); }
+#app .tile-i { width:48px; height:48px; flex:none; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:28px; line-height:1; background:rgba(255,255,255,.08); background:color-mix(in srgb, var(--area, var(--accent)) 18%, transparent); }
+#app .tile-t { font-size:17px; font-weight:700; line-height:1.25; hyphens:auto; -webkit-hyphens:auto; overflow-wrap:break-word; max-width:100%; }
+#app .tile .chip-st { margin-top:0; }
+#app .tile.st-turn { border-color:var(--accent-2); box-shadow:0 0 0 1px var(--accent-2), 0 6px 22px var(--glow); }
+#app .tile.st-ready { border-color:rgba(255,214,102,.7); }
+
+/* ---------- Wir ---------- */
+#app .us-hero-box { width:100%; }
+#app .us-hero { width:100%; min-height:104px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:16px; margin:0 0 8px; border-radius:20px; border:1px solid var(--line); background:linear-gradient(135deg, rgba(255,209,102,.14), rgba(255,255,255,.03)); color:var(--text); font-family:var(--sans); cursor:pointer; }
+#app .us-names { font-size:19px; font-weight:700; color:var(--text-soft); }
+#app .us-names i { font-style:normal; color:var(--accent); }
+#app .us-n { font-family:var(--serif); font-size:34px; line-height:1.1; color:var(--c-us); }
+#app .us-l { font-size:19px; font-weight:700; }
+/* Zeit und Wünsche: Unterseiten von „Wir“, ohne eigene Reiterleiste */
+#app .seg[data-seg="time"], #app .seg[data-seg="wishes"] { display:none; }
+#app #sub-fav .view-title { margin-bottom:12px; }
+
+/* ---------- Einstellungen: nur Einstellungen, in Karten gruppiert ---------- */
+#app .settings-list .card, #app .set-card { padding:16px 16px 8px; }
+#app .set-card .eyebrow { margin:0 0 8px; }
+#app .set-btns { justify-content:flex-start; margin:8px 0 8px; }
+#app .set-state { font-size:19px; font-weight:700; margin:0 0 4px; color:var(--text-soft); }
+#app .set-state.on { color:var(--text); }
+#app .switch { min-height:56px; gap:12px; }
+#app .toggle { width:56px; height:32px; border-radius:16px; }
+#app .toggle::after { width:26px; height:26px; top:2px; left:2px; }
+#app .toggle[aria-checked="true"]::after { transform:translateX(24px); }
+#app .theme-sw { height:48px; }
+#app details.about { padding:0 16px; }
+#app details.about > summary { min-height:56px; display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:19px; font-weight:700; color:var(--text); cursor:pointer; list-style:none; }
+#app details.about > summary::-webkit-details-marker { display:none; }
+#app details.about > summary::after { content:'›'; font-size:26px; color:var(--accent-2); transition:transform .2s; }
+#app details.about[open] > summary::after { transform:rotate(90deg); }
+#app details.about[open] { padding-bottom:16px; }
+#app details.about p { font-size:16px; line-height:1.5; color:var(--text-soft); }
+#app .own-card { margin-top:8px; }
+
 /* ---------- Schmetterling klein in der Botschaftskarte ---------- */
 #app .msg-card .heart-wrap { margin:0 auto 8px; width:72px; height:60px; }
 #app .msg-card .big-heart { width:72px; height:60px; filter:drop-shadow(0 0 10px var(--glow)); }

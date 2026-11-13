@@ -273,7 +273,7 @@
     S.favorites.slice().reverse().forEach((t) => {
       const d = document.createElement('div'); d.className = 'fav-item';
       d.innerHTML = '<span>' + esc(fmt(t)) + '</span><button class="reason-del" aria-label="Favorit entfernen">✕</button>';
-      d.querySelector('span').onclick = () => showMessage({ text: t, own: S.ownMessages.includes(t) }, 'Dein Favorit');
+      d.querySelector('span').onclick = () => { if (!$('view-home').classList.contains('active')) showView('home'); showMessage({ text: t, own: S.ownMessages.includes(t) }, 'Dein Favorit'); };
       d.querySelector('button').onclick = () => { S.favorites = S.favorites.filter((x) => x !== t); save(); renderFavs(); updateFavBtn(); };
       l.appendChild(d);
     });
@@ -495,7 +495,7 @@
         const v = sh.querySelector('#pf-date').value;
         if (!v) { toast('Bitte Datum wählen'); return; }
         if (parseISODate(v) > new Date()) { toast('Das Datum liegt in der Zukunft'); return; }
-        S.anniversary = v; save(); closeSheet(); renderTime(); toast('Gespeichert ❤');
+        S.anniversary = v; save(); closeSheet(); renderTime(); renderUs(); toast('Gespeichert ❤');
       };
     });
   }
@@ -576,22 +576,59 @@
     themeGrid($('themeGrid'), S.theme, (t) => { S.theme = t; save(); applyTheme(); });
     setToggle('togMotion', S.motion); setToggle('togHaptic', S.haptic);
     $('aboutVersion').textContent = D.version;
-    const l = $('ownMsgList'); l.innerHTML = '';
-    if (!S.ownMessages.length) l.innerHTML = '<div class="empty">Noch keine eigenen Botschaften. Persönliche Worte machen das Geschenk einzigartig.</div>';
+    renderOwnMsgs();
+  }
+  /* Eigene Botschaften – seit 3.43.0 unter „Schicken“ */
+  function renderOwnMsgs() {
+    const l = $('ownMsgList'); if (!l) return; l.innerHTML = '';
+    if (!S.ownMessages.length) l.innerHTML = '<div class="empty">Noch keine eigenen Botschaften.</div>';
     S.ownMessages.forEach((t, i) => {
       const d = document.createElement('div'); d.className = 'fav-item';
       d.innerHTML = '<span>' + esc(fmt(t)) + '</span><button class="reason-del" aria-label="Botschaft löschen">✕</button>';
-      d.querySelector('button').onclick = () => confirmSheet('Botschaft löschen?', fmt(t), 'Löschen', () => { S.ownMessages.splice(i, 1); S.favorites = S.favorites.filter((x) => x !== t); save(); refillQueue(); renderSettings(); renderFavs(); }, true);
+      d.querySelector('button').onclick = () => confirmSheet('Botschaft löschen?', fmt(t), 'Löschen', () => { S.ownMessages.splice(i, 1); S.favorites = S.favorites.filter((x) => x !== t); save(); refillQueue(); renderOwnMsgs(); renderFavs(); }, true);
       l.appendChild(d);
     });
   }
+
+  /* ---------- Wir (3.43.0): Tage zusammen oben, darunter Kacheln ---------- */
+  function renderUs() {
+    const h = $('usHero'); if (!h) return;
+    const names = '<span class="us-names">' + esc(S.emojiS + ' ' + S.sender) + ' <i aria-hidden="true">❤</i> ' + esc(S.emojiR + ' ' + S.receiver) + '</span>';
+    if (S.anniversary) {
+      const days = Math.max(0, Math.round((atMidnight(new Date()) - atMidnight(parseISODate(S.anniversary))) / 86400000));
+      h.innerHTML = '<button type="button" class="us-hero" data-go="time.days">' + names + '<span class="us-n">' + days.toLocaleString('de-DE') + '</span><span class="us-l">' + (days === 1 ? 'Tag zusammen' : 'Tage zusammen') + '</span></button>';
+    } else h.innerHTML = '<button type="button" class="us-hero" data-go="setdate">' + names + '<span class="us-l">📅 Datum eintragen</span></button>';
+  }
+  /* Ein Weg für alle Kacheln: data-go = Ziel, data-proxy = verborgener Knopf, der geklickt wird */
+  const GO = {
+    'time.days': () => { showView('time'); showSub('time', 'days'); },
+    'time.occasions': () => { showView('time'); showSub('time', 'occasions'); },
+    'wishes.wishlist': () => { showView('wishes'); showSub('wishes', 'wishlist'); },
+    'wishes.coupons': () => { showView('wishes'); showSub('wishes', 'coupons'); },
+    'wishes.thanks': () => { showView('wishes'); showSub('wishes', 'thanks'); },
+    'wishes.fav': () => { showView('wishes'); showSub('wishes', 'fav'); },
+    dates: () => { if (window.LZD) window.LZD.sheet('anniversary'); },
+    gift: () => { if (window.LZP) window.LZP.searchSheet(); },
+    book: () => { if (window.LZX && window.LZX.book) window.LZX.book(); },
+    news: () => { if (window.LZU && window.LZU.newsSheet) window.LZU.newsSheet(); },
+    hilfe: () => { if (window.LZWI && window.LZWI.hilfe) window.LZWI.hilfe(); },
+    setdate: () => { $('btnSetDate').click(); },
+    send: () => showView('send'),
+    post: () => showView('post')
+  };
+  document.addEventListener('click', (e) => {
+    const t = e.target.closest && e.target.closest('[data-go]'); if (!t || !t.closest('#app') || !GO[t.dataset.go]) return;
+    const area = (t.closest('[data-area]') || t.closest('.view') || {}).dataset; const where = area && area.area ? area.area : 'home';
+    if (window.LZS) window.LZS.count('open:' + where + ':' + t.dataset.go);
+    GO[t.dataset.go]();
+  });
   function nameInput(id, key) {
     $(id).addEventListener('change', () => { const v = $(id).value.trim(); if (v) { S[key] = v; save(); renderHeader(); refillQueue(); daisyReady = false; if (current.text) $('msgText').textContent = fmt(current.text); if (key === 'sender' && window.LZP && window.LZP.announce) window.LZP.announce(); } else $(id).value = S[key]; });
   }
   nameInput('setSender', 'sender'); nameInput('setReceiver', 'receiver');
   $('togMotion').onclick = () => { S.motion = !S.motion; save(); setToggle('togMotion', S.motion); applyTheme(); };
   $('togHaptic').onclick = () => { S.haptic = !S.haptic; save(); setToggle('togHaptic', S.haptic); haptic([40, 60, 40]); };
-  $('btnWrite2').onclick = () => writeOwn(() => renderSettings());
+  $('btnWrite2').onclick = () => writeOwn(() => renderOwnMsgs());
   $('btnExport').onclick = () => {
     const copy = Object.assign({}, S); delete copy.partner; delete copy.deviceId; delete copy.pendingPair; // Verbindung ist gerätegebunden
     const blob = new Blob([JSON.stringify(copy, null, 2)], { type: 'application/json' });

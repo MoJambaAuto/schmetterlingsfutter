@@ -87,7 +87,8 @@
     const anchor = $('togFly') || $('togHaptic'); if (!anchor || $('togStats')) return;
     const row = document.createElement('div'); row.className = 'switch';
     row.innerHTML = '<div>Anonym mithelfen<small>Zählt nur, was genutzt wird und was hakt · <a href="#" data-info>Was genau?</a></small></div><button class="toggle" id="togStats" role="switch" aria-label="Anonym mithelfen"></button>';
-    anchor.closest('.switch').after(row);
+    const slot = $('privacySlot'); /* 3.43.0: Karte „Daten“ in den Einstellungen */
+    if (slot) slot.appendChild(row); else anchor.closest('.switch').after(row);
     row.querySelector('[data-info]').onclick = (e) => { e.preventDefault(); infoSheet(); };
     $('togStats').onclick = () => setOk(!ok());
     syncToggle();

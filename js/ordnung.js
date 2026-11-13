@@ -47,11 +47,6 @@
     });
   }
 
-  /* ---------- Zweitrangiges von der Startseite an seinen Ort ---------- */
-  const wishes = $('view-wishes');
-  const fav = $('favPanel'); if (fav && wishes) wishes.appendChild(fav);
-  const thanks = $('thanksCard'); const tsub = $('sub-thanks');
-  if (thanks && tsub) tsub.prepend(thanks); else if (thanks) thanks.classList.add('o-off');
   /* Reihenfolge: Neues vom Schatz, Botschaft, Du & …, Flügelschlag, Schicken, (Geschenk-Radar wenn bald), Schmetterling */
   const msgCard = home.querySelector(':scope > .msg-card');
   const anchor = $('fromPartner');

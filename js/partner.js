@@ -879,9 +879,10 @@
   }
   function renderSettingsCard() {
     const c = $('partnerSettings'); if (!c) return; const p = P().partner;
-    if (!RELAY) { c.innerHTML = '<div class="eyebrow">Partner-Verbindung</div><p class="about" style="font-size:17px">In dieser Version noch nicht freigeschaltet.</p>'; return; }
-    c.innerHTML = '<div class="eyebrow">Partner-Verbindung</div><p class="about" style="font-size:17px;margin-bottom:10px">' + (!p ? 'Nicht verbunden. Mit Verbindung landen Botschaften und Gutscheine direkt in der App von ' + L.esc(S().receiver) + ', und Gleichklang-Spiele laufen getrennt auf zwei Handys.' : p.joined ? 'Verbunden mit ' + L.esc(partnerName()) + '. Der Vermittlungsdienst sieht nur verschlüsselte Daten.' : 'Code erzeugt, wartet auf ' + L.esc(S().receiver) + '.') + '</p><div class="row wrap" style="justify-content:flex-start"><button class="pill-btn small ' + (p ? '' : 'primary') + '" data-pair>' + (!p ? 'Jetzt verbinden' : 'Verbindung verwalten') + '</button>' + (p && p.joined ? '<button class="pill-btn small ghost" data-inbox>📬 Postfach</button>' : '') + '</div>';
-    c.querySelector('[data-pair]').onclick = pairSheet; const ib = c.querySelector('[data-inbox]'); if (ib) ib.onclick = inboxSheet;
+    if (!RELAY) { c.innerHTML = '<div class="eyebrow">Verbindung</div><p class="about" style="font-size:19px">Noch nicht freigeschaltet</p>'; return; }
+    /* 3.43.0: nur der Zustand und ein Knopf – das Postfach ist jetzt der Reiter „Post“ */
+    c.innerHTML = '<div class="eyebrow">Verbindung</div><div class="set-state' + (p && p.joined ? ' on' : '') + '">' + (!p ? 'Nicht verbunden' : p.joined ? '💞 Verbunden mit ' + L.esc(partnerName()) : '⏳ Wartet auf ' + L.esc(S().receiver)) + '</div><div class="row wrap set-btns"><button class="pill-btn small ' + (p ? '' : 'primary') + '" data-pair>' + (!p ? 'Jetzt verbinden' : 'Verbindung verwalten') + '</button></div>';
+    c.querySelector('[data-pair]').onclick = pairSheet;
   }
   function renderSendButtons() {
     const on = paired() && joined();

@@ -78,6 +78,10 @@
   css.textContent = '.nw-list{margin:8px 0 4px 0;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:10px}.nw-list li{font-size:17px;line-height:1.45;background:var(--glass,rgba(255,255,255,.05));border-radius:14px;padding:10px 12px}' +
     '.nw-bar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom));z-index:9700;border:0;border-radius:22px;padding:12px 18px;min-height:46px;font:700 16px Lato,sans-serif;color:#fff;background:linear-gradient(135deg,#e8467c,#b04fd0);box-shadow:0 6px 20px rgba(0,0,0,.35)}';
   document.head.appendChild(css);
+  /* „Was ist neu?“ zum Nachlesen (Kachel unter Wir → Mitmachen und Frag Papillon, 3.43.0) */
+  function newsSheet() {
+    L.openSheet('<h3>✨ Neu in Version ' + esc(D.version) + '</h3><ul class="nw-list">' + (D.news || []).slice(0, 3).map((n) => n.items.map((t) => '<li>' + esc(t) + '</li>').join('')).join('') + '</ul><div class="row" style="margin-top:12px"><button class="pill-btn primary" data-ok>Schön!</button></div>', (sh) => { sh.querySelector('[data-ok]').onclick = L.closeSheet; });
+  }
   whatsNew();
-  window.LZU = { whatsNew, check, busy };
+  window.LZU = { whatsNew, check, busy, newsSheet };
 })();
