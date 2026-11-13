@@ -442,5 +442,5 @@
   }
   document.querySelectorAll('#view-play .seg [data-sub="spiele"]').forEach((b) => b.addEventListener('click', renderHub));
   renderHub();
-  window.LZG = { activity, renderHub, openGame, luegeNew, storyNew, jagdNew, fangOpen, fangPlay, games, received };
+  window.LZG = { activity, renderHub, openGame, luegeNew, storyNew, jagdNew, fangOpen, fangPlay, games, received, META };
 })();

@@ -189,7 +189,12 @@
      angehängt an die stille Begrüßung (ältere App-Versionen ignorieren das Feld). Bewusst ohne Uhrzeit des Lesens: kein Druck. */
   function noteSent(obj, at) {
     const s = P(); if (!s.outbox) s.outbox = [];
-    s.outbox.push({ at, t: obj.t, deck: obj.deck || '', sd: obj.sd || '', text: String(obj.text || obj.title || '').slice(0, 60), seen: false });
+    const o = { at, t: obj.t, deck: obj.deck || '', sd: obj.sd || '', text: String(obj.text || obj.title || '').slice(0, 60), seen: false };
+    /* 3.43.0, nur lokal für den Verlauf „Post“: Bezug, Spiel und Spielart */
+    if (obj.re && obj.re.text) o.re = { text: String(obj.re.text).slice(0, 60), t: String(obj.re.t || 'msg').slice(0, 10) };
+    const gid = obj.gid || ((obj.t === 'game' || obj.t === 'spiel') && obj.id) || ''; if (gid) o.gid = String(gid).slice(0, 40);
+    if (obj.k || obj.g) o.k = String(obj.k || obj.g).slice(0, 20);
+    s.outbox.push(o);
     if (s.outbox.length > 40) s.outbox = s.outbox.slice(-40);
     L.save();
   }
@@ -765,34 +770,137 @@
     L.confirmSheet('💞 Apps verbinden?', S().receiver + ' hat dir einen Verbindungs-Code geschickt. Jetzt verbinden?', 'Verbinden', () => { P().pendingPair = null; L.save(); doJoin(code); });
   }
 
-  /* ---------- Postfach ---------- */
-  function inboxSheet() {
-    const s = P(); const items = s.inbox.slice().reverse();
-    let html = '<h3>📬 Postfach</h3>';
-    if (!items.length) html += '<div class="empty">Noch nichts angekommen. Was ' + L.esc(partnerName()) + ' dir aus der App schickt, landet hier.</div>';
-    items.forEach((m) => {
-      const when = new Date(m.at).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
-      const def = inboxTypes[m.t];
-      const canReply = { msg: 1, pic: 1, jingle: 1, coupon: 1 }[m.t] && window.LZR;
-      html += '<div class="inbox-item' + (m.read ? '' : ' new') + '" data-id="' + m.id + '"><span class="ii-e">' + (def ? def.icon : m.t === 'coupon' ? '🎟️' : m.t === 'match' ? '🎯' : m.t === 'unknown' ? '❔' : '💌') + '</span><div class="ii-b">' + (m.re && window.LZR ? window.LZR.quoteHtml(m.re, 'deine Nachricht') : '') + (def && def.html ? def.html(m) : '') + '<div class="ii-t">' + L.esc(m.text || '') + '</div><div class="ii-m">' + (def ? L.esc(def.meta || '') + ' · ' : m.t === 'match' ? (m.ready ? 'Ergebnis da – antippen · ' : 'Einladung zum Mitspielen · ') : m.t === 'coupon' ? 'Gutschein, liegt bei Wünsche → Gutscheine · ' : (m.label ? L.esc(m.label) + ' · ' : '')) + when + '</div>' + (canReply ? '<button type="button" class="pill-btn small ghost ii-reply" data-reply="' + m.id + '">↩ Antworten</button>' : '') + '</div><button class="reason-del" aria-label="Löschen" data-del="' + m.id + '">✕</button></div>';
-    });
-    html += '<div class="row" style="margin-top:14px"><button class="pill-btn ghost" data-cancel>Schließen</button></div>';
-    L.openSheet(html, (sh) => {
-      sh.querySelector('[data-cancel]').onclick = L.closeSheet;
-      sh.querySelectorAll('.inbox-item').forEach((el) => el.onclick = (e) => {
-        if (e.target.dataset.del) return;
-        if (e.target.dataset.reply) { const rm = s.inbox.find((x) => x.id === e.target.dataset.reply); if (!rm) return; rm.read = true; L.save(); L.closeSheet(); window.LZR.start(rm); if (window.LZN && window.LZN.replySheet) setTimeout(() => window.LZN.replySheet(rm), 60); renderAll(); return; }
-        const m = s.inbox.find((x) => x.id === el.dataset.id); if (!m) return; m.read = true; L.save(); L.closeSheet();
-        if (m.t === 'msg') { L.showView('home'); L.showMessage({ text: m.text, own: true, incoming: true, re: m.re, mid: m.id }, 'Von ' + partnerName() + ' für dich'); L.spawnHearts(10); }
-        else if (m.t === 'coupon') { L.showView('wishes'); L.showSub('wishes', 'coupons'); }
-        else if (m.t === 'match') { const deck = deckById(m.deck); if (deck) { const rec = s.matches[deck.id]; const iv = (s.invites || {})[deck.id]; if (rec && rec.mode === 'relay' && (m.ready || !iv || !iv.sd || iv.sd === rec.sd) && (!deck.daily || rec.date.slice(0, 10) === L.todayKey())) { showResults(deck, rec); refreshMatches(deck, rec, true).catch(() => {}); } else playDeck(deck.id); } }
-        else if (inboxTypes[m.t] && inboxTypes[m.t].open) inboxTypes[m.t].open(m);
-        renderAll();
-      });
-      sh.querySelectorAll('[data-del]').forEach((b) => b.onclick = (e) => { e.stopPropagation(); s.inbox = s.inbox.filter((x) => x.id !== b.dataset.del); L.save(); L.closeSheet(); inboxSheet(); renderAll(); });
-    });
-    s.inbox.forEach((m) => { if (m.t === 'match' || m.t === 'unknown') m.read = true; }); L.save();
+  /* ---------- Post (3.43.0): alles zwischen euch in einem Verlauf ----------
+     Links der Schatz (Empfangenes aus S.inbox), rechts du (Gesendetes aus S.outbox). Je Zeile: Art, Titel, Uhrzeit,
+     bei dir „✓ zugestellt“ oder „✓✓ gesehen“ – bewusst ohne Lese-Uhrzeit, kein „zuletzt online“ (Mos Grundsatz: kein Druck). */
+  const KIND = {
+    msg: ['💌', 'Botschaft'], pic: ['🎨', 'Bild'], jingle: ['🎶', 'Jingle'], coupon: ['🎟️', 'Gutschein'],
+    match: ['🎯', 'Spiel'], game: ['🎲', 'Spiel'], spiel: ['🎲', 'Spiel'], falter: ['🦋', 'Falter'],
+    checkin: ['🌦️', 'Wetterbericht'], gift: ['🎁', 'Überraschung'], unknown: ['❔', 'Neue Art von Nachricht']
+  };
+  const CAN_REPLY = { msg: 1, pic: 1, jingle: 1, coupon: 1 };
+  const dayKey = (ts) => { const d = new Date(ts); return d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate(); };
+  /* Spiele zu zweit: Titel und Symbol aus spiele.js (luege, story, jagd, fang) bzw. spiele2.js (Wanderzug …) */
+  function gameInfo(t, gid, k) {
+    const G = window.LZG, G2 = window.LZG2;
+    if (t === 'spiel' && G2) { const g = gid && G2.games ? G2.games()[gid] : null; const K = G2.KINDS && G2.KINDS[(g && g.kind) || k]; if (K) return { icon: K.icon, title: K.title, g, two: true }; }
+    if (t === 'game' && G) { const g = gid && G.games ? G.games()[gid] : null; const M = G.META && G.META[(g && g.kind) || k]; if (M) return { icon: M.icon, title: M.title, g, two: false }; }
+    return null;
   }
+  function timeline() {
+    const s = P(); const raw = [];
+    (s.inbox || []).forEach((m) => raw.push({ who: 'them', at: m.at || 0, t: m.t, text: m.text || '', m, id: m.id, gid: m.gid || '', deck: m.deck || '', re: m.re || null, read: !!m.read }));
+    (s.outbox || []).forEach((o) => raw.push({ who: 'me', at: o.at || 0, t: o.t, text: o.text || '', o, id: 'o' + o.at, gid: o.gid || '', deck: o.deck || '', k: o.k || '', re: o.re || null, seen: !!o.seen }));
+    raw.sort((a, b) => b.at - a.at);
+    /* Bündeln: aufeinanderfolgende Züge desselben Spiels am selben Tag = eine Zeile mit der Zeit des letzten */
+    const out = [];
+    raw.forEach((e) => {
+      const last = out[out.length - 1];
+      if (last && e.gid && last.gid === e.gid && dayKey(last.at) === dayKey(e.at)) { last.n++; if (e.who === 'them' && !e.read) last.read = false; return; }
+      e.n = 1; out.push(e);
+    });
+    return out;
+  }
+  function chipFor(e, acts, shown) {
+    const key = e.gid || (e.t === 'match' ? 'deck:' + e.deck : ''); if (!key || shown[key]) return ''; shown[key] = 1;
+    const a = acts.find((x) => (e.gid && x.id === e.gid) || (!e.gid && x.deck && x.deck.id === e.deck));
+    const name = L.esc(partnerName());
+    if (a && a.kind === 'turn') return '<span class="chip-st turn">Du bist dran</span>';
+    if (a && a.kind === 'ready') return '<span class="chip-st ready">Ergebnis da</span>';
+    if (a && a.kind === 'wait') return '<span class="chip-st wait">' + name + ' ist dran</span>';
+    const gi = (e.t === 'game' || e.t === 'spiel') ? gameInfo(e.t, e.gid, e.k) : null; const g = gi && gi.g;
+    if (g && g.turn !== 'done' && !g.ab && !(g.mode === 'pass')) { const mine = gi.two ? g.turn === g.me : g.turn === 'me'; return mine ? '<span class="chip-st turn">Du bist dran</span>' : '<span class="chip-st wait">' + name + ' ist dran</span>'; }
+    return '';
+  }
+  function rowTitle(e) {
+    const K = KIND[e.t] || KIND.unknown, def = inboxTypes[e.t];
+    let icon = (e.who === 'them' && def && def.icon) || K[0], title = '';
+    if (e.t === 'match') { const d = deckById(e.deck); if (d) { icon = d.icon; title = d.title; } else title = e.text; }
+    else if (e.t === 'game' || e.t === 'spiel') { const gi = gameInfo(e.t, e.gid, e.k); if (gi) icon = gi.icon; title = (e.who === 'them' && e.text) ? e.text.replace(/^\S+\s/, '') : gi ? gi.title : K[1]; if (e.n > 1) title = (gi ? gi.title : title) + ' · ' + e.n + ' Züge'; }
+    else if (e.t === 'msg') title = e.text ? '„' + e.text + '“' : K[1];
+    else if (e.t === 'unknown') title = K[1];
+    else title = K[1] + (e.text ? ': ' + e.text.replace(/^🏆\s*/, '') : '');
+    return { icon, title };
+  }
+  const tlTime = (at) => (Date.now() - at < 3600e3 ? L.ago(at) : new Date(at).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }));
+  function dayLabel(at) {
+    const d = L.atMidnight(new Date(at)), t = L.atMidnight(new Date()); const diff = Math.round((t - d) / 864e5);
+    return diff <= 0 ? 'Heute' : diff === 1 ? 'Gestern' : new Date(at).toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short' });
+  }
+  /* Eine Zeile – derselbe Baustein in Post und (kompakt) auf Heute */
+  function rowHtml(e, acts, shown, compact) {
+    const { icon, title } = rowTitle(e); const def = inboxTypes[e.t];
+    const st = e.who === 'me' ? '<span class="tl-st" data-st="' + (e.seen ? 'seen' : 'sent') + '">' + (e.seen ? '✓✓ gesehen' : '✓ zugestellt') + '</span>' : '';
+    const unread = e.who === 'them' && !e.read;
+    const quote = e.re && window.LZR ? window.LZR.quoteHtml(e.re, e.who === 'them' ? 'deine Nachricht' : '') : '';
+    const media = !compact && e.who === 'them' && def && def.html && e.m ? def.html(e.m) : '';
+    const reply = !compact && e.who === 'them' && CAN_REPLY[e.t] && window.LZR ? '<button type="button" class="pill-btn small ghost tl-reply" data-reply="' + e.id + '">↩ Antworten</button>' : '';
+    const av = e.who === 'them' ? '<span class="tl-av" aria-hidden="true">' + L.esc(S().emojiR) + '</span>' : '';
+    const more = !compact && e.who === 'them' ? '<button type="button" class="tl-x" data-more="' + e.id + '" aria-label="Weitere Aktionen">⋯</button>' : '';
+    return '<div class="tl-row ' + e.who + (unread ? ' new' : '') + (compact ? ' compact' : '') + '" data-id="' + L.esc(e.id) + '" role="button" tabindex="0">' + av +
+      '<div class="tl-b">' + (compact ? '' : quote) + '<div class="tl-t"><span class="tl-k">' + icon + '</span> ' + L.esc(title) + '</div>' + media +
+      '<div class="tl-m"><span class="tl-time">' + (compact ? L.ago(e.at) : tlTime(e.at)) + '</span>' + st + (unread ? '<i class="tl-dot" aria-label="neu"></i>' : '') + chipFor(e, acts, shown) + '</div>' + reply + '</div>' + more + '</div>';
+  }
+  /* Öffnen – gleiche Wege wie früher im Postfach-Fenster */
+  function openItem(m) {
+    const s = P(); if (!m) return; m.read = true; L.save(); L.closeSheet();
+    if (m.t === 'msg') { L.showView('home'); L.showMessage({ text: m.text, own: true, incoming: true, re: m.re, mid: m.id }, 'Von ' + partnerName() + ' für dich'); L.spawnHearts(10); }
+    else if (m.t === 'coupon') { L.showView('wishes'); L.showSub('wishes', 'coupons'); }
+    else if (m.t === 'match') { const deck = deckById(m.deck); if (deck) { const rec = s.matches[deck.id]; const iv = (s.invites || {})[deck.id]; if (rec && rec.mode === 'relay' && (m.ready || !iv || !iv.sd || iv.sd === rec.sd) && (!deck.daily || rec.date.slice(0, 10) === L.todayKey())) { showResults(deck, rec); refreshMatches(deck, rec, true).catch(() => {}); } else playDeck(deck.id); } }
+    else if (inboxTypes[m.t] && inboxTypes[m.t].open) inboxTypes[m.t].open(m);
+    renderAll();
+  }
+  function replyItem(m) {
+    if (!m || !window.LZR) return; m.read = true; L.save(); L.closeSheet(); window.LZR.start(m);
+    if (window.LZN && window.LZN.replySheet) setTimeout(() => window.LZN.replySheet(m), 60);
+    renderAll();
+  }
+  function openOwn(e) {
+    if (e.t === 'match') { const deck = deckById(e.deck); if (deck) openDeckFromStatus(deck); return; }
+    if (e.t === 'spiel' && e.gid && window.LZG2 && window.LZG2.games()[e.gid]) { window.LZG2.open(e.gid); return; }
+    if (e.t === 'game' && e.gid && window.LZG && window.LZG.games()[e.gid]) window.LZG.openGame(e.gid);
+  }
+  function bindRows(box, list) {
+    const s = P(); const byId = {}; list.forEach((e) => { byId[e.id] = e; });
+    box.querySelectorAll('.tl-row').forEach((el) => {
+      const go = (ev) => {
+        if (ev.target.closest('[data-reply],[data-more]')) return;
+        const e = byId[el.dataset.id]; if (!e) return;
+        if (e.who === 'them') openItem(s.inbox.find((x) => x.id === e.id)); else openOwn(e);
+      };
+      el.onclick = go; el.onkeydown = (ev) => { if (ev.key === 'Enter') go(ev); };
+    });
+    box.querySelectorAll('[data-reply]').forEach((b) => b.onclick = () => replyItem(s.inbox.find((x) => x.id === b.dataset.reply)));
+    box.querySelectorAll('[data-more]').forEach((b) => b.onclick = () => {
+      const m = s.inbox.find((x) => x.id === b.dataset.more); if (!m) return;
+      L.openSheet('<h3>' + L.esc(rowTitle(byId[m.id] || { t: m.t, text: m.text, who: 'them' }).title.slice(0, 60)) + '</h3><div class="o-list">' +
+        (CAN_REPLY[m.t] && window.LZR ? '<button type="button" class="pill-btn" data-r>↩ Antworten</button>' : '') +
+        '<button type="button" class="pill-btn" data-o>Öffnen</button><button type="button" class="pill-btn ghost danger" data-d>Löschen</button></div><div class="row" style="margin-top:12px"><button class="pill-btn ghost" data-cancel>Schließen</button></div>', (sh) => {
+        sh.querySelector('[data-cancel]').onclick = L.closeSheet;
+        const r = sh.querySelector('[data-r]'); if (r) r.onclick = () => replyItem(m);
+        sh.querySelector('[data-o]').onclick = () => openItem(m);
+        sh.querySelector('[data-d]').onclick = () => { s.inbox = s.inbox.filter((x) => x.id !== m.id); L.save(); L.closeSheet(); renderAll(); renderPost(); L.toast('Gelöscht'); };
+      });
+    });
+  }
+  function renderPost() {
+    const box = $('postList'); if (!box) return;
+    const s = P(); const list = timeline().slice(0, 80);
+    if (!list.length) {
+      box.innerHTML = '<div class="tl-empty"><p>' + (paired() && joined() ? 'Noch nichts zwischen euch.' : 'Noch nicht verbunden.') + '</p>' +
+        (paired() && joined() ? '<button type="button" class="pill-btn primary" data-go="send">Etwas schicken</button>' : '<button type="button" class="pill-btn primary" data-pair>Jetzt verbinden</button>') + '</div>';
+      const pb = box.querySelector('[data-pair]'); if (pb) pb.onclick = pairSheet;
+      return;
+    }
+    const acts = activity(); const shown = {}; let day = '', html = '';
+    list.forEach((e) => { const d = dayLabel(e.at); if (d !== day) { day = d; html += '<div class="tl-day">' + L.esc(d) + '</div>'; } html += rowHtml(e, acts, shown, false); });
+    box.innerHTML = html; bindRows(box, list);
+    /* wie früher beim Öffnen des Postfachs: Einladungen und Hinweise gelten als gelesen, sobald man sie gesehen hat */
+    let ch = false; (s.inbox || []).forEach((m) => { if ((m.t === 'match' || m.t === 'unknown') && !m.read) { m.read = true; ch = true; } });
+    if (ch) { L.save(); renderInboxBadge(); flushSeen(); }
+  }
+  /* Alte Aufrufer (Suche, Karten, Mitteilung) – das Postfach ist jetzt der Reiter „Post“ */
+  function inboxSheet() { L.closeSheet(); L.showView('post'); }
   function renderInboxBadge() {
     const n = unread(); const b = $('inboxBadge'); if (b) { b.textContent = n > 9 ? '9+' : n; b.classList.toggle('hidden', !n); }
     const nb = $('navBadge'); if (nb) { nb.textContent = n > 9 ? '9+' : (n || ''); nb.classList.toggle('hidden', !n); nb.setAttribute('aria-label', n + ' neu'); }
@@ -888,7 +996,7 @@
     const on = paired() && joined();
     const b = $('btnSendPartner'); if (b) { b.classList.toggle('hidden', !on); b.setAttribute('aria-label', 'In die App von ' + partnerName() + ' schicken'); }
   }
-  function renderAll() { flushSeen(); renderTabDots(); renderHomeCards(); renderSettingsCard(); renderSendButtons(); renderInboxBadge(); renderDecks(); renderPush(); if (window.LZN) window.LZN.render(); }
+  function renderAll() { flushSeen(); renderTabDots(); renderHomeCards(); renderSettingsCard(); renderSendButtons(); renderInboxBadge(); renderDecks(); renderPush(); if (window.LZN) window.LZN.render(); const pv = $('view-post'); if (pv && pv.classList.contains('active')) renderPost(); }
 
   /* ---------- Mitteilungen aufs Handy (Web Push ohne Inhalt) ----------
      Der Dienst stupst das Gerät nur an; was angekommen ist, holt die App wie immer selbst ab und entschlüsselt es. */
@@ -979,7 +1087,7 @@
   setInterval(() => { if (document.visibilityState === 'visible') pull(); }, 45000);
   $('obFinish').addEventListener('click', () => setTimeout(() => { renderAll(); offerPendingPair(); }, 80));
 
-  window.LZP = { createPair, doJoin, searchSheet, searchFormHtml, bindSearch, activity, deckStatus, openDeckFromStatus, explored, lastSent, P, paired, joined, partnerName, sendOrShare, sendCoupon, send, pull, pairSheet, inboxSheet, playDeck, renderDecks, renderAll, renderGiftRadar, amazonUrl, tips, tipOf, tipsHtml, bindTips, mountTips, leavePair, unread, RELAY, on, inboxType, openMatch, closeMatch, online, pairLink, ideaSheet, reportSheet, iosBrowser, commonSheet, renderCommon, pushOn, pushOff, pushSupported, renderPush, partnerPron: () => (P().partner && P().partner.pron) || '', announce: () => { if (paired() && joined()) send({ t: 'hello', name: S().sender, pron: S().pron || '' }).catch(() => {}); } };
+  window.LZP = { createPair, doJoin, searchSheet, searchFormHtml, bindSearch, activity, deckStatus, openDeckFromStatus, explored, lastSent, P, paired, joined, partnerName, sendOrShare, sendCoupon, send, pull, pairSheet, inboxSheet, renderPost, timeline, openItem, playDeck, renderDecks, renderAll, renderGiftRadar, amazonUrl, tips, tipOf, tipsHtml, bindTips, mountTips, leavePair, unread, RELAY, on, inboxType, openMatch, closeMatch, online, pairLink, ideaSheet, reportSheet, iosBrowser, commonSheet, renderCommon, pushOn, pushOff, pushSupported, renderPush, partnerPron: () => (P().partner && P().partner.pron) || '', announce: () => { if (paired() && joined()) send({ t: 'hello', name: S().sender, pron: S().pron || '' }).catch(() => {}); } };
   renderAll(); handlePairParam();
   if (window.LZF) { window.LZF.renderPiek(); window.LZF.renderGiftRadar && window.LZF.renderGiftRadar(); }
   /* Erst abholen, wenn alle Skripte geladen sind (naehe.js meldet eigene Nachrichtenarten an) */
