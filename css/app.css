@@ -591,8 +591,12 @@ a.pill-btn { text-decoration:none; display:inline-flex; align-items:center; just
 .promo-list li { display:flex; gap:10px; align-items:flex-start; font-size:18px; line-height:1.4; color:var(--text); }
 .promo-list li span { flex:none; width:26px; text-align:center; }
 
-/* 3.12.1 Herz mit Flügeln */
-.big-heart { width:180px; height:130px; }
+/* 3.12.1 Herz mit Flügeln – 3.36.0: Schmetterling aus Herzen (App-Logo) */
+.big-heart { width:180px; height:149px; }
+.sf-logo .sf-lw, .sf-logo .sf-rw { transform-box:view-box; animation:sfFlapL 2.5s ease-in-out infinite; }
+.sf-logo .sf-lw { transform-origin:252px 290px; } .sf-logo .sf-rw { transform-origin:260px 290px; }
+@keyframes sfFlapL { 0%,100% { transform:scaleX(1); } 50% { transform:scaleX(.8); } }
+[data-motion="off"] .sf-logo .sf-lw, [data-motion="off"] .sf-logo .sf-rw { animation:none; }
 .pulse-ring { left:50%; margin-left:-65px; }
 .heart-wings { transform-box:fill-box; transform-origin:center; animation:wingFlap 2.5s ease-in-out infinite; }
 @keyframes wingFlap { 0%,100% { transform:scaleX(1); } 50% { transform:scaleX(.84); } }
