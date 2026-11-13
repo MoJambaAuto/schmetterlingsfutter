@@ -186,7 +186,7 @@
     const title = f ? (q.done === 1 ? 'Geschlüpft!' : 'Ein neuer Falter!') : q.stage === 2 ? 'Die Raupe spinnt sich ein' : 'Aus dem Ei geschlüpft';
     const shareText = f ? 'Neu in unserem Schmetterlingsbuch: ' + f.name + ' 🦋' : 'Bei uns wächst etwas heran 🐛';
     setTimeout(() => {
-      L.openSheet('<div class="bfly-party">' + (f ? '<div class="fx-hero">' + falterImg(f, 'big') + '</div><h3>' + esc(title) + '</h3><p class="fx-name">' + esc(f.name) + ' <span class="fx-rar">' + esc(f.rar) + '</span></p><p class="about" style="margin-bottom:10px">' + esc(f.fact) + '</p>' +
+      L.openSheet('<div class="bfly-party">' + (f ? '<div class="fx-hero">' + falterImg(f, 'big') + '</div><h3>' + esc(title) + '</h3><p class="fx-name">' + esc(f.name) + ' <span class="fx-rar">' + esc(f.rar) + '</span></p><p class="about" style="margin-bottom:10px">' + esc(f.fact) + '</p>' + (window.LZWI ? window.LZWI.moreRow(f.i) + window.LZWI.hint() : '') +
         '<p class="about" style="font-size:16px;color:var(--text-soft);margin-bottom:16px">🥚 Er hat schon ein Ei gelegt. Als Nächstes wartet ein Falter der Stufe <b>„' + esc(nx.rar) + '“</b>.</p>'
         : '<div class="bfly-big">' + picHtml(t) + '</div><h3>' + esc(title) + '</h3><p class="about" style="margin-bottom:16px">' + esc(STAGE_UI[q.stage][1]) + '</p>') +
         '<div class="row wrap" style="justify-content:center"><button class="pill-btn primary" data-ok>Weiter</button>' + (f ? '<button class="pill-btn" data-book>📖 Zum Buch</button>' : '') + '<button class="pill-btn" data-share>🖼️ Teilen</button></div></div>', (sh) => {
@@ -250,13 +250,14 @@
     L.openSheet('<h3>📖 Euer Schmetterlingsbuch</h3><p class="about" style="font-size:16px;margin-bottom:10px">' + have + ' geschlüpft' + (wild ? ' · 🕸️ ' + wild + ' draußen gefangen' : '') + ' · Generation ' + q.gen + ' wächst gerade heran. Jeder neue Falter ist seltener als der vorige.</p>' +
       '<div class="fx-grid">' + grid + '</div>' +
       (have >= LADDER.length ? '' : '<p class="about" style="font-size:15px;color:var(--text-muted);margin-top:8px">Nach allen neun Arten kommen Prachtformen – schillernd, mit Sternenglanz und in Regenbogenfarben.</p>') +
+      '<p class="wi-hintp"><button type="button" class="wi-link" data-hilfe>🌱 Echten Faltern helfen</button></p>' +
       '<div class="row wrap" style="margin-top:12px">' + (window.LZJ ? '<button class="pill-btn primary" data-jagd>🕸️ Draußen fangen</button>' : '') + '<button class="pill-btn ghost" data-cancel>Schließen</button></div>', (sh) => {
       sh.querySelector('[data-cancel]').onclick = L.closeSheet;
       const jb = sh.querySelector('[data-jagd]'); if (jb) jb.onclick = () => { L.closeSheet(); if (document.querySelector('.jagd')) return; setTimeout(() => window.LZJ.open(), 60); };
       sh.querySelectorAll('.fx-cell').forEach((c) => c.onclick = () => {
         const n = Number(c.dataset.n); if (n > have && !(n <= LADDER.length && (jc[n - 1] || (window.LZ.S.besuchBook || {})[n - 1]))) { L.toast(n === have + 1 ? '🥚 Wächst gerade heran – weiter füttern!' : 'Noch nicht entdeckt'); return; }
         const f = falter(n);
-        L.openSheet('<div class="bfly-party"><div class="fx-hero">' + falterImg(f, 'big') + '</div><h3>' + esc(f.name) + '</h3><p class="fx-name"><span class="fx-rar">' + esc(f.rar) + '</span> · Falter Nr. ' + n + '</p><p class="about" style="margin:8px 0 16px">' + esc(f.fact) + '</p>' +
+        L.openSheet('<div class="bfly-party"><div class="fx-hero">' + falterImg(f, 'big') + '</div><h3>' + esc(f.name) + '</h3><p class="fx-name"><span class="fx-rar">' + esc(f.rar) + '</span> · Falter Nr. ' + n + '</p><p class="about" style="margin:8px 0 16px">' + esc(f.fact) + '</p>' + (window.LZWI ? window.LZWI.steck(f.i) : '') +
           '<div class="row wrap" style="justify-content:center"><button class="pill-btn" data-back>← Zum Buch</button><button class="pill-btn" data-share>🖼️ Teilen</button></div></div>', (s2) => {
           s2.querySelector('[data-back]').onclick = () => { L.closeSheet(); setTimeout(book, 60); };
           s2.querySelector('[data-share]').onclick = () => { L.closeSheet(); shareCard({ text: 'In unserem Schmetterlingsbuch: ' + f.name + ' 🦋', label: 'Schmetterlingsfutter', sig: S().sender + ' & ' + you() }); };

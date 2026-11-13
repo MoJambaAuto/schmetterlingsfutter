@@ -137,7 +137,7 @@
   /* ---------- Startbildschirm ---------- */
   function open() {
     css(); const h = stand(); const n = Object.keys(h.arten).length;
-    const chips = ARTEN.map((a) => '<span class="' + (h.arten[a.id] ? '' : 'no') + '">' + (a.gold ? '🌟 ' : '🦋 ') + esc(a.name) + '</span>').join('');
+    const WI = window.LZWI; const chips = ARTEN.map((a) => (h.arten[a.id] && WI && WI.HEIDE[a.id] !== undefined) ? '<button type="button" data-wiart="' + WI.HEIDE[a.id] + '">🦋 ' + esc(a.name) + '</button>' : '<span class="' + (h.arten[a.id] ? '' : 'no') + '">' + (a.gold ? '🌟 ' : '🦋 ') + esc(a.name) + '</span>').join('');
     L.openSheet('<h3>🦋 Papillon in der Heide</h3><p class="about" style="font-size:17px;margin-bottom:8px">Fliegt mit Papillon durch die Heide und fangt Schmetterlinge: Links ziehen zum Fliegen, Schmetterling antippen zum Fangen. Seltene Arten zählen mehr, 🌟 goldene 10 Punkte. Eine Runde dauert 2½ Minuten.</p>' +
       '<p class="about" style="font-size:16px;margin:0 0 6px">💞 Zu zweit: Einer fliegt, der andere hält Ausschau und sagt an. Danach tauschen!</p>' +
       '<div class="fg-week">Bestwert: ' + (h.best || 0) + ' · Arten entdeckt: ' + n + '/' + ARTEN.length + '</div><div class="hd-arten">' + chips + '</div>' +
@@ -428,10 +428,12 @@
       h.letzte = { pts, datum: new Date().toISOString().slice(0, 10), arten: caughtArten };
       L.save(); C('game_done:heide');
       if (window.LZG && window.LZG.renderHub) { try { window.LZG.renderHub(); } catch (e) {} }
-      const list = ARTEN.filter((a) => caughtArten[a.id]).map((a) => '<span>' + (a.gold ? '🌟 ' : '🦋 ') + esc(a.name) + ' ×' + caughtArten[a.id] + '</span>').join('') || '<span class="no">Diesmal keiner – nächstes Mal!</span>';
+      const WI = window.LZWI, chip = (a, txt) => WI && WI.HEIDE[a.id] !== undefined ? '<button type="button" data-wiart="' + WI.HEIDE[a.id] + '">' + txt + '</button>' : '<span>' + txt + '</span>';
+      const list = ARTEN.filter((a) => caughtArten[a.id]).map((a) => chip(a, (a.gold ? '🌟 ' : '🦋 ') + esc(a.name) + ' ×' + caughtArten[a.id])).join('') || '<span class="no">Diesmal keiner – nächstes Mal!</span>';
       L.openSheet('<h3>🦋 ' + pts + ' Punkte</h3>' + (rekord && h.runden > 1 ? '<p class="about">🏆 Neuer Bestwert!</p>' : '') +
         '<p class="about" style="margin:4px 0">' + caughtN + ' Schmetterlinge gefangen' + (neu.length ? ' · ' + neu.length + ' neue Art' + (neu.length > 1 ? 'en' : '') + ' entdeckt!' : '') + '</p><div class="hd-arten">' + list + '</div>' +
-        '<div class="fg-week">Bestwert: ' + h.best + ' · Arten: ' + Object.keys(h.arten).length + '/' + ARTEN.length + '</div>' +
+        (WI && caughtN ? '<p class="wi-sub" style="margin:0 0 6px">Art antippen für ihren Steckbrief</p>' : '') +
+        '<div class="fg-week">Bestwert: ' + h.best + ' · Arten: ' + Object.keys(h.arten).length + '/' + ARTEN.length + '</div>' + (WI ? WI.hint() : '') +
         '<p class="about" style="text-align:center;margin:8px 0 0">💞 Jetzt das Handy weitergeben – wer fängt mehr?</p>' +
         '<div class="row" style="margin-top:10px"><button class="pill-btn ghost" data-cancel>Fertig</button><button class="pill-btn primary" data-again>Nochmal</button></div>', (sh) => {
         sh.querySelector('[data-cancel]').onclick = L.closeSheet;

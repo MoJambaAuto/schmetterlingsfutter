@@ -274,7 +274,7 @@
   function caughtSheet(rec, walkDone) {
     const f = falter(rec.i), where = (HAB[rec.hab] || HAB.open).t;
     L.spawnHearts(14);
-    L.openSheet('<div class="bfly-party"><div class="fx-hero">' + img(rec.i, 'big') + '</div><h3>Gefangen!</h3><p class="fx-name">' + esc(f.name) + ' <span class="fx-rar">' + esc(f.rar) + '</span></p><p class="about" style="margin:6px 0 4px">Gefunden ' + esc(where) + '.</p><p class="about" style="font-size:16px;color:var(--text-soft);margin-bottom:14px">' + esc(f.fact) + '</p>' +
+    L.openSheet('<div class="bfly-party"><div class="fx-hero">' + img(rec.i, 'big') + '</div><h3>Gefangen!</h3><p class="fx-name">' + esc(f.name) + ' <span class="fx-rar">' + esc(f.rar) + '</span></p><p class="about" style="margin:6px 0 4px">Gefunden ' + esc(where) + '.</p><p class="about" style="font-size:16px;color:var(--text-soft);margin-bottom:14px">' + esc(f.fact) + '</p>' + (window.LZWI ? window.LZWI.moreRow(rec.i) + window.LZWI.hint() : '') +
       (walkDone ? '<div class="row" style="justify-content:center;margin-bottom:8px"><button class="pill-btn primary" data-walkend>💞 Spaziergang abschließen</button></div>' : '') +
       '<div class="row wrap" style="justify-content:center">' + (on() && !walkDone ? '<button class="pill-btn primary" data-gift>💌 Für ' + esc(you()) + ' gefangen</button>' : on() ? '<button class="pill-btn" data-gift>💌 Für ' + esc(you()) + ' gefangen</button>' : '') + '<button class="pill-btn" data-share>🖼️ Teilen</button><button class="pill-btn ghost" data-ok>Weiter jagen</button></div></div>', (sh) => {
       sh.querySelector('[data-ok]').onclick = L.closeSheet;
@@ -411,7 +411,7 @@
     });
     P().inboxType('falter', { icon: '🦋', meta: 'Für dich gefangen – antippen', html: (m) => img(m.fi || 0, 'inbox'), open: (m) => {
       const f = falter(m.fi || 0); css();
-      L.openSheet('<div class="bfly-party"><div class="fx-hero">' + img(m.fi || 0, 'big') + '</div><h3>Für dich gefangen</h3><p class="fx-name">' + esc(f.name) + ' <span class="fx-rar">' + esc(f.rar) + '</span></p><p class="about" style="margin:6px 0 14px">' + esc(you()) + ' hat ihn ' + esc((HAB[m.hab] || HAB.open).t) + ' gefunden und dir geschickt. Er ist jetzt in deinem Schmetterlingsbuch.</p>' +
+      L.openSheet('<div class="bfly-party"><div class="fx-hero">' + img(m.fi || 0, 'big') + '</div><h3>Für dich gefangen</h3><p class="fx-name">' + esc(f.name) + ' <span class="fx-rar">' + esc(f.rar) + '</span></p><p class="about" style="margin:6px 0 14px">' + esc(you()) + ' hat ihn ' + esc((HAB[m.hab] || HAB.open).t) + ' gefunden und dir geschickt. Er ist jetzt in deinem Schmetterlingsbuch.</p>' + (window.LZWI ? window.LZWI.moreRow(m.fi || 0) : '') +
         '<div class="row wrap" style="justify-content:center">' + (window.LZN && window.LZN.replySheet ? '<button class="pill-btn primary" data-reply>Danke sagen</button>' : '') + '<button class="pill-btn" data-book>📖 Zum Buch</button><button class="pill-btn ghost" data-ok>Schließen</button></div></div>', (sh) => {
         sh.querySelector('[data-ok]').onclick = L.closeSheet;
         sh.querySelector('[data-book]').onclick = () => { L.closeSheet(); setTimeout(() => X() && X().book(), 60); };

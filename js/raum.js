@@ -282,7 +282,7 @@
     L.spawnHearts(14);
     const restN = left().length;
     L.openSheet('<div class="bfly-party"><h3>' + (mine.length === 1 ? 'Ein Falter gefangen!' : mine.length + ' Falter gefangen!') + '</h3><div class="ra-pre">' + mine.map((i) => img(i)).join('') + '</div>' +
-      '<p class="about" style="margin:6px 0 4px">' + esc(mine.map((i) => falter(i).name).join(', ')) + '</p><p class="about" style="font-size:16px;color:var(--text-soft);margin-bottom:12px">' + esc(falter(mine[mine.length - 1]).fact || '') + '</p>' +
+      '<p class="about" style="margin:6px 0 4px">' + esc(mine.map((i) => falter(i).name).join(', ')) + '</p><p class="about" style="font-size:16px;color:var(--text-soft);margin-bottom:12px">' + esc(falter(mine[mine.length - 1]).fact || '') + '</p>' + (window.LZWI ? window.LZWI.moreRows(mine) + window.LZWI.hint() : '') +
       (restN ? '<p class="about" style="font-size:15px">' + (restN === 1 ? 'Ein Falter ist' : restN + ' Falter sind') + ' heute noch da.</p>' : '<p class="about" style="font-size:15px">Morgen kommen neue Falter zu Besuch.</p>') +
       '<div class="row wrap" style="justify-content:center"><button class="pill-btn" data-book>📖 Schmetterlingsbuch</button><button class="pill-btn ghost" data-ok>Schließen</button></div></div>', (sh) => {
       sh.querySelector('[data-ok]').onclick = L.closeSheet;

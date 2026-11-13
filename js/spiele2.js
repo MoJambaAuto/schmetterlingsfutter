@@ -21,7 +21,8 @@
     wiese: { icon: '🌼', title: 'Wiese durchsuchen', sub: 'Schmetterlinge verstecken und finden', modes: ['relay', 'pass'], def: 'relay' },
     wuerfel: { icon: '🎲', title: 'Würfelwiese', sub: '5 Würfel, 13 Kombinationen', modes: ['pass', 'relay'], def: 'pass' },
     beete: { icon: '🌸', title: 'Blumenbeete', sub: 'Zäune ziehen, Beete schließen', modes: ['pass', 'relay'], def: 'pass' },
-    wanderzug: { icon: '🦋', title: 'Wanderzug', sub: 'Backgammon mit Raupen und Schmetterlingen', modes: ['pass', 'relay'], def: 'pass' }
+    wanderzug: { icon: '🦋', title: 'Wanderzug', sub: 'Backgammon mit Raupen und Schmetterlingen', modes: ['pass', 'relay'], def: 'pass' },
+    quiz: { icon: '🧐', title: 'Wahr oder Falter?', sub: 'Echt oder erfunden? Schmetterlings-Wissen im Duell', modes: ['pass', 'relay'], def: 'pass' }
   };
   const PRIZES = ['10 Minuten Nackenmassage', 'Frühstück ans Bett', 'Lieblingsessen kochen', 'Heute den Abwasch übernehmen', 'Füße massieren', 'Den Film für heute Abend aussuchen', 'Einen kleinen Liebesbrief schreiben', 'Ein Lied vorsingen', 'Ein Bad mit Kerzen vorbereiten', '15 Minuten kuscheln, Handys weg', 'Haare kraulen', 'Morgen Kaffee oder Tee ans Bett', 'Gewinner wählt den Spaziergang', 'Ein Tänzchen in der Küche', 'Eis holen gehen', 'Gewinner bestimmt das Abendprogramm'];
   const NUDGES = ['Jetzt mal 10 Minuten Handys weg: Erzählt euch den schönsten Moment eurer Woche.', 'Handys umdrehen und eine Runde Umarmung – mindestens 20 Sekunden.', 'Kurze Pause vom Bildschirm: Macht euch zusammen einen Tee.', 'Legt die Handys weg und plant euer nächstes Date – nur mit Stift und Zettel.', 'Handys aus der Hand: Wer schafft es, den anderen zuerst zum Lachen zu bringen?'];
@@ -88,6 +89,7 @@
     wiese: ['🌼 Wiese durchsuchen', '<ol><li>Jede Person versteckt 6 Schmetterlings-Schwärme (Größen 4, 3, 3, 2, 2, 2) auf der eigenen Wiese. „Neu verteilen“ würfelt die Verstecke.</li><li>Abwechselnd tippt ihr ein Feld auf der Wiese der anderen Person an.</li><li>Flattert ein Schmetterling auf, darfst du gleich nochmal. Nur Gras: Die andere Person ist dran.</li><li>Wer zuerst alle Schmetterlinge gefunden hat, gewinnt.</li></ol>'],
     wuerfel: ['🎲 Würfelwiese', '<ol><li>Wer dran ist, würfelt bis zu dreimal. Würfel antippen, um sie zu behalten.</li><li>Danach eine freie Zeile im Block wählen – die Zahl zeigt, wie viele Punkte sie bringt.</li><li>Oben zählen gleiche Augen (63 Punkte oben bringen 35 Bonus). Unten: Pasch, Full House (3+2), Straßen, Schwarm (5 gleiche) und Chance (Summe).</li><li>Passt nichts, eine Zeile mit 0 streichen. Am Ende gewinnt die höhere Summe.</li></ol>'],
     beete: ['🌸 Blumenbeete', '<ol><li>Zwischen den Steinen liegen 16 Beete. Abwechselnd setzt ihr je <b>ein Zaunstück</b>.</li><li><b>Tippe zwischen zwei benachbarte Steine.</b> Das Zaunstück leuchtet auf – zum Setzen nochmal tippen oder „Zaun setzen“.</li><li>Setzt du das vierte Zaunstück um ein Beet, wächst dort deine Blume und <b>du bist gleich nochmal dran</b>.</li><li>Sind alle Beete eingezäunt, gewinnt, wer mehr Blumen hat.</li></ol><p class="g2-tip">Tipp: Setze nie das dritte Zaunstück um ein Beet – sonst schließt die andere Person es.</p>'],
+    quiz: ['🧐 Wahr oder Falter?', '<ol><li>Abwechselnd bekommt ihr eine Behauptung über echte Schmetterlinge.</li><li>Tippt <b>Wahr</b> oder <b>Erfunden</b>. Danach zeigt Papillon, was stimmt – und warum.</li><li>Jede richtige Antwort bringt einen Punkt. Nach 10 Fragen gewinnt, wer mehr Punkte hat.</li></ol>'],
     wanderzug: ['🦋 Wanderzug (Backgammon)', '<ol><li>Rosé zieht gegen den Uhrzeigersinn nach unten rechts, Gold in die Gegenrichtung. Ziel: alle 15 Steine ins eigene Viertel bringen und dann vom Brett nehmen („Heimfliegen“).</li><li>„Würfeln“, dann einen leuchtenden Stein antippen und eines der markierten Ziele wählen. Jeder Würfel ist ein Zug; ein Pasch zählt doppelt.</li><li>Auf Felder mit 2 oder mehr fremden Steinen darf man nicht. Steht dort genau 1 fremder Stein, wird er geschlagen und muss von der Mitte neu einsteigen.</li><li>Die App zeigt nur erlaubte Züge an.</li></ol>']
   };
   function helpShow(kind) {
@@ -142,6 +144,7 @@
 
   /* ---------- Ende: Sieger, Einsatz, Anstoß ohne Handy ---------- */
   function finish(g) {
+    if (g.kind === 'quiz' && !qzEnd[g.id]) return; // erst nach der letzten Auflösung
     C('g2_done:' + g.kind); if (g.finished) return; g.finished = true; L.save();
     setTimeout(() => {
       if (!$('g2Screen')) return;
@@ -151,6 +154,7 @@
       box.innerHTML = '<div class="g2-end-card"><div class="g2-big">' + (draw ? '🤝' : '🏆') + '</div><h2>' + (draw ? 'Unentschieden!' : (g.mode === 'relay' ? (iWon ? 'Du gewinnst!' : esc(you()) + ' gewinnt!') : esc(wn) + ' gewinnt!')) + '</h2>' +
         (g.prize && !draw ? '<p class="g2-prize">🎁 Einsatz: <b>' + esc(g.prize) + '</b></p>' + (iLost || g.mode === 'pass' ? '<button type="button" class="pill-btn primary" data-coupon>🎟️ Als Gutschein ' + (g.mode === 'pass' ? 'festhalten' : 'an ' + esc(you()) + ' schicken') + '</button>' : (iWon ? '<p class="about">Den schuldet dir ' + esc(you()) + ' jetzt. 😉</p>' : '')) : '') +
         (Math.random() < 0.4 ? '<p class="g2-nudge">📵 ' + esc(NUDGES[rnd(NUDGES.length)]) + '</p>' : '') +
+        (g.kind === 'quiz' && window.LZWI ? window.LZWI.hint() : '') +
         '<div class="row" style="margin-top:12px"><button class="pill-btn ghost" data-close>Fertig</button><button class="pill-btn" data-again>Revanche</button></div></div>';
       $('g2Screen').appendChild(box); if (!draw) L.spawnHearts(14);
       const cp = box.querySelector('[data-coupon]'); if (cp) cp.onclick = async () => {
@@ -178,7 +182,8 @@
     wiese: (g) => { g.st = { fleet: { a: null, b: null }, shots: { a: [], b: [] }, phase: 'place' }; g.turn = 'a'; },
     wuerfel: (g) => { g.st = { card: { a: {}, b: {} }, dice: [1, 1, 1, 1, 1], held: [false, false, false, false, false], rolls: 0 }; g.turn = 'a'; },
     beete: (g) => { g.st = { h: Array(20).fill(0), v: Array(20).fill(0), box: Array(16).fill(0) }; g.turn = 'a'; },
-    wanderzug: (g) => { g.st = bgStart(); g.turn = Math.random() < 0.5 ? 'a' : 'b'; }
+    wanderzug: (g) => { g.st = bgStart(); g.turn = Math.random() < 0.5 ? 'a' : 'b'; },
+    quiz: (g) => { g.st = { qs: shuffle(Array.from({ length: QZ().length }, (_, k) => k)).slice(0, QZ_N), i: 0, pts: { a: 0, b: 0 }, last: null }; g.turn = 'a'; }
   };
   const KEYROWS = ['QWERTZUIOPÜ', 'ASDFGHJKLÖÄ', 'YXCVBNM'];
   function raupeSvg(wrong, done, won) {
@@ -508,8 +513,45 @@
     el.querySelectorAll('[data-bar]').forEach((b) => b.addEventListener('click', () => { if (srcSet.has('bar')) { g.sel = 'bar'; render(); } }));
   }
 
+  /* ======================= Wahr oder Falter? (3.41.0) =======================
+     Fragen in wissen.js (LZWI.QUIZ, nur hinten ergänzen). Über zwei Handys wandern nur die Nummern der Fragen. */
+  const QZ = () => (window.LZWI && window.LZWI.QUIZ) || [];
+  const QZ_N = 10, qzSeen = {}, qzEnd = {};
+  function quizRender(g, el) {
+    const st = g.st, Q = QZ(), score = (p) => st.pts[p];
+    if (st.last && qzSeen[g.id] !== st.i && Q[st.last.q]) {
+      const q = Q[st.last.q], me = g.mode === 'relay' && st.last.p === g.me, done = g.turn === 'done';
+      el.innerHTML = playersHtml(g, score, null) + '<div class="qz-card ' + (st.last.ok ? 'ok' : 'no') + '"><div class="qz-res">' + (st.last.ok ? '✓ Richtig' : '✗ Daneben') + '</div>' +
+        '<p class="qz-who">' + esc(nameOf(g, st.last.p)) + (me ? ' hast' : ' hat') + ' „' + (st.last.pick ? 'Wahr' : 'Erfunden') + '“ getippt</p><p class="qz-st">„' + esc(q.s) + '“</p>' +
+        '<p class="qz-ans">Das ist <b>' + (q.w ? 'wahr' : 'erfunden') + '</b>. ' + esc(q.x) + '</p></div>' +
+        '<div class="row" style="justify-content:center"><button class="pill-btn primary" data-next>' + (done ? '🏁 Zum Ergebnis' : 'Weiter') + '</button></div>';
+      el.querySelector('[data-next]').onclick = () => {
+        qzSeen[g.id] = st.i;
+        if (done) { qzEnd[g.id] = 1; render(); finish(g); return; }
+        render(); if (g.mode === 'pass') handover(g, g.turn, true);
+      };
+      return;
+    }
+    if (g.turn === 'done') { el.innerHTML = playersHtml(g, score, null) + '<div class="g2-wait">🏁 Alle ' + QZ_N + ' Fragen gespielt.</div>'; return; }
+    if (!myTurn(g)) { el.innerHTML = playersHtml(g, score, g.turn) + waitHtml(g); return; }
+    const q = Q[st.qs[st.i]];
+    if (!q) { el.innerHTML = '<div class="g2-wait">Diese Frage kennt deine App noch nicht – bitte die App einmal schließen und neu öffnen.</div>'; return; }
+    el.innerHTML = playersHtml(g, score, g.turn) + '<p class="qz-n">Frage ' + (st.i + 1) + ' von ' + QZ_N + (g.mode === 'pass' ? ' · <b>' + esc(nameOf(g, g.turn)) + '</b> ist dran' : '') + '</p>' +
+      '<div class="qz-card"><div class="qz-big" aria-hidden="true">🧐</div><p class="qz-st">„' + esc(q.s) + '“</p></div>' +
+      '<div class="qz-btns"><button type="button" class="pill-btn primary" data-a="1">✓ Wahr</button><button type="button" class="pill-btn" data-a="0">✗ Erfunden</button></div>';
+    el.querySelectorAll('[data-a]').forEach((b) => b.onclick = () => {
+      if (g.turn === 'done' || !myTurn(g)) return;
+      const pick = b.dataset.a === '1' ? 1 : 0, ok = pick === q.w, p = g.turn;
+      if (ok) st.pts[p]++;
+      st.last = { q: st.qs[st.i], p, pick, ok }; st.i++;
+      if (st.i >= QZ_N) { g.turn = 'done'; g.winner = st.pts.a > st.pts.b ? 'a' : st.pts.b > st.pts.a ? 'b' : 'draw'; } else g.turn = other(p);
+      L.haptic(ok ? 15 : 30);
+      commit(g, { toast: '🧐 ' + you() + ' ist dran' });
+    });
+  }
+
   /* ---------- Bildschirm ---------- */
-  const RENDER = { raupe: raupeRender, wiese: wieseRender, wuerfel: wuerfelRender, beete: beeteRender, wanderzug: wanderRender };
+  const RENDER = { raupe: raupeRender, wiese: wieseRender, wuerfel: wuerfelRender, beete: beeteRender, wanderzug: wanderRender, quiz: quizRender };
   let curId = null;
   function waitHtml(g) { return '<div class="g2-wait">⏳ ' + esc(you()) + ' ist dran. Du bekommst Bescheid.</div>'; }
   function open(id) {
@@ -624,7 +666,7 @@
     const box = $('spieleList'); if (!box || box.querySelector('[data-g2]')) return;
     const heads = Array.from(box.querySelectorAll('.hub-h')); const h = heads.find((x) => /Gegeneinander/.test(x.textContent)); if (!h) return;
     const next = heads[heads.indexOf(h) + 1] || null;
-    const frag = document.createDocumentFragment(); ['wanderzug', 'wiese', 'raupe', 'wuerfel', 'beete'].forEach((k) => { const t = tileFor(k); t.setAttribute('data-g2', k); frag.appendChild(t); });
+    const frag = document.createDocumentFragment(); ['wanderzug', 'quiz', 'wiese', 'raupe', 'wuerfel', 'beete'].forEach((k) => { const t = tileFor(k); t.setAttribute('data-g2', k); frag.appendChild(t); });
     box.insertBefore(frag, next);
   }
   function hook() {
