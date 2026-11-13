@@ -1,0 +1,40 @@
+/* ========== Schmetterlingsfutter – Klare Oberfläche (3.43.0) ==========
+   Bauplan „Klare Oberfläche“ vom 13.11.2026. Jede Regel beginnt mit #app, weil mehrere Skripte eigene
+   <style>-Blöcke hinter die Dateien hängen – gleiche Gewichtung würde verlieren.
+   Schriftgrößen nur 16 / 19 / 22 / 26 / 34 px, Stärken 500 und 700. Abstände 8 / 12 / 16 / 24 px.
+   Tippflächen mindestens 48 px, nichts unter 16 px, keine Untertitel. */
+
+.o-off { display:none !important; }
+
+/* ---------- Werte ---------- */
+#app {
+  --c-send:#ff6496; --c-play:#b388ff; --c-us:#ffd166; --c-post:#7ee8dc;
+  --sp1:8px; --sp2:12px; --sp3:16px; --sp4:24px;
+  --tile-bg:rgba(255,255,255,.06);
+  font-weight:500;
+}
+#app [data-area="send"] { --area:var(--c-send); }
+#app [data-area="play"] { --area:var(--c-play); }
+#app [data-area="us"] { --area:var(--c-us); }
+#app [data-area="post"] { --area:var(--c-post); }
+
+/* ---------- Seiten und Überschriften ---------- */
+#app main { padding-left:16px; padding-right:16px; }
+#app .view-title { font-family:var(--sans); font-style:normal; font-size:26px; font-weight:700; line-height:1.25; color:var(--text); text-align:left; align-self:stretch; letter-spacing:0; margin:4px 0 16px; }
+#app .view-sub { display:none; }
+#app .eyebrow { font-size:19px; font-weight:700; line-height:1.3; letter-spacing:0; text-transform:none; color:var(--text); }
+#app .hub-h { font-size:19px; font-weight:700; letter-spacing:0; text-transform:none; color:var(--text); }
+/* Großbuchstaben mit Sperrung entfallen */
+#app .msg-label, #app .msg-sig, #app .tag, #app .field label, #app .tips-label, #app .oracle-count,
+#app .big-number small, #app .time-cell span, #app .coupon .c-state, #app .ad-note, #app .hint {
+  text-transform:none; letter-spacing:0;
+}
+#app .msg-label { font-size:16px; font-weight:700; color:var(--text-soft); }
+#app .msg-sig { font-size:16px; font-weight:700; }
+
+/* ---------- Schon in 3.42.0 zu klein (Prüfskript) ---------- */
+#app .chip-st { font-size:16px; padding:4px 12px; }
+#app .wi-eb { font-size:16px; }
+#app .d-meta, #app .chip.soon, #app .lg-lie, #app .st-count, #app .fg-duel span, #app .jg-hint span { font-size:16px; }
+#app .icon-btn { width:48px; height:48px; flex:none; }
+#app .tip { min-height:48px; display:inline-flex; align-items:center; }

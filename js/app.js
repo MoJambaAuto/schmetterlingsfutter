@@ -61,6 +61,19 @@
   const fmtDate = (d) => d.toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric' });
   const atMidnight = (d) => { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; };
   const parseISODate = (iso) => { const [y, m, d] = iso.split('-').map(Number); return new Date(y, m - 1, d); };
+  /* Zeitangabe für Verläufe (3.43.0): gerade eben · vor N Min. · HH:MM · gestern HH:MM · Mo. HH:MM · TT.MM. */
+  function ago(ts) {
+    const d = new Date(ts), now = new Date(), diff = now - d;
+    if (!isFinite(diff)) return '';
+    if (diff < 60000) return 'gerade eben';
+    if (diff < 3600000) return 'vor ' + Math.floor(diff / 60000) + ' Min.';
+    const hm = d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+    const days = Math.round((atMidnight(now) - atMidnight(d)) / 864e5);
+    if (days <= 0) return hm;
+    if (days === 1) return 'gestern ' + hm;
+    if (days < 7) return d.toLocaleDateString('de-DE', { weekday: 'short' }).replace(/\.?$/, '.') + ' ' + hm;
+    return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
+  }
 
   let toastTimer;
   function toast(msg) {
@@ -648,7 +661,7 @@
   window.LZ = {
     get S() { return S; }, save, fmt, esc, pick, toast, openSheet, closeSheet, confirmSheet, promptSheet,
     spawnHearts, showMessage, showView, showSub, haptic, fmtDate, parseISODate, atMidnight, todayKey, shareText, renderHeader,
-    setToggle, showEnvelope, renderTime
+    setToggle, showEnvelope, renderTime, ago
   };
 
   /* Melden: schickt den Wortlaut der Vorlage (ohne eure Namen) an die Redaktion */
