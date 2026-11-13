@@ -15,6 +15,7 @@
 
   /* ---------- Was es alles gibt: [Gruppe, Symbol, Titel, Suchwörter, Antwort (nur wo nötig), Sprung] ---------- */
   const ITEMS = [
+    ['Mehr', '🎁', 'Empfehlungen: ausgesuchte Partner für Erlebnisse, Blumen, Tickets', 'empfehlungen partner partnerangebote angebote erlebnis blumen tickets gutschein werbung shop', '', () => { if (window.LZE && window.LZE.visible().length) window.LZE.sheet(); else L.toast('Die Empfehlungen kommen bald'); }],
     ['Zu zweit', '✨', 'Falter zu Besuch: drei Falter im Zimmer fangen (Raum-AR)', 'falter zu besuch zimmer raum ar augmented reality 3d drinnen zuhause wohnzimmer kamera fangen', '', () => { if (window.LZA) window.LZA.visit(); }],
     ['Zu zweit', '💞', 'Falterspaziergang: zusammen rausgehen und drei Falter finden', 'falterspaziergang spaziergang zusammen rausgehen gemeinsam draußen walk date natur', '', () => { if (window.LZJ) window.LZJ.open(); }],
     ['Spielen', '🔄', 'Spiel neu starten oder beenden: im Spiel oben rechts auf ⋯', 'spiel neu starten neustart abbrechen beenden aufgeben aufhören reset würfelwiese wanderzug blumenbeete raupe wiese menü', '', () => { view('play', 'spiele')(); L.toast('Spiel öffnen, dann oben rechts auf ⋯ tippen'); }],
