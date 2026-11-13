@@ -212,6 +212,44 @@
     Object.keys(f.days).forEach((k) => { if (weekOf(k) !== wk || k === day()) return; const d = f.days[k]; if (d.me == null || d.them == null) return; if (d.me > d.them) me++; else if (d.them > d.me) them++; });
     return { me, them };
   }
+  /* 3.38.1: Wochen-Einsatz – wer am Sonntag weniger Tage vorn war, schenkt den Liebesdienst */
+  function weekResult(wk) {
+    const f = fangState(); let me = 0, them = 0;
+    Object.keys(f.days).forEach((k) => { if (weekOf(k) !== wk) return; const d = f.days[k]; if (d.me == null || d.them == null) return; if (d.me > d.them) me++; else if (d.them > d.me) them++; });
+    return { me, them };
+  }
+  function prizes() { const f = fangState(); if (!f.prizes) f.prizes = {}; Object.keys(f.prizes).forEach((k) => { if (Number(k) < weekOf(day()) - 3) delete f.prizes[k]; }); return f.prizes; }
+  function prizePick() {
+    const G2 = window.LZG2, list = G2 && G2.PRIZES ? G2.PRIZES.slice().sort(() => Math.random() - 0.5).slice(0, 5) : ['Frühstück ans Bett', '10 Minuten Nackenmassage', 'Den Film aussuchen'];
+    let pick = list[0];
+    L.openSheet('<h3>🎁 Einsatz für diese Woche</h3><p class="about" style="font-size:17px;margin-bottom:10px">Wer am Sonntag weniger Tage vorn war, schenkt ' + esc(you()) + ' bzw. dir diesen Liebesdienst.</p><div class="chips" id="fgPrize">' + list.map((p, i) => '<button type="button" data-p="' + esc(p) + '"' + (i ? '' : ' class="on"') + '>' + esc(p) + '</button>').join('') + '<button type="button" data-own>✏️ Eigener</button></div><input id="fgOwn" class="hidden" maxlength="60" placeholder="z. B. Pizza ausgeben" autocomplete="off">' +
+      '<div class="row" style="margin-top:12px"><button class="pill-btn ghost" data-cancel>Abbrechen</button><button class="pill-btn primary" data-go>Festlegen</button></div>', (sh) => {
+      const own = sh.querySelector('#fgOwn');
+      sh.querySelectorAll('#fgPrize button').forEach((b) => b.onclick = () => { sh.querySelectorAll('#fgPrize button').forEach((x) => x.classList.toggle('on', x === b)); if (b.hasAttribute('data-own')) { own.classList.remove('hidden'); own.focus(); pick = null; } else { own.classList.add('hidden'); pick = b.dataset.p; } });
+      sh.querySelector('[data-cancel]').onclick = () => { L.closeSheet(); setTimeout(fangOpen, 80); };
+      sh.querySelector('[data-go]').onclick = async () => {
+        const p = (pick === null ? own.value.trim() : pick || '').slice(0, 60); if (!p) { own.focus(); return; }
+        const wk = weekOf(day()); prizes()[wk] = { prize: p, by: 'me' }; L.save(); C('fang_prize');
+        try { await send({ g: 'fang', op: 'prize', wk, prize: p }); L.toast('🎁 Einsatz steht – ' + you() + ' weiß Bescheid'); } catch (e) { L.toast('Gespeichert – senden klappt beim nächsten Mal'); }
+        L.closeSheet(); setTimeout(fangOpen, 80);
+      };
+    });
+  }
+  /* Abrechnung der Vorwoche (einmal, beim nächsten Öffnen) */
+  function prizeSettle() {
+    const f = fangState(), ps = prizes(), wk = weekOf(day()) - 1, p = ps[wk]; if (!p || p.done) return false;
+    const r = weekResult(wk); p.done = 1; L.save();
+    if (r.me === r.them) { L.openSheet('<div class="bfly-party"><h3>🤝 Unentschieden</h3><p class="about">Letzte Woche stand es ' + r.me + ' : ' + r.them + '. Der Einsatz „' + esc(p.prize) + '“ fällt aus – oder ihr schenkt ihn euch einfach gegenseitig. 😉</p><div class="row" style="margin-top:12px"><button class="pill-btn primary" data-ok>Weiter</button></div></div>', (sh) => { sh.querySelector('[data-ok]').onclick = () => { L.closeSheet(); setTimeout(fangOpen, 80); }; }); return true; }
+    const won = r.me > r.them;
+    L.spawnHearts(won ? 16 : 8);
+    L.openSheet('<div class="bfly-party"><h3>' + (won ? '👑 Wochenkrone für dich!' : '👑 Die Krone geht an ' + esc(you())) + '</h3><p class="about" style="margin-bottom:8px">Letzte Woche ' + r.me + ' : ' + r.them + ' Tage.</p><p class="g2-prize" style="font-size:18px">🎁 Einsatz: <b>' + esc(p.prize) + '</b></p>' +
+      (won ? '<p class="about">Den schuldet dir ' + esc(you()) + ' jetzt. 😉</p>' : '<button type="button" class="pill-btn primary" data-coupon>🎟️ Als Gutschein an ' + esc(you()) + ' schicken</button>') +
+      '<div class="row" style="margin-top:12px"><button class="pill-btn ghost" data-ok>Weiter</button></div></div>', (sh) => {
+      sh.querySelector('[data-ok]').onclick = () => { L.closeSheet(); setTimeout(fangOpen, 80); };
+      const cp = sh.querySelector('[data-coupon]'); if (cp) cp.onclick = async () => { cp.disabled = true; try { await P().sendCoupon({ icon: '👑', title: p.prize, desc: 'Wochenkrone beim Schmetterlingsfangen' }); cp.textContent = '✓ Unterwegs'; C('fang_prize_paid'); } catch (e) { cp.disabled = false; L.toast('Senden fehlgeschlagen'); } };
+    });
+    return true;
+  }
   /* gleiche Runde für beide: Zufall aus dem Datum */
   function rng(seedStr) { let h = 2166136261; for (const c of seedStr) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return () => { h = Math.imul(h ^ (h >>> 15), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); h ^= h >>> 16; return (h >>> 0) / 4294967296; }; }
   function fangSpawns() {
@@ -224,15 +262,18 @@
     return out;
   }
   function fangOpen() {
-    const f = fangState(), d = f.days[day()], wk = fangWeek(), name = esc(you());
+    if (on() && prizeSettle()) return;
+    const f = fangState(), d = f.days[day()], wk = fangWeek(), name = esc(you()), pz = prizes()[weekOf(day())];
     const left = FANG_TRIES - d.tries;
     L.openSheet('<h3>🦋 Schmetterlinge fangen</h3><p class="about" style="font-size:17px;margin-bottom:10px">30 Sekunden: Tipp die Schmetterlinge an. 🌟 Goldene zählen 5, 🐝 Bienen kosten 3 Punkte. Heute bekommt ihr beide dieselbe Runde, dein bester von 3 Versuchen zählt.</p>' +
       '<div class="fg-duel"><div><span>Du</span><b>' + (d.me == null ? '–' : d.me) + '</b></div><div class="vs">heute</div><div><span>' + name + '</span><b>' + (d.them == null ? '–' : (d.me == null ? '🙈' : d.them)) + '</b></div></div>' +
       (d.them != null && d.me == null ? '<p class="about" style="text-align:center;margin:6px 0">' + name + ' hat schon vorgelegt. Die Punktzahl siehst du nach deinem Versuch.</p>' : '') +
       '<div class="fg-week">👑 Diese Woche: Du ' + wk.me + ' · ' + name + ' ' + wk.them + '</div>' +
+      (on() ? (pz ? '<div class="fg-week">🎁 Einsatz der Woche: <b>' + esc(pz.prize) + '</b></div>' : '<div class="row" style="justify-content:center;margin-top:6px"><button class="pill-btn small ghost" data-prize>🎁 Liebesdienst als Wochen-Einsatz</button></div>') : '') +
       '<div class="row" style="margin-top:12px"><button class="pill-btn ghost" data-cancel>Schließen</button>' + (left > 0 ? '<button class="pill-btn primary" data-go>Los! (' + left + ' ' + (left === 1 ? 'Versuch' : 'Versuche') + ')</button>' : '<button class="pill-btn" disabled>Morgen gibt es neue Versuche</button>') + '</div>', (sh) => {
       sh.querySelector('[data-cancel]').onclick = L.closeSheet;
       const go = sh.querySelector('[data-go]'); if (go) go.onclick = () => { L.closeSheet(); setTimeout(fangPlay, 120); };
+      const pzb = sh.querySelector('[data-prize]'); if (pzb) pzb.onclick = () => { L.closeSheet(); setTimeout(prizePick, 80); };
     });
   }
   function fangPlay() {
@@ -293,6 +334,7 @@
   function received(obj, created) {
     const kind = obj.g, gs = games(), name = you();
     if (kind === 'fang') {
+      if (obj.op === 'prize') { const wk = Number(obj.wk); if (!Number.isInteger(wk) || typeof obj.prize !== 'string') return false; const ps = prizes(); if (ps[wk] && ps[wk].done) return true; ps[wk] = { prize: obj.prize.slice(0, 60), by: 'them' }; L.save(); L.toast('🎁 ' + name + ' hat einen Wochen-Einsatz fürs Schmetterlingsfangen festgelegt: ' + ps[wk].prize); renderHub(); return true; }
       if (obj.op !== 'score' || typeof obj.day !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(obj.day) || !Number.isInteger(obj.score)) return false;
       const f = fangState(); if (!f.days[obj.day]) f.days[obj.day] = { me: null, them: null, tries: 0 };
       f.days[obj.day].them = Math.max(0, Math.min(999, obj.score)); L.save();

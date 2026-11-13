@@ -12,6 +12,7 @@
 
   /* Was ist neu – kurz, in Alltagssprache. Neueste zuerst. */
   D.news = [
+    { v: '3.38.1', items: ['👑 Schmetterlinge fangen: Legt einen Liebesdienst als Wochen-Einsatz fest – wer am Sonntag hinten liegt, schenkt ihn'] },
     { v: '3.38.0', items: [
       '🔥 Neuer Partner Orion: Ideen im Bereich „Zweisamkeit“ (18+) führen jetzt zu einem passenden Erotik-Shop',
       '🔄 Neue Versionen kommen zuverlässig an – die App frischt sich in einem ruhigen Moment selbst auf',
