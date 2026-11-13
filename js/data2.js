@@ -3,7 +3,7 @@
 (function () {
   'use strict';
   const D = window.LUZIFER_DATA;
-  D.version = '3.36.0';
+  D.version = '3.36.1';
   /* Grundton des Klavier-Samples fürs Liebeslied-Pad (audio/pad.wav), wird beim Einbau gemessen */
   D.padBase = 174.61;
 

@@ -57,7 +57,7 @@
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const todayKey = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
   function hash(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return Math.abs(h >>> 0); }
-  function haptic(ms) { if (S.haptic && navigator.vibrate) { try { navigator.vibrate(ms || 12); } catch (e) {} } }
+  function haptic(ms) { if (S.haptic && navigator.vibrate) { try { const v = Array.isArray(ms) ? ms : Math.min(70, Math.max(28, Math.round((ms || 12) * 2.5))); navigator.vibrate(v); } catch (e) {} } } /* 3.36.1: Impulse unter ca. 20 ms spürt man auf vielen Handys (z. B. Galaxy S23) nicht */
   const fmtDate = (d) => d.toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric' });
   const atMidnight = (d) => { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; };
   const parseISODate = (iso) => { const [y, m, d] = iso.split('-').map(Number); return new Date(y, m - 1, d); };
@@ -559,7 +559,7 @@
   }
   nameInput('setSender', 'sender'); nameInput('setReceiver', 'receiver');
   $('togMotion').onclick = () => { S.motion = !S.motion; save(); setToggle('togMotion', S.motion); applyTheme(); };
-  $('togHaptic').onclick = () => { S.haptic = !S.haptic; save(); setToggle('togHaptic', S.haptic); haptic(15); };
+  $('togHaptic').onclick = () => { S.haptic = !S.haptic; save(); setToggle('togHaptic', S.haptic); haptic([40, 60, 40]); };
   $('btnWrite2').onclick = () => writeOwn(() => renderSettings());
   $('btnExport').onclick = () => {
     const copy = Object.assign({}, S); delete copy.partner; delete copy.deviceId; delete copy.pendingPair; // Verbindung ist gerätegebunden
