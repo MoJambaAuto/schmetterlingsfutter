@@ -12,6 +12,7 @@
 
   /* Was ist neu – kurz, in Alltagssprache. Neueste zuerst. */
   D.news = [
+    { v: '3.45.0', items: ['🎵 Eure Lieder vom Liebeslied-Pad als MP3 oder WAV herunterladen (⬇ neben jedem Lied)', '🎹 Das Pad ist kompakter: alle Töne und die Aufnahme passen auf einen Bildschirm'] },
     { v: '3.44.0', items: ['❤️ 😂 🥹 Schnell reagieren: unter jeder Nachricht vom Schatz – dein Schatz sieht deine Reaktion in „Post“'] },
     { v: '3.43.0', items: ['🧭 Neue Leiste unten: Heute · Post · Schicken · Spielen · Wir – jede Funktion hat ihren festen Platz', '📬 Post zeigt alles zwischen euch: was du geschickt hast, was angekommen ist, und ob es gesehen wurde', '⚙️ Einstellungen oben rechts am Zahnrad – dort stehen jetzt nur noch Einstellungen'] },
     { v: '3.42.0', items: ['🏡 Neue Adresse: app.schmetterlingsfutter.de – deine Daten sind mitgekommen', '🔔 Mitteilungen bitte einmal neu einschalten (die neue Adresse fragt neu)'] },

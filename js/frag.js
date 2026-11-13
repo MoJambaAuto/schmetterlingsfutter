@@ -74,6 +74,7 @@
     ['Spielen', '🏳️', 'Weiße Fahne', 'streit frieden versoehnen entschuldigen pause sorry vertragen', '', klartext('Weiße Fahne')],
     ['Spielen', '🃏', 'Gesprächskarte ziehen', 'frage fragen karte gespraech kennenlernen tiefer', '', klartext('Gesprächskarte')],
     ['Spielen', '🌼', 'Gänseblümchen-Orakel', 'orakel blume gaensebluemchen liebt zupfen', '', view('play', 'oracle')],
+    ['Spielen', '⬇', 'Lied herunterladen: als MP3 oder WAV', 'download herunterladen mp3 wav datei speichern lied musik song exportieren audio', 'Unter Musik bei „Eure Lieder“ auf ⬇ tippen.', spot('play', 'songList', 'music')],
     ['Spielen', '🎹', 'Liebeslied-Pad', 'lied komponieren toene klavier aufnehmen melodie spielen', '', spot('play', 'songList', 'music')],
     ['Spielen', '🔥', 'Zweisamkeit (18+)', 'zweisamkeit erotik flirt sex intim vorlieben lust leidenschaft', '', view('play', 'intim')],
     ['Spielen', '💞', 'Wer ist dran? Spiele, die auf dich warten', 'dran warten wartet einladung ergebnis gesehen gelesen status partner mitspielen', 'Steht ganz oben auf „Heute“ unter „Zwischen euch“ und oben unter „Spielen“.', spot('home', 'partnerCard')],

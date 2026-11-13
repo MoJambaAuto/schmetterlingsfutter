@@ -76,9 +76,9 @@ html[data-view]:not([data-view="home"]) #app .occasion-chip { display:none; }
 
 /* ---------- Schicken ---------- */
 #app .tiles.four { grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; }
-#app .quick-row .tile { min-height:88px; padding:8px 2px; gap:6px; }
+#app .quick-row .tile { min-height:80px; padding:6px 2px; gap:4px; }
 #app .quick-row .tile-t { font-size:16px; }
-#app .quick-head { align-self:stretch; margin:8px 0 8px; }
+#app .quick-head { align-self:stretch; margin:4px 0 4px; }
 #app .quick-head .eyebrow { margin:0; }
 #app .link-btn { min-height:48px; padding:0 4px 0 12px; border:0; background:transparent; color:var(--accent-2); font-size:19px; font-weight:700; cursor:pointer; }
 #app #view-send #reasonPanel { margin-top:-4px; }
@@ -147,6 +147,8 @@ html[data-view]:not([data-view="home"]) #app .occasion-chip { display:none; }
 #app .pad-ctrl .pill-btn { flex:1 1 auto; padding:10px 12px; font-size:16px; }
 #app #sub-music > .view-title { margin-bottom:12px; }
 #app #sub-music .hint { margin-top:4px; }
+#app .reason-del { min-width:44px; min-height:44px; display:inline-flex; align-items:center; justify-content:center; }
+#app #jingleChips button { min-height:44px; }
 #app .song { flex-wrap:wrap; }
 #app .song .s-t { flex:1 1 calc(100% - 60px); min-width:0; }
 #app .song .s-t + .icon-btn { margin-left:auto; }
@@ -195,7 +197,7 @@ html[data-view]:not([data-view="home"]) #app .occasion-chip { display:none; }
 #app .own-card { margin-top:8px; }
 
 /* ---------- Heute ---------- */
-#app #view-home > .card { margin-bottom:12px; }
+#app #view-home > .card { margin-bottom:10px; }
 #app #partnerCard .zw-head { margin:0 0 8px; }
 #app .zw-one { font-size:19px; color:var(--text-soft); margin:0 0 4px; }
 #app .zw-foot { justify-content:flex-start; margin-top:12px; gap:8px; }
