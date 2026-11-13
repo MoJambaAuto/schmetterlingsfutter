@@ -74,3 +74,14 @@ Nur mit Zustimmung in der App: einmal am Tag Tagessummen der Vortage an `POST /s
 3. Auswerten: `node relay/scripts/auswertung.mjs --tage 28` (nur lesend; `--lokal` für den Testdienst). Pflege-Ablauf: Claude-Skill `schmetterlingsfutter-pflege`.
 
 Solange der Dienst `/stats` nicht kennt, sammelt die App die Summen bis zu acht Tage im Gerät und versucht es täglich erneut.
+
+## Bühne (Open Mic, seit 3.40.0) – ohne Paar-Anmeldung
+
+- `POST /buehne/list` `{key?, sort: trend|neu|woche|beste, cat?, before?, offset?}` → `{poems, star (Gedicht der Vorwoche), voted, wingsLeft, week}`
+- `GET /buehne/poem?id=` → ein Gedicht (für geteilte Links `?gedicht=<id>`)
+- `POST /buehne/post` `{key, title, body, author, cat, yt?, gift, shop, rules: true}` → `live` oder `review` (auffällige Wörter); Links/Kontaktdaten werden abgelehnt; 3 je Gerät und Tag
+- `POST /buehne/vote` `{key, id, kind: clap|wing}` – Applaus einmal je Gedicht, 3 Flügel je Tag, nicht für eigene
+- `POST /buehne/report` `{key, id, reason, note?}` – ab 3 Meldungen ausgeblendet (`review`)
+- `POST /buehne/mine` / `POST /buehne/delete` `{key, id}` – eigene Werke (inkl. `offer` = Nachricht von uns)
+
+`key` = zufälliger Geräteschlüssel aus der App; gespeichert wird nur `keyHash` (SHA-256, gekürzt). Moderation: `node relay/scripts/buehne.mjs` (siehe Kopf der Datei). Test: `node relay/test/buehne.test.mjs`.

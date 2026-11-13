@@ -12,6 +12,7 @@
 
   /* Was ist neu – kurz, in Alltagssprache. Neueste zuerst. */
   D.news = [
+    { v: '3.40.0', items: ['🎤 Neu unter Spielen: die Bühne – Liebesgedichte von euch lesen, applaudieren, Flügel geben und selbst vortragen', '🎁 Aus jedem Gedicht ein Geschenk machen: Tasse, Karte, Poster, Shirt und mehr – mit Vorschau', '🏆 Jede Woche wird das beliebteste Gedicht zum „Gedicht der Woche“'] },
     { v: '3.39.2', items: ['🪂 Neu in den Empfehlungen: Jochen Schweizer Arena – Erlebnisse zu zweit bei München'] },
     { v: '3.39.1', items: ['🦋 Falter in 3D startet und beendet sich zuverlässiger – auch mit der Zurück-Taste'] },
     { v: '3.39.0', items: ['🎁 Papillon bringt ab und zu ein kleines Geschenk vorbei – neue Empfehlungen unserer Partner (als Werbung gekennzeichnet, ganz selten)', '🛠️ Mehrere Verbesserungen an der Falterjagd in 3D'] },

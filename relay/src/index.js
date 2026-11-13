@@ -123,6 +123,157 @@ async function pushPartner(env, pairId, toDev) {
   } catch (e) { /* Push ist Zugabe: ein Fehler darf das Senden nie stören */ }
 }
 
+/* ---- Bühne (Open Mic, 3.40.0): öffentliche Gedichte, Applaus, Flügel, Melden ----
+   Ohne Anmeldung. Jedes Gerät hat einen zufälligen Schlüssel (bleibt im Gerät); gespeichert wird nur seine gekürzte Prüfsumme.
+   Keine Links, Mail-Adressen oder Telefonnummern im Text (Spam- und Schutzregel). Auffällige Wörter → erst Prüfung. */
+const BU_CATS = ['liebe', 'sehnsucht', 'humor', 'anlass', 'trost', 'frei'];
+const BU_REASONS = ['fremd', 'beleidigend', 'sexuell', 'gewalt', 'persoenlich', 'spam', 'sonst'];
+const BU = { titleMin: 2, titleMax: 60, bodyMin: 20, bodyMax: 1500, lines: 40, authorMin: 2, authorMax: 30, postsPerDay: 3, postsIpDay: 6, postsTotalDay: 500, wingsPerDay: 3, votesIpDay: 600, reportsIpDay: 30, hideAt: 3, page: 30 };
+const isKey = (s) => typeof s === 'string' && /^[a-f0-9]{32,64}$/.test(s);
+async function keyHash(s) {
+  const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('sf-buehne|' + s));
+  return Array.from(new Uint8Array(d).slice(0, 12), (x) => x.toString(16).padStart(2, '0')).join('');
+}
+function isoWeek(t) {
+  const d = new Date(t); const day = (d.getUTCDay() + 6) % 7; d.setUTCDate(d.getUTCDate() - day + 3);
+  const y = d.getUTCFullYear(); const first = new Date(Date.UTC(y, 0, 4));
+  const w = 1 + Math.round(((d - first) / 864e5 - 3 + ((first.getUTCDay() + 6) % 7)) / 7);
+  return y + '-W' + String(w).padStart(2, '0');
+}
+function buClean(s, multi) {
+  if (typeof s !== 'string') return '';
+  s = s.normalize('NFC').replace(/\r\n?/g, '\n').replace(/[\u0000-\u0009\u000B-\u001F\u007F​-‏‪-‮⁦-⁩]/g, '');
+  if (!multi) return s.replace(/\s+/g, ' ').trim();
+  return s.split('\n').map((l) => l.replace(/[ \t]+/g, ' ').trim()).join('\n').replace(/\n{3,}/g, '\n\n').trim();
+}
+const BU_CONTACT = /(https?:\/\/|www\.|\b[a-z0-9-]+\.(de|com|net|org|info|io|me|at|ch|eu|ly|app|shop)\b|[^\s@]+@[^\s@]+\.[a-z]{2,}|(\+|00)\d[\d \/-]{6,}|\b0\d{2,5}[ \/-]?\d{4,}|\b(insta|instagram|telegram|whatsapp|snapchat|onlyfans|tiktok)\b)/i;
+/* Wörter, bei denen ein Mensch erst draufschaut (kein Urteil, nur „bitte prüfen“) */
+const BU_REVIEW = /(fick|fotze|hure|nutte|schwuchtel|neger|kanake|hitler|nazi|vergewalt|kinderp|pädo|paedo|umbringen|abstechen|selbstmord|suizid|schwanz|muschi|titten|wichs|porno|sex\b)/i;
+function buOut(r, voter) {
+  return { id: r.id, title: r.title, body: r.body, author: r.author, cat: r.cat, claps: r.claps, wings: r.wings, created: r.created, week: r.week, yt: r.yt || '', gift: !!r.gift, aid: String(r.akey || '').slice(0, 10), mine: !!(voter && r.akey === voter) };
+}
+const buScore = (r) => r.claps + 3 * r.wings;
+async function buRate(env, req, t, kind, limit) {
+  const day = new Date(t).toISOString().slice(0, 10);
+  const who = await shortHash(day + '|' + (req.headers.get('CF-Connecting-IP') || 'local') + '|bu');
+  const row = await env.DB.prepare('SELECT n FROM buehne_rate WHERE day = ? AND who = ? AND kind = ?').bind(day, who, kind).first();
+  if (row && row.n >= limit) return false;
+  await env.DB.prepare('INSERT INTO buehne_rate (day, who, kind, n) VALUES (?, ?, ?, 1) ON CONFLICT(day, who, kind) DO UPDATE SET n = n + 1').bind(day, who, kind).run();
+  return true;
+}
+async function buList(env, body, t) {
+  const voter = isKey(body.key) ? await keyHash(body.key) : null;
+  const sort = ['neu', 'trend', 'woche', 'beste'].includes(body.sort) ? body.sort : 'trend';
+  const cat = BU_CATS.includes(body.cat) ? body.cat : '';
+  const catSql = cat ? ' AND cat = ?' : '', catArg = cat ? [cat] : [];
+  const off = Number.isInteger(body.offset) && body.offset > 0 && body.offset < 2000 ? body.offset : 0;
+  let rows = [];
+  if (sort === 'neu') {
+    const before = Number.isInteger(body.before) && body.before > 0 ? body.before : 2 ** 31;
+    rows = (await env.DB.prepare("SELECT * FROM poems WHERE status = 'live' AND id < ?" + catSql + ' ORDER BY id DESC LIMIT ?').bind(before, ...catArg, BU.page).all()).results || [];
+  } else if (sort === 'beste') {
+    rows = (await env.DB.prepare("SELECT * FROM poems WHERE status = 'live'" + catSql + ' ORDER BY (claps + 3 * wings) DESC, id DESC LIMIT ? OFFSET ?').bind(...catArg, BU.page, off).all()).results || [];
+  } else if (sort === 'woche') {
+    rows = (await env.DB.prepare("SELECT * FROM poems WHERE status = 'live' AND week = ?" + catSql + ' ORDER BY (claps + 3 * wings) DESC, id DESC LIMIT ? OFFSET ?').bind(isoWeek(t), ...catArg, BU.page, off).all()).results || [];
+  } else {
+    /* Im Aufwind: Applaus und Flügel, je älter desto weniger Gewicht (wie bei Nachrichten-Seiten) */
+    const all = (await env.DB.prepare("SELECT * FROM poems WHERE status = 'live' AND created > ?" + catSql + ' ORDER BY id DESC LIMIT 400').bind(t - 45 * 864e5, ...catArg).all()).results || [];
+    all.forEach((r) => { r._s = (buScore(r) + 1) / Math.pow((t - r.created) / 3.6e6 + 2, 1.25); });
+    rows = all.sort((a, b) => b._s - a._s).slice(off, off + BU.page);
+  }
+  const out = { sort, week: isoWeek(t), poems: rows.map((r) => buOut(r, voter)) };
+  /* Gedicht der Woche = bestes Gedicht der Vorwoche (mindestens 3 Punkte) */
+  const prev = isoWeek(t - 7 * 864e5);
+  const star = await env.DB.prepare("SELECT * FROM poems WHERE status = 'live' AND week = ? AND (claps + 3 * wings) >= 3 ORDER BY (claps + 3 * wings) DESC, id ASC LIMIT 1").bind(prev).first();
+  if (star) out.star = Object.assign(buOut(star, voter), { starWeek: prev });
+  if (voter) {
+    const ids = out.poems.map((p) => p.id).concat(star ? [star.id] : []);
+    if (ids.length) {
+      const v = (await env.DB.prepare('SELECT poem_id, kind FROM poem_votes WHERE voter = ? AND poem_id IN (' + ids.map(() => '?').join(',') + ')').bind(voter, ...ids).all()).results || [];
+      out.voted = {}; v.forEach((x) => { (out.voted[x.poem_id] = out.voted[x.poem_id] || []).push(x.kind); });
+    }
+    const day = new Date(t).toISOString().slice(0, 10);
+    const w = await env.DB.prepare("SELECT COUNT(*) AS n FROM poem_votes WHERE voter = ? AND kind = 'wing' AND day = ?").bind(voter, day).first();
+    out.wingsLeft = Math.max(0, BU.wingsPerDay - (w ? w.n : 0));
+  }
+  return out;
+}
+async function buehne(path, req, env, body, t) {
+  if (path === '/buehne/list') return [200, await buList(env, body, t)];
+  if (!isKey(body.key)) return [400, { error: 'key' }];
+  const me = await keyHash(body.key);
+  const day = new Date(t).toISOString().slice(0, 10);
+  if (path === '/buehne/post') {
+    if (body.rules !== true) return [400, { error: 'rules' }];
+    const title = buClean(body.title, false), text = buClean(body.body, true), author = buClean(body.author, false);
+    const cat = BU_CATS.includes(body.cat) ? body.cat : 'frei';
+    if (title.length < BU.titleMin || title.length > BU.titleMax || author.length < BU.authorMin || author.length > BU.authorMax) return [400, { error: 'input' }];
+    if (text.length < BU.bodyMin || text.length > BU.bodyMax || text.split('\n').length > BU.lines) return [400, { error: 'length' }];
+    if (BU_CONTACT.test(title + '\n' + text + '\n' + author)) return [400, { error: 'contact' }];
+    let yt = null;
+    if (body.yt) { yt = typeof body.yt === 'string' && /^[A-Za-z0-9_-]{11}$/.test(body.yt) ? body.yt : ''; if (!yt) return [400, { error: 'yt' }]; }
+    const mine = await env.DB.prepare('SELECT COUNT(*) AS n FROM poems WHERE akey = ? AND created > ?').bind(me, t - 864e5).first();
+    if (mine && mine.n >= BU.postsPerDay) return [429, { error: 'limit' }];
+    const total = await env.DB.prepare('SELECT COUNT(*) AS n FROM poems WHERE created > ?').bind(t - 864e5).first();
+    if (total && total.n >= BU.postsTotalDay) return [429, { error: 'later' }];
+    const dup = await env.DB.prepare("SELECT id FROM poems WHERE body = ? AND status != 'removed' LIMIT 1").bind(text).first();
+    if (dup) return [409, { error: 'dup' }];
+    if (!(await buRate(env, req, t, 'post', BU.postsIpDay))) return [429, { error: 'limit' }];
+    const flag = BU_REVIEW.test(title + ' ' + text + ' ' + author) ? 'wort' : null;
+    const status = flag ? 'review' : 'live';
+    const r = await env.DB.prepare('INSERT INTO poems (created, week, title, body, author, cat, akey, yt, gift, shop, status, flag) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+      .bind(t, isoWeek(t), title, text, author, cat, me, yt, body.gift === false ? 0 : 1, body.shop === true ? 1 : 0, status, flag).run();
+    return [200, { ok: true, id: r.meta && r.meta.last_row_id, status }];
+  }
+  if (path === '/buehne/vote') {
+    const kind = body.kind === 'wing' ? 'wing' : body.kind === 'clap' ? 'clap' : '';
+    if (!kind || !Number.isInteger(body.id)) return [400, { error: 'input' }];
+    const p = await env.DB.prepare("SELECT id, akey FROM poems WHERE id = ? AND status = 'live'").bind(body.id).first();
+    if (!p) return [404, { error: 'unknown' }];
+    if (p.akey === me) return [409, { error: 'own' }];
+    if (kind === 'wing') {
+      const w = await env.DB.prepare("SELECT COUNT(*) AS n FROM poem_votes WHERE voter = ? AND kind = 'wing' AND day = ?").bind(me, day).first();
+      if (w && w.n >= BU.wingsPerDay) return [429, { error: 'wings' }];
+    }
+    if (!(await buRate(env, req, t, 'vote', BU.votesIpDay))) return [429, { error: 'limit' }];
+    const ins = await env.DB.prepare('INSERT OR IGNORE INTO poem_votes (poem_id, voter, kind, day) VALUES (?, ?, ?, ?)').bind(p.id, me, kind, day).run();
+    if (ins.meta && ins.meta.changes) await env.DB.prepare('UPDATE poems SET ' + (kind === 'wing' ? 'wings = wings + 1' : 'claps = claps + 1') + ' WHERE id = ?').bind(p.id).run();
+    const now2 = await env.DB.prepare('SELECT claps, wings FROM poems WHERE id = ?').bind(p.id).first();
+    const w2 = await env.DB.prepare("SELECT COUNT(*) AS n FROM poem_votes WHERE voter = ? AND kind = 'wing' AND day = ?").bind(me, day).first();
+    return [200, { ok: true, claps: now2.claps, wings: now2.wings, wingsLeft: Math.max(0, BU.wingsPerDay - (w2 ? w2.n : 0)) }];
+  }
+  if (path === '/buehne/report') {
+    const reason = BU_REASONS.includes(body.reason) ? body.reason : '';
+    if (!reason || !Number.isInteger(body.id)) return [400, { error: 'input' }];
+    const p = await env.DB.prepare("SELECT id, reports, status FROM poems WHERE id = ? AND status != 'removed'").bind(body.id).first();
+    if (!p) return [404, { error: 'unknown' }];
+    if (!(await buRate(env, req, t, 'report', BU.reportsIpDay))) return [429, { error: 'limit' }];
+    const note = buClean(typeof body.note === 'string' ? body.note : '', false).slice(0, 200) || null;
+    const ins = await env.DB.prepare('INSERT OR IGNORE INTO poem_votes (poem_id, voter, kind, day, reason) VALUES (?, ?, ?, ?, ?)').bind(p.id, me, 'report', day, reason + (note ? ': ' + note : '')).run();
+    if (ins.meta && ins.meta.changes) {
+      const n = p.reports + 1;
+      await env.DB.prepare("UPDATE poems SET reports = ?, status = CASE WHEN ? >= ? AND status = 'live' THEN 'review' ELSE status END, flag = CASE WHEN ? >= ? AND status = 'live' THEN ? ELSE flag END WHERE id = ?")
+        .bind(n, n, BU.hideAt, n, BU.hideAt, 'meldung:' + reason, p.id).run();
+    }
+    return [200, { ok: true }];
+  }
+  if (path === '/buehne/mine') {
+    const rows = (await env.DB.prepare("SELECT * FROM poems WHERE akey = ? AND status != 'removed' ORDER BY id DESC LIMIT 100").bind(me).all()).results || [];
+    return [200, { poems: rows.map((r) => Object.assign(buOut(r, me), { status: r.status, shop: !!r.shop, offer: r.offer || '' })) }];
+  }
+  if (path === '/buehne/delete') {
+    if (!Number.isInteger(body.id)) return [400, { error: 'input' }];
+    const p = await env.DB.prepare('SELECT id FROM poems WHERE id = ? AND akey = ?').bind(body.id, me).first();
+    if (!p) return [404, { error: 'unknown' }];
+    await env.DB.batch([
+      env.DB.prepare('DELETE FROM poem_votes WHERE poem_id = ?').bind(p.id),
+      env.DB.prepare('DELETE FROM poems WHERE id = ?').bind(p.id)
+    ]);
+    return [200, { ok: true }];
+  }
+  return [404, { error: 'not found' }];
+}
+
 async function auth(env, body) {
   if (!isPair(body.pair) || !isDev(body.dev) || !isTok(body.token)) return null;
   const p = await env.DB.prepare('SELECT * FROM pairs WHERE id = ?').bind(body.pair).first();
@@ -141,6 +292,12 @@ async function handle(req, env, ctx) {
   if (req.method === 'GET') {
     if (url.pathname === '/' || url.pathname === '/health') return json({ ok: true, service: 'schmetterlingsfutter-relay', time: now() }, 200, req, env);
     if (url.pathname === '/push/key') return json({ key: pushReady(env) ? env.VAPID_PUBLIC : '' }, 200, req, env);
+    if (url.pathname === '/buehne/poem') {
+      const id = Number(url.searchParams.get('id'));
+      if (!Number.isInteger(id) || id < 1) return err('input', 400, req, env);
+      const r = await env.DB.prepare("SELECT * FROM poems WHERE id = ? AND status = 'live'").bind(id).first();
+      return r ? json({ poem: buOut(r, null) }, 200, req, env) : err('unknown', 404, req, env);
+    }
     return err('not found', 404, req, env);
   }
   if (req.method !== 'POST') return err('method', 405, req, env);
@@ -150,6 +307,9 @@ async function handle(req, env, ctx) {
   try { const text = await req.text(); if (text.length > MAX_BODY) return err('too large', 413, req, env); body = JSON.parse(text || '{}'); } catch (e) { return err('bad json', 400, req, env); }
   if (!body || typeof body !== 'object') return err('bad json', 400, req, env);
   const t = now();
+
+  /* ---- Bühne (ohne Anmeldung) ---- */
+  if (url.pathname.startsWith('/buehne/')) { const [st, out] = await buehne(url.pathname, req, env, body, t); return json(out, st, req, env); }
 
   /* ---- Paar anlegen ---- */
   if (url.pathname === '/pair/new') {
@@ -311,6 +471,7 @@ async function cleanup(env) {
     env.DB.prepare('DELETE FROM push_subs WHERE pair_id NOT IN (SELECT id FROM pairs)'),
     env.DB.prepare('DELETE FROM idea_rate WHERE day < ?').bind(new Date(t).toISOString().slice(0, 10)),
     env.DB.prepare('DELETE FROM stats_rate WHERE day < ?').bind(new Date(t).toISOString().slice(0, 10)),
+    env.DB.prepare('DELETE FROM buehne_rate WHERE day < ?').bind(new Date(t).toISOString().slice(0, 10)),
     env.DB.prepare('DELETE FROM stats WHERE day < ?').bind(new Date(t - STATS_KEEP_DAYS * 864e5).toISOString().slice(0, 10)),
     env.DB.prepare('DELETE FROM stats_q WHERE day < ?').bind(new Date(t - STATS_KEEP_DAYS * 864e5).toISOString().slice(0, 10))
   ]);
