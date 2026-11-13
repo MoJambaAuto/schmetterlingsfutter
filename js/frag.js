@@ -151,11 +151,12 @@
   }
 
   /* feste Suchleiste oben, auf jeder Seite erreichbar */
+  /* 3.43.0: die Leiste steht fest in index.html (mit Zahnrad) – nur bauen, falls sie fehlt */
   const app = $('app');
-  if (app && !$('fragBar')) {
+  if (app && !document.querySelector('.frag-bar')) {
     const bar = document.createElement('div'); bar.className = 'frag-bar'; bar.innerHTML = '<button type="button" id="fragBar"><span aria-hidden="true">🔍</span> Frag Papillon</button>';
     app.insertBefore(bar, app.querySelector('header'));
-    $('fragBar').onclick = open;
   }
+  if ($('fragBar')) $('fragBar').onclick = open;
   window.LZQ = { open, search: (q) => search(q).map((it) => it[2]) };
 })();

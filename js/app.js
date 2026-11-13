@@ -165,19 +165,37 @@
   }
 
   /* ---------- Navigation ---------- */
+  /* 3.43.0: fünf Reiter (Heute · Post · Schicken · Spielen · Wir), Einstellungen über das Zahnrad.
+     Zeit und Wünsche sind Unterseiten von „Wir“; ihre alten Reiter-Knöpfe liegen verborgen in #navStash,
+     damit Skripte, die sich an deren Klick hängen, weiter mitzeichnen. */
+  const TAB_OF = { home: 'home', post: 'post', send: 'send', play: 'play', us: 'us', time: 'us', wishes: 'us', settings: '' };
   function showView(name) {
     document.querySelectorAll('.view').forEach((v) => v.classList.toggle('active', v.id === 'view-' + name));
+    const tab = TAB_OF[name] !== undefined ? TAB_OF[name] : name;
     document.querySelectorAll('.nav button').forEach((b) => {
-      const on = b.dataset.view === name; b.classList.toggle('active', on); b.setAttribute('aria-selected', on);
+      const on = b.dataset.view === tab; b.classList.toggle('active', on); b.setAttribute('aria-selected', on);
     });
+    document.documentElement.setAttribute('data-view', name);
+    const gear = $('btnSettings'); if (gear) { gear.classList.toggle('active', name === 'settings'); gear.setAttribute('aria-pressed', name === 'settings'); }
     if (name === 'play' && !daisyReady) initDaisy();
     if (name === 'time') { renderTime(); if (window.LZF) window.LZF.renderOccasions(); }
     if (name === 'wishes') { renderCoupons(); if (window.LZF) window.LZF.renderWishes(); }
     if (name === 'settings') { renderSettings(); if (window.LZF) window.LZF.renderIntim(); }
     if (name === 'play' && window.LZF) window.LZF.renderSongs();
+    if (name === 'post' && window.LZP && window.LZP.renderPost) window.LZP.renderPost();
+    if (name === 'send' && typeof renderOwnMsgs === 'function') renderOwnMsgs();
+    if (name === 'us' && typeof renderUs === 'function') renderUs();
+    const legacy = $('nav-' + name); if (legacy && !legacy.closest('.nav')) legacy.click();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
   document.querySelectorAll('.nav button').forEach((b) => b.addEventListener('click', () => showView(b.dataset.view)));
+  $('btnSettings').addEventListener('click', () => showView('settings'));
+  /* Zurück-Bausteine: „‹ Wir“, „‹ Zurück“, „‹ Spielen“ */
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest && e.target.closest('[data-back],[data-back-sub]'); if (!b) return;
+    if (b.dataset.back) { showView(b.dataset.back); return; }
+    showSub('play', b.dataset.backSub); if (window.LZG) window.LZG.renderHub(); window.scrollTo(0, 0);
+  });
   function showSub(seg, sub) {
     const s = document.querySelector('.seg[data-seg="' + seg + '"]'); if (!s) return;
     s.querySelectorAll('button').forEach((b) => { const on = b.dataset.sub === sub; b.classList.toggle('active', on); b.setAttribute('aria-selected', on); });
@@ -668,6 +686,7 @@
   $('btnReport').onclick = () => { if (window.LZP && window.LZP.reportSheet) window.LZP.reportSheet(current.text); };
 
   /* ---------- Start ---------- */
+  document.documentElement.setAttribute('data-view', 'home');
   applyTheme(); renderHeader(); refillQueue(); renderFavs();
   $('tapCounter').textContent = S.taps >= 10 ? S.taps + ' × Liebe abgeholt' : '';
   if (!S.onboarded) startOnboarding();

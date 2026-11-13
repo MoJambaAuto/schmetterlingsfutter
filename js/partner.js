@@ -795,7 +795,7 @@
   }
   function renderInboxBadge() {
     const n = unread(); const b = $('inboxBadge'); if (b) { b.textContent = n > 9 ? '9+' : n; b.classList.toggle('hidden', !n); }
-    const nb = $('navBadge'); if (nb) nb.classList.toggle('hidden', !n);
+    const nb = $('navBadge'); if (nb) { nb.textContent = n > 9 ? '9+' : (n || ''); nb.classList.toggle('hidden', !n); nb.setAttribute('aria-label', n + ' neu'); }
   }
 
   /* ---------- Startseite: Verbindung, Bock-auf, Geschenk-Radar ---------- */

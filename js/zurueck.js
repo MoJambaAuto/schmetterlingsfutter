@@ -29,6 +29,17 @@
     return out.sort((a, b) => b.z - a.z);
   }
   const homeActive = () => { const h = $('view-home'); return !h || h.classList.contains('active'); };
+  /* 3.43.0: erst eine Ebene innerhalb des Reiters zurück – Spiel-Unterseite → Katalog, Zeit/Wünsche → Wir */
+  const act = (id) => { const v = $(id); return !!v && v.classList.contains('active'); };
+  function backInside() {
+    if (act('view-play')) {
+      const sub = document.querySelector('#view-play > .sub.active');
+      if (sub && sub.id !== 'sub-spiele') { L.showSub('play', 'spiele'); if (window.LZG) window.LZG.renderHub(); window.scrollTo(0, 0); return true; }
+    }
+    if (act('view-time') || act('view-wishes')) { L.showView('us'); return true; }
+    if (act('view-settings')) { L.showView('home'); return true; }
+    return false;
+  }
 
   /* Verlaufseinträge, die ohne Antippen entstehen, überspringt Chrome beim Zurück. Darum: nach jedem Zurück sofort
      neu sichern und beim nächsten Antippen noch einmal „mit Geste“. */
@@ -41,6 +52,7 @@
     gesture = false;
     const top = layers()[0];
     if (top) { try { top.close(); } catch (e) {} push(); return; }
+    if (backInside()) { push(); return; }
     if (!homeActive()) { L.showView('home'); window.scrollTo(0, 0); push(); return; }
     /* Startseite: einmal warnen, beim zweiten Druck die App verlassen */
     if (exitTimer) { history.back(); return; }

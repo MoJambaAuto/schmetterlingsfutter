@@ -21,6 +21,7 @@
   <div class="stars" id="stars" aria-hidden="true"></div>
   <div class="floating-hearts" id="fh" aria-hidden="true"></div>
 
+  <div class="frag-bar" id="topBar"><button type="button" id="fragBar"><span aria-hidden="true">🔍</span> Frag Papillon</button><button type="button" id="btnSettings" data-view="settings" aria-label="Einstellungen" aria-pressed="false">⚙️</button></div>
   <header class="header">
     <span class="name-pill" id="pillSender">🐰 Hase</span>
     <span class="name-sep" aria-hidden="true">❤</span>
@@ -31,6 +32,14 @@
   <main>
     <!-- ===== Botschaften ===== -->
     <section class="view active" id="view-home" aria-labelledby="nav-home">
+      <div class="counter-chip" id="tapCounter"></div>
+      <div class="card soft hidden" id="giftTeaser" style="padding:16px 18px;margin-bottom:14px"></div>
+      <div class="card soft hidden" id="iosHint" style="padding:14px 16px;margin-bottom:14px"></div>
+      <div class="card partner-card hidden" id="pairPromo" style="padding:18px 20px;margin-bottom:14px"></div>
+      <div class="card partner-card hidden" id="pushPromo" style="padding:18px 20px;margin-bottom:14px"></div>
+      <div class="card from-partner hidden" id="fromPartner"></div>
+
+      <div class="card msg-card">
       <div class="heart-wrap" id="heartWrap" role="button" tabindex="0" aria-label="Neue Botschaft anzeigen">
         <div class="pulse-ring"></div>
         <svg class="big-heart sf-logo" viewBox="56 92 400 330" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -55,14 +64,6 @@
           <text id="heartEmoji" display="none"></text>
         </svg>
       </div>
-      <div class="counter-chip" id="tapCounter"></div>
-      <div class="card soft hidden" id="giftTeaser" style="padding:16px 18px;margin-bottom:14px"></div>
-      <div class="card soft hidden" id="iosHint" style="padding:14px 16px;margin-bottom:14px"></div>
-      <div class="card partner-card hidden" id="pairPromo" style="padding:18px 20px;margin-bottom:14px"></div>
-      <div class="card partner-card hidden" id="pushPromo" style="padding:18px 20px;margin-bottom:14px"></div>
-      <div class="card from-partner hidden" id="fromPartner"></div>
-
-      <div class="card msg-card">
         <div class="msg-label" id="msgLabel">Heute für dich</div>
         <div id="msgRe"></div>
         <div class="msg-text" id="msgText" aria-live="polite">…</div>
@@ -148,7 +149,7 @@
     </section>
 
     <!-- ===== Orakel ===== -->
-    <section class="view" id="view-play" aria-labelledby="nav-play">
+    <section class="view" id="view-play" data-area="play" aria-labelledby="nav-play">
       <div class="seg" role="tablist" data-seg="play">
         <button role="tab" data-sub="spiele" class="active" aria-selected="true">🎲 Spiele</button>
         <button role="tab" data-sub="buehne" aria-selected="false">🎤 Bühne</button>
@@ -160,6 +161,7 @@
         <button role="tab" data-sub="intim" aria-selected="false" id="segIntim">🔥 Zweisamkeit</button>
       </div>
       <div class="sub" id="sub-klartext">
+        <button type="button" class="back-row" data-back-sub="spiele">‹ Spielen</button>
         <div class="view-title">Klartext</div>
         <div class="view-sub">Was unausgesprochen bleibt, wächst – hier wird es leicht</div>
         <div id="klartextList" style="width:100%"></div>
@@ -167,11 +169,13 @@
         <p class="about" style="font-size:16px;color:var(--text-muted);margin-top:4px">Die Spiele helfen beim Reden, sie ersetzen keine Paarberatung. Wenn du dich bedroht fühlst oder Angst vor deinem Partner oder deiner Partnerin hast: Hilfetelefon „Gewalt gegen Frauen“ 116 016, Hilfetelefon „Gewalt an Männern“ 0800 123 99 00 – kostenlos und vertraulich.</p>
       </div>
       <div class="sub" id="sub-buehne">
+        <button type="button" class="back-row" data-back-sub="spiele">‹ Spielen</button>
         <div class="view-title">Die Bühne</div>
         <div class="view-sub">Liebesgedichte von euch – lesen, applaudieren, selbst vortragen</div>
         <div id="buehneBox" style="width:100%"></div>
       </div>
       <div class="sub" id="sub-gemeinsam">
+        <button type="button" class="back-row" data-back-sub="spiele">‹ Spielen</button>
         <div class="view-title">Gemeinsam</div>
         <div class="view-sub">Was euch verbindet und was ihr neu entdecken könnt</div>
         <div class="card soft hidden" id="commonBox"></div>
@@ -183,6 +187,7 @@
         <div id="spieleList" style="width:100%"></div>
       </div>
       <div class="sub" id="sub-match">
+        <button type="button" class="back-row" data-back-sub="spiele">‹ Spielen</button>
         <div class="view-title">Gleichklang</div>
         <div class="view-sub">Ihr antwortet getrennt – sichtbar wird nur, was beide wollen</div>
         <div id="deckList" style="width:100%"></div>
@@ -190,6 +195,7 @@
         <div class="row hidden" id="ideaRow" style="margin-top:14px"><button class="pill-btn ghost" id="btnIdea">💡 Idee spenden</button></div>
       </div>
       <div class="sub" id="sub-oracle">
+      <button type="button" class="back-row" data-back-sub="spiele">‹ Spielen</button>
       <div class="view-title">Gänseblümchen-Orakel</div>
       <div class="view-sub">Tippe auf ein Blütenblatt</div>
       <div class="daisy-wrap" id="daisyWrap">
@@ -210,6 +216,7 @@
       <div class="hint" id="daisyHint">Tippe auf ein Blütenblatt, um es abzuzupfen</div>
       </div>
       <div class="sub" id="sub-music">
+        <button type="button" class="back-row" data-back-sub="spiele">‹ Spielen</button>
         <div class="card" id="jingleBox" style="padding:18px 18px"></div>
         <div class="view-title">Liebeslied-Pad</div>
         <div class="view-sub">Tippe Töne, nimm auf, schenk ein Lied</div>
@@ -227,6 +234,7 @@
         </div>
       </div>
       <div class="sub" id="sub-intim">
+        <button type="button" class="back-row" data-back-sub="spiele">‹ Spielen</button>
         <div class="view-title">Zweisamkeit</div>
         <div class="view-sub">Nähe, Flirt und Leidenschaft – nur für euch</div>
         <div id="intimLocked" class="card" style="text-align:center">
@@ -261,7 +269,8 @@
     </section>
 
     <!-- ===== Unsere Zeit ===== -->
-    <section class="view" id="view-time" aria-labelledby="nav-time">
+    <section class="view" id="view-time" data-area="us" aria-labelledby="nav-us">
+      <button type="button" class="back-row" data-back="us">‹ Wir</button>
       <div class="seg" role="tablist" data-seg="time">
         <button role="tab" data-sub="days" class="active" aria-selected="true">📅 Unsere Zeit</button>
         <button role="tab" data-sub="occasions" aria-selected="false">💘 Anlässe</button>
@@ -305,7 +314,8 @@
     </section>
 
     <!-- ===== Gutscheine ===== -->
-    <section class="view" id="view-wishes" aria-labelledby="nav-wishes">
+    <section class="view" id="view-wishes" data-area="us" aria-labelledby="nav-us">
+      <button type="button" class="back-row" data-back="us">‹ Wir</button>
       <div class="seg" role="tablist" data-seg="wishes">
         <button role="tab" data-sub="wishlist" class="active" aria-selected="true">🗺️ Love Map</button>
         <button role="tab" data-sub="thanks" aria-selected="false">🙏 Danke</button>
@@ -341,7 +351,8 @@
     </section>
 
     <!-- ===== Einstellungen ===== -->
-    <section class="view settings-list" id="view-settings" aria-labelledby="nav-settings">
+    <section class="view settings-list" id="view-settings" aria-label="Einstellungen">
+      <button type="button" class="back-row" data-back="home">‹ Zurück</button>
       <div class="sub active" id="sub-prefs">
       <div class="view-title">Einstellungen</div>
       <div class="view-sub">Deine Daten bleiben auf diesem Gerät</div>
@@ -403,15 +414,33 @@
       </div>
       </div>
     </section>
+
+    <!-- ===== Post: alles zwischen euch (3.43.0) ===== -->
+    <section class="view" id="view-post" data-area="post" aria-labelledby="nav-post">
+      <div class="view-title">Post</div>
+      <div id="postList" class="tl"></div>
+    </section>
+
+    <!-- ===== Schicken (3.43.0) ===== -->
+    <section class="view" id="view-send" data-area="send" aria-labelledby="nav-send">
+      <div class="view-title">Etwas schicken</div>
+    </section>
+
+    <!-- ===== Wir (3.43.0) ===== -->
+    <section class="view" id="view-us" data-area="us" aria-labelledby="nav-us">
+      <div class="view-title">Wir</div>
+    </section>
   </main>
 
   <nav class="nav" role="tablist" aria-label="Hauptnavigation">
-    <button role="tab" id="nav-home" data-view="home" class="active" aria-selected="true"><span class="ico">💌<i class="nav-badge hidden" id="navBadge"></i></span>Heute</button>
-    <button role="tab" id="nav-play" data-view="play" aria-selected="false"><span class="ico">🌼<i class="nav-badge hidden" id="navBadgePlay"></i></span>Spielen</button>
-    <button role="tab" id="nav-time" data-view="time" aria-selected="false"><span class="ico">📅</span>Zeit</button>
-    <button role="tab" id="nav-wishes" data-view="wishes" aria-selected="false"><span class="ico">⭐</span>Wünsche</button>
-    <button role="tab" id="nav-settings" data-view="settings" aria-selected="false"><span class="ico">⚙️</span>Mehr</button>
+    <button role="tab" id="nav-home" data-view="home" class="active" aria-selected="true"><span class="ico">🏠</span>Heute</button>
+    <button role="tab" id="nav-post" data-view="post" aria-selected="false"><span class="ico">📬<i class="nav-badge hidden" id="navBadge"></i></span>Post</button>
+    <button role="tab" id="nav-send" data-view="send" class="nav-main" aria-selected="false"><span class="ico" aria-hidden="true">+</span>Schicken</button>
+    <button role="tab" id="nav-play" data-view="play" aria-selected="false"><span class="ico">🎲<i class="nav-badge hidden" id="navBadgePlay"></i></span>Spielen</button>
+    <button role="tab" id="nav-us" data-view="us" aria-selected="false"><span class="ico">💞</span>Wir</button>
   </nav>
+  <!-- frühere Reiter: bleiben als Auslöser für Skripte, die sich daran hängen (3.43.0) -->
+  <div id="navStash" hidden><button type="button" id="nav-time" tabindex="-1">Zeit</button><button type="button" id="nav-wishes" tabindex="-1">Wünsche</button><button type="button" id="nav-settings" tabindex="-1">Einstellungen</button></div>
 </div>
 
 <!-- ===== Onboarding ===== -->
