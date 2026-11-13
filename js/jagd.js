@@ -307,8 +307,10 @@
   }
   async function arCam() {
     if (!ar || ar.stream || ar.paused) return;
-    try { ar.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false }); if (!ar || ar.paused) { ar && ar.stream && ar.stream.getTracks().forEach((t) => t.stop()); if (ar) ar.stream = null; return; } ar.v.srcObject = ar.stream; ar.lay.classList.add('cam'); }
-    catch (e) { ar.lay.classList.remove('cam'); }
+    const me0 = ar; let st0 = null;
+    try { st0 = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false }); } catch (e) { if (ar) ar.lay.classList.remove('cam'); return; }
+    if (!ar || ar !== me0 || ar.paused || ar.stream) { st0.getTracks().forEach((t) => t.stop()); return; } /* 3.38.2: inzwischen geschlossen → Kamera sofort aus (Codex-Prüfung) */
+    ar.stream = st0; ar.v.srcObject = st0; ar.lay.classList.add('cam');
   }
   function arPause() { if (!ar) return; ar.paused = true; if (ar.stream) { ar.stream.getTracks().forEach((t) => t.stop()); ar.stream = null; } ar.lay.classList.remove('cam'); }
   function arResume() { if (!ar || !root || document.querySelector('.jagd-fang') || document.querySelector('.raum-ov')) return; ar.paused = false; if (!root.classList.contains('show-map')) arCam(); }

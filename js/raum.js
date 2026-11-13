@@ -234,7 +234,7 @@
       (can ? '<p class="about" style="font-size:15px;color:var(--text-muted)">Die Falter erscheinen echt im Raum (Raum-AR). Das Kamerabild bleibt auf dem Handy.</p>' : '<p class="about" style="font-size:15px;color:var(--text-muted)">Dieses Handy kann kein Raum-AR – die Falter flattern über dem Kamerabild.</p>') +
       '<div class="row" style="margin-top:10px"><button class="pill-btn ghost" data-cancel>Später</button><button class="pill-btn primary" data-go>Los geht’s</button></div>', (sh) => {
       sh.querySelector('[data-cancel]').onclick = L.closeSheet;
-      sh.querySelector('[data-go]').onclick = () => { L.closeSheet(); C('besuch_go:' + (can ? 'ar' : 'cam')); setTimeout(() => go(can), 80); };
+      sh.querySelector('[data-go]').onclick = () => { L.closeSheet(); C('besuch_go:' + (can ? 'ar' : 'cam')); go(can); }; /* 3.38.2: direkt im Antippen, sonst lehnt Chrome den 3D-Start ab (Codex-Prüfung) */
     });
   }
   function caught(i) {
@@ -246,7 +246,7 @@
     const rest = left(); const mine = [];
     if (ar) {
       const started = await start({ list: rest, title: 'Falter zu Besuch', sub: 'Schau dich langsam im Zimmer um. Tippe auf einen Falter, wenn er nah ist.', onCatch: (i) => { caught(i); mine.push(i); }, onEnd: () => done(mine) });
-      if (started) return; ok = false; L.toast('Raum-AR ließ sich nicht starten – die Falter kommen übers Kamerabild');
+      if (started) return; L.toast('Raum-AR ließ sich nicht starten – die Falter kommen übers Kamerabild');
     }
     const next = () => { const r = left(); if (!r.length || !J() || !J().fangen) return done(mine); J().fangen(r[0], (yes) => { if (yes) { caught(r[0]); mine.push(r[0]); setTimeout(next, 250); } else done(mine); }, 'Falter zu Besuch'); };
     next();
