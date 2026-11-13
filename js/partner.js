@@ -370,7 +370,7 @@
 
   function playDeck(deckId, forcePass) {
     const deck = deckById(deckId); if (!deck) return;
-    if (deck.adult && !S().intim) { L.toast('Erst den Bereich „Zweisamkeit“ unter Mehr einschalten (18+)'); return; }
+    if (deck.adult && !S().intim) { L.toast('Erst den Bereich „Zweisamkeit“ in den Einstellungen ⚙️ einschalten (18+)'); return; }
     const canRelay = !!(paired() && joined() && RELAY);
     const mode = (!forcePass && canRelay) ? 'relay' : 'pass';
     window.LZS && window.LZS.count('deck_open:' + deck.id);

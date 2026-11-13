@@ -164,7 +164,7 @@
           const winnerIsPartner = w === 'b'; // an einem Handy ist „a“ immer die Person, der das Handy gehört
           if (winnerIsPartner && on()) await P().sendCoupon(c);
           else if (winnerIsPartner) L.toast('🎁 ' + you() + ' hat ' + g.prize + ' gut 😉');
-          else { S().coupons.push(Object.assign({ id: uid('c'), used: null, from: you() }, c)); L.save(); L.toast('🎟️ Gutschein liegt unter Wünsche → Gutscheine'); }
+          else { S().coupons.push(Object.assign({ id: uid('c'), used: null, from: you() }, c)); L.save(); L.toast('🎟️ Gutschein liegt unter Wir → Gutscheine'); }
         }
         cp.disabled = true; cp.textContent = '✓ Erledigt';
       };
