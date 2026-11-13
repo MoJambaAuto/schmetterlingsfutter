@@ -267,10 +267,6 @@
     const order = { turn: 0, ready: 1, wait: 2 }; out.sort((a, b) => order[a.kind] - order[b.kind]);
     return out;
   }
-  function lastSent() {
-    const o = (P().outbox || []).slice().reverse().find((x) => x.t !== 'match');
-    return o && Date.now() - o.at < 7 * 864e5 ? o : null;
-  }
   function openDeckFromStatus(deck) {
     const rec = P().matches[deck.id]; const st = deckStatus(deck);
     if (st && (st.kind === 'ready' || st.kind === 'wait')) { showResults(deck, rec); refreshMatches(deck, rec, true).catch(() => {}); }
@@ -785,13 +781,6 @@
     return '<ul class="promo-list"><li><span>💌</span>Botschaften, Jingles und Überraschungen landen direkt bei ' + L.esc(S().receiver) + '</li><li><span>🎯</span>Spiele laufen geheim auf zwei Handys</li><li><span>🦋</span>Euer Schmetterling wächst gemeinsam</li></ul>';
   }
   /* Direkt nach der Einrichtung einmal anbieten */
-  function pairWelcome() {
-    if (!RELAY || paired() || P().pendingPair) return;
-    L.openSheet('<h3>💞 Verbindet eure Handys</h3>' + pairBenefits() + '<div class="row wrap" style="margin-top:16px"><button class="pill-btn primary" data-go>Jetzt verbinden</button><button class="pill-btn ghost" data-cancel>Später</button></div>', (sh) => {
-      sh.querySelector('[data-cancel]').onclick = L.closeSheet;
-      sh.querySelector('[data-go]').onclick = () => { L.closeSheet(); setTimeout(pairSheet, 80); };
-    });
-  }
   function offerPendingPair() {
     const code = P().pendingPair; if (!code || paired()) return;
     if (iosBrowser()) {
@@ -1003,17 +992,9 @@
     if (!html) html = '<p class="zw-one">Gerade ist nichts offen.</p>';
     return { html: '<div class="tl zw">' + html + '</div>', list: extra };
   }
-  /* Punkte an „Spielen“ und an den Reitern, wenn dort jemand wartet oder ein Ergebnis da ist */
+  /* Punkt an „Spielen“, wenn dort jemand wartet oder ein Ergebnis da ist (die Kacheln zeigen es im Katalog selbst) */
   function renderTabDots() {
-    const hot = { spiele: 0, match: 0, gemeinsam: 0, klartext: 0, intim: 0 };
-    activity().forEach((a) => { if (a.kind === 'wait') return; if (a.game) { hot.spiele++; return; } const k = a.deck.adult ? 'intim' : a.deck.talk ? 'klartext' : a.deck.common ? 'gemeinsam' : 'match'; hot[k]++; });
-    const any = Object.keys(hot).some((k) => hot[k]);
-    const nb = $('navBadgePlay'); if (nb) nb.classList.toggle('hidden', !any);
-    document.querySelectorAll('#view-play .seg [data-sub]').forEach((b) => {
-      let dot = b.querySelector('.sub-dot'); const on = !!hot[b.dataset.sub];
-      if (on && !dot) { dot = document.createElement('i'); dot.className = 'sub-dot'; dot.setAttribute('aria-hidden', 'true'); b.appendChild(dot); }
-      if (dot) dot.classList.toggle('hidden', !on);
-    });
+    const nb = $('navBadgePlay'); if (nb) nb.classList.toggle('hidden', !activity().some((a) => a.kind !== 'wait'));
   }
   function renderGiftRadar() {
     const g = $('giftRadar'); if (!g || !window.LZF || !window.LZF.occasionsAll) return;
@@ -1137,7 +1118,7 @@
   setInterval(() => { if (document.visibilityState === 'visible') pull(); }, 45000);
   $('obFinish').addEventListener('click', () => setTimeout(() => { renderAll(); offerPendingPair(); }, 80));
 
-  window.LZP = { createPair, doJoin, searchSheet, searchFormHtml, bindSearch, activity, deckStatus, openDeckFromStatus, explored, lastSent, P, paired, joined, partnerName, sendOrShare, sendCoupon, send, pull, pairSheet, inboxSheet, renderPost, timeline, openItem, react, reactBar, REACTS, playDeck, renderDecks, renderAll, renderGiftRadar, amazonUrl, tips, tipOf, tipsHtml, bindTips, mountTips, leavePair, unread, RELAY, on, inboxType, openMatch, closeMatch, online, pairLink, ideaSheet, reportSheet, iosBrowser, commonSheet, renderCommon, pushOn, pushOff, pushSupported, renderPush, partnerPron: () => (P().partner && P().partner.pron) || '', announce: () => { if (paired() && joined()) send({ t: 'hello', name: S().sender, pron: S().pron || '' }).catch(() => {}); } };
+  window.LZP = { createPair, doJoin, searchSheet, searchFormHtml, bindSearch, activity, deckStatus, openDeckFromStatus, explored, P, paired, joined, partnerName, sendOrShare, sendCoupon, send, pull, pairSheet, inboxSheet, renderPost, timeline, openItem, react, reactBar, REACTS, playDeck, renderDecks, renderAll, renderGiftRadar, amazonUrl, tips, tipOf, tipsHtml, bindTips, mountTips, leavePair, unread, RELAY, on, inboxType, openMatch, closeMatch, online, pairLink, ideaSheet, reportSheet, iosBrowser, commonSheet, renderCommon, pushOn, pushOff, pushSupported, renderPush, partnerPron: () => (P().partner && P().partner.pron) || '', announce: () => { if (paired() && joined()) send({ t: 'hello', name: S().sender, pron: S().pron || '' }).catch(() => {}); } };
   renderAll(); handlePairParam();
   if (window.LZF) { window.LZF.renderPiek(); window.LZF.renderGiftRadar && window.LZF.renderGiftRadar(); }
   /* Erst abholen, wenn alle Skripte geladen sind (naehe.js meldet eigene Nachrichtenarten an) */

@@ -52,7 +52,6 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   outline:2px solid var(--accent-2); outline-offset:2px;
 }
 input, textarea, select { font:inherit; color:var(--text); }
-.sr-only { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
 .hidden { display:none !important; }
 
 #app {
@@ -385,14 +384,6 @@ main { z-index:1; flex:1; padding:8px 24px calc(var(--nav-h) + 24px + env(safe-a
 .nav .ico { position:relative; display:inline-block; }
 .nav-badge { position:absolute; top:-2px; right:-8px; width:9px; height:9px; border-radius:50%; background:var(--accent-deep); border:1.5px solid var(--bg1); box-shadow:0 0 8px var(--glow); }
 .paircode { font-family:var(--serif); font-size:22px; letter-spacing:3px; text-align:center; padding:14px; border:.5px dashed var(--accent-2); border-radius:var(--radius-s); margin:10px 0 14px; user-select:all; -webkit-user-select:all; }
-.inbox-item { display:flex; gap:10px; align-items:flex-start; padding:10px 0; border-bottom:.5px solid var(--line-soft); cursor:pointer; }
-.inbox-item:last-of-type { border-bottom:0; }
-.inbox-item.new .ii-t { color:var(--text); }
-.inbox-item.new .ii-e::after { content:''; display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--accent-deep); margin-left:2px; vertical-align:top; }
-.inbox-item .ii-e { font-size:20px; }
-.inbox-item .ii-b { flex:1; min-width:0; }
-.inbox-item .ii-t { font-family:var(--serif); font-style:italic; font-size:19px; color:var(--text-soft); }
-.inbox-item .ii-m { font-size:16px; color:var(--text-muted); margin-top:2px; }
 
 /* ---------- Gleichklang ---------- */
 .deck { width:100%; display:flex; gap:12px; align-items:center; padding:14px; margin-bottom:10px; background:var(--glass); border:.5px solid var(--line); border-radius:var(--radius-s); text-align:left; color:var(--text); }
@@ -452,7 +443,6 @@ main { z-index:1; flex:1; padding:8px 24px calc(var(--nav-h) + 24px + env(safe-a
 .kz-s.on { border-color:var(--accent-2); background:var(--glass); }
 .kz-sep { width:1px; height:24px; background:var(--line-soft); }
 .pic-big { display:block; width:100%; max-width:300px; margin:0 auto; border-radius:16px; border:.5px solid var(--line); }
-.inbox-item .ii-img { width:72px; height:72px; object-fit:cover; border-radius:10px; border:.5px solid var(--line-soft); display:block; margin-bottom:6px; }
 .from-partner { border-color:var(--accent-2); box-shadow:0 0 26px var(--glow); text-align:center; }
 .from-partner .fp-text { font-family:var(--serif); font-style:italic; font-size:20px; line-height:1.55; margin-top:8px; }
 .qr { width:190px; max-width:70%; margin:6px auto 12px; padding:8px; background:#fff; border-radius:14px; }
@@ -559,9 +549,6 @@ button.reason-text { background:transparent; border:0; padding:0; text-align:lef
 .bfly-big { font-size:96px; line-height:1.1; text-align:center; margin:4px 0 8px; }
 .bfly-party { text-align:center; }
 .fly { display:inline-block; }
-.swarm { display:flex; flex-wrap:wrap; gap:10px; }
-.swarm-i { display:flex; flex-direction:column; align-items:center; width:92px; font-size:40px; }
-.swarm-i small { font-size:16px; color:var(--text-soft); text-align:center; line-height:1.25; }
 .futter-dots { display:flex; gap:8px; }
 .futter-dots i { width:22px; height:22px; border-radius:50%; border:2px solid var(--accent-2); }
 .futter-dots i.on { background:var(--accent-2); }
@@ -578,11 +565,6 @@ a.pill-btn { text-decoration:none; display:inline-flex; align-items:center; just
 .msg-text, .fp-text, #sheet .about { white-space:pre-line; }
 
 /* 3.11.1 Schmetterlings-Grafik und Schwarm-Raster */
-.fly-svg { display:inline-block; vertical-align:middle; }
-.fly-svg.rare { filter:drop-shadow(0 0 6px #ffd76a); }
-.swarm { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px 8px; }
-.swarm-i { width:auto; font-size:46px; }
-.swarm-i small { hyphens:manual; overflow-wrap:anywhere; }
 .bfly-pic svg, .bfly-big svg { filter:drop-shadow(0 2px 8px rgba(0,0,0,.35)); }
 
 /* 3.12.0 Verbinden-Hinweis */
@@ -598,15 +580,11 @@ a.pill-btn { text-decoration:none; display:inline-flex; align-items:center; just
 @keyframes sfFlapL { 0%,100% { transform:scaleX(1); } 50% { transform:scaleX(.8); } }
 [data-motion="off"] .sf-logo .sf-lw, [data-motion="off"] .sf-logo .sf-rw { animation:none; }
 .pulse-ring { left:50%; margin-left:-65px; }
-.heart-wings { transform-box:fill-box; transform-origin:center; animation:wingFlap 2.5s ease-in-out infinite; }
-@keyframes wingFlap { 0%,100% { transform:scaleX(1); } 50% { transform:scaleX(.84); } }
-[data-motion="off"] .heart-wings { animation:none; }
 
 /* 3.15.0 Frag Papillon und Kachel-Gruppen */
 .frag-bar { position:sticky; top:0; z-index:30; padding:10px 16px 8px; background:linear-gradient(var(--bg0) 72%, transparent); }
 .frag-bar button { width:100%; min-height:48px; border-radius:24px; border:1.5px solid var(--line); background:var(--bg1); color:var(--text-soft); font-family:inherit; font-size:18px; font-weight:700; text-align:left; padding:0 18px; display:flex; gap:10px; align-items:center; cursor:pointer; }
 .header { padding-top:6px; }
-.tile-head { margin:8px 0 10px; }
 .frag-row { display:flex; align-items:center; gap:12px; width:100%; text-align:left; background:transparent; border:0; border-bottom:.5px solid var(--line-soft); color:var(--text); padding:12px 2px; font-family:inherit; font-size:19px; cursor:pointer; }
 .frag-e { width:30px; text-align:center; flex:none; font-size:22px; }
 .frag-b { flex:1; min-width:0; display:flex; flex-direction:column; }
@@ -641,21 +619,10 @@ a.pill-btn { text-decoration:none; display:inline-flex; align-items:center; just
 .d-prog { height:5px; border-radius:3px; background:var(--glass-2); margin-top:8px; overflow:hidden; }
 .d-prog i { display:block; height:100%; background:linear-gradient(90deg,var(--accent-2),var(--accent)); border-radius:3px; }
 .d-meta { font-size:15px; color:var(--text-muted); margin-top:4px; }
-.act-row { width:100%; display:flex; gap:10px; align-items:center; text-align:left; color:var(--text); background:var(--glass); border:1px solid var(--line); border-radius:var(--radius-s); padding:10px 12px; margin-top:8px; }
-.act-row.st-turn { border-color:var(--accent-2); }
-.act-row .ai { font-size:26px; flex-shrink:0; }
-.act-row .ab { flex:1; min-width:0; display:flex; flex-direction:column; align-items:flex-start; }
-.act-row .at { font-family:var(--serif); font-size:18px; line-height:1.25; }
-.act-row .d-go { font-size:22px; color:var(--accent-2); }
-.act-note { font-size:16px; color:var(--text-soft); margin-top:8px; line-height:1.4; }
-.act-note.sent { color:var(--text-muted); }
-.act-note.sent.seen { color:var(--accent-2); }
-.act-note i { font-style:normal; color:var(--text-muted); }
 .pstat { display:inline-block; margin:2px 0 12px; font-size:16px; font-weight:700; border-radius:12px; padding:4px 12px; border:1px solid var(--line); color:var(--text-soft); }
 .pstat.seen { color:var(--accent-2); border-color:var(--accent-2); }
 .round-note { font-size:16px; color:var(--text-soft); margin-top:14px; line-height:1.45; }
 #navBadgePlay, #navBadge { width:11px; height:11px; }
-.sub-dot { display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--accent-deep); margin-left:5px; vertical-align:middle; box-shadow:0 0 8px var(--glow); }
 .own-search { display:flex; gap:8px; margin-top:12px; }
 .own-search input { flex:1; min-width:0; font-size:17px; padding:9px 12px; border-radius:14px; border:1px solid var(--line); background:var(--glass-2); color:var(--text); }
 
