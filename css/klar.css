@@ -157,9 +157,9 @@ html[data-view]:not([data-view="home"]) #app .occasion-chip { display:none; }
 #app .set-state { font-size:19px; font-weight:700; margin:0 0 4px; color:var(--text-soft); }
 #app .set-state.on { color:var(--text); }
 #app .switch { min-height:56px; gap:12px; }
-#app .toggle { width:56px; height:32px; border-radius:16px; }
-#app .toggle::after { width:26px; height:26px; top:2px; left:2px; }
-#app .toggle[aria-checked="true"]::after { transform:translateX(24px); }
+#app .toggle { width:72px; height:44px; border-radius:22px; }
+#app .toggle::after { width:36px; height:36px; top:3px; left:3px; }
+#app .toggle[aria-checked="true"]::after { transform:translateX(28px); }
 #app .theme-sw { height:48px; }
 #app details.about { padding:0 16px; }
 #app details.about > summary { min-height:56px; display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:19px; font-weight:700; color:var(--text); cursor:pointer; list-style:none; }
