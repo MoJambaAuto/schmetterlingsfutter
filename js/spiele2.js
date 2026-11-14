@@ -142,7 +142,7 @@
 
   /* ---------- Zug abschließen ---------- */
   async function commit(g, opts) {
-    g.n++; g.updated = Date.now(); L.save();
+    g.n++; g.updated = Date.now(); L.save(); livePending = null; /* echter Zug ersetzt wartende Live-Stände */
     if (g.mode === 'relay') {
       try { await P().send({ t: 'spiel', k: g.kind, id: g.id, n: g.n, st: g.st, turn: g.turn, prize: g.prize, winner: g.winner || null, op: g.n === 1 ? 'new' : 'move' }); }
       catch (e) { L.toast('Senden fehlgeschlagen – der Zug ist gespeichert, nochmal öffnen und erneut senden'); g.unsent = true; L.save(); }
@@ -590,8 +590,13 @@
      Wer ein Spiel über zwei Handys offen hat, meldet das still an (op 'watch', alle 60 s erneuert, beim Schließen 'unwatch').
      Solange der Schatz zuschaut, geht jeder Wurf und jeder Einzelzug als stille Nachricht (op 'live') hinterher.
      Bei offenem Spiel holt die App alle 2,5 s ab. Live-Nachrichten tragen die alte Zugnummer n – ältere Versionen verwerfen sie still. */
-  const liveSeen = {}; let liveChain = Promise.resolve(), pollT = null, watchT = null;
-  function sendQuiet(g, op, ev) { if (g.mode !== 'relay' || !on()) return; const o = { t: 'spiel', k: g.kind, id: g.id, n: g.n, st: op === 'live' ? g.st : {}, turn: g.turn, op, live: true }; if (ev) o.ev = ev; liveChain = liveChain.then(() => P().send(o)).catch(() => {}); }
+  const liveSeen = {}; let liveChain = Promise.resolve(), pollT = null, watchT = null, liveQ = [], liveBusy = false;
+  function sendQuiet(g, op, ev) { if (g.mode !== 'relay' || !on()) return; const o = { t: 'spiel', k: g.kind, id: g.id, n: g.n, st: op === 'live' ? JSON.parse(JSON.stringify(g.st)) : {}, turn: g.turn, op, live: true }; /* 3.47.1: Kopie – sonst tragen alle wartenden Nachrichten schon den Endstand */ if (ev) o.ev = ev;
+    if (op !== 'live') { liveChain = liveChain.then(() => P().send(o)).catch(() => {}); return; }
+    livePending = o; livePump(); }
+  /* 3.47.1: Live-Stände nie stapeln – höchstens einer unterwegs, einer wartet (der neueste); bei langsamem Netz entfallen Zwischenstände statt nachzuhängen */
+  let livePending = null, liveSending = false;
+  async function livePump() { if (liveSending || !livePending) return; liveSending = true; const o = livePending; livePending = null; try { await P().send(o); } catch (e) {} liveSending = false; livePump(); }
   function liveSend(g, ev) { if (g && g.mode === 'relay' && g.watchUntil > Date.now() && g.turn !== 'done') sendQuiet(g, 'live', ev); }
   function liveStart(g) {
     liveStop(null); if (!g || g.mode !== 'relay' || g.turn === 'done' || !on()) return;
@@ -607,10 +612,18 @@
     if (obj.op === 'unwatch') { g.watchUntil = 0; return false; }
     /* op 'live': nur Vorschau des laufenden Zugs, nur bei offenem Spiel, nie während man selbst dran ist */
     if (obj.n !== g.n || curId !== g.id || myTurn(g) || g.turn === 'done') return false;
-    g.st = obj.st; liveSeen[g.id] = Date.now(); if (obj.ev === 'roll') rolledAt = Date.now();
-    render(); if (obj.ev === 'roll' || obj.ev === 'hit') L.haptic(obj.ev === 'hit' ? 20 : 6);
-    await new Promise((r) => setTimeout(r, obj.ev === 'roll' ? 900 : 550)); /* mehrere Schritte nacheinander zeigen */
-    return false;
+    liveSeen[g.id] = Date.now(); liveQ.push({ id: g.id, n: obj.n, st: obj.st, ev: obj.ev });
+    if (liveQ.length > 3) liveQ.splice(0, liveQ.length - 3); /* hängt die Anzeige hinterher: ältere Zwischenschritte überspringen */
+    livePlay(); return false;
+  }
+  /* 3.47.1: Zwischenschritte nacheinander zeigen, ohne das Abholen aufzuhalten (der echte Zugwechsel kommt sofort durch) */
+  function livePlay() {
+    if (liveBusy) return; const it = liveQ.shift(); if (!it) return;
+    const g = store()[it.id];
+    if (!g || it.n !== g.n || curId !== g.id || myTurn(g) || g.turn === 'done') return livePlay();
+    liveBusy = true; g.st = it.st; if (it.ev === 'roll') rolledAt = Date.now();
+    render(); if (it.ev === 'roll' || it.ev === 'hit') L.haptic(it.ev === 'hit' ? 20 : 6);
+    setTimeout(() => { liveBusy = false; livePlay(); }, it.ev === 'roll' ? 700 : 400);
   }
   /* Spiel-Menü: So geht’s · Neu starten · Spiel beenden (3.34.0) */
   function menu(g) {
@@ -674,6 +687,7 @@
     if (!KINDS[obj.k] || typeof obj.id !== 'string' || obj.id.length > 40 || !Number.isInteger(obj.n) || !obj.st || typeof obj.st !== 'object') return false;
     if (obj.op === 'watch' || obj.op === 'unwatch' || obj.op === 'live') return liveGot(obj);
     if (store()[obj.id]) liveSeen[obj.id] = 0;
+    liveQ = liveQ.filter((x) => x.id !== obj.id);
     const gs = store(); let g = gs[obj.id];
     if (!g) { if (obj.op !== 'new') return false; g = gs[obj.id] = { id: obj.id, kind: obj.k, mode: 'relay', mine: false, me: 'b', turn: 'a', n: 0, prize: String(obj.prize || '').slice(0, 60), created: created || Date.now(), updated: Date.now(), st: null }; }
     if (obj.n <= g.n) return false; // schon bekannt
