@@ -2,7 +2,8 @@
    Läuft als ERSTES Skript. Auf der neuen Adresse tut es nichts.
    Alte Adresse im Browser-Tab: App-Speicher verschlüsselt (AES-GCM, Schlüssel nur im Link-Anker) über den Relay mitnehmen,
    dann weiter zu umzug.html auf der neuen Adresse – dort wird eingespielt. Ohne Daten: einfach weiterleiten.
-   Play-App (TWA) bleibt vorerst hier: dort sieht man keine Adresse, und erst ein neues Play-Paket kennt die neue.
+   Play-App (TWA, ab 3.48.2): zieht automatisch mit um (kein Hinweis nötig, dort sieht man keine Adresse), damit das
+   nächste Play-Paket mit der neuen Adresse die Daten schon vorfindet. Bis dahin zeigt die alte Play-App oben die Adresse.
    Installierte Web-App (Startbildschirm): kein Zwang, nur ein Hinweis mit Knopf.
    Test am PC: localStorage 'sf.umzugTest' = 'http://127.0.0.1:8003/' auf localhost:8000 → verhält sich wie die alte Adresse. */
 (function () {
@@ -19,7 +20,7 @@
   if (location.hostname !== OLD_HOST && !test) return;
   if (test) { NEW = test; RELAY = 'http://localhost:8787'; }
   try { if (/^android-app:\/\/de\.mojamba\.schmetterlingsfutter/.test(document.referrer || '')) set('sf.twa', '1'); } catch (e) {}
-  if (get('sf.twa') === '1') return;
+  var twa = get('sf.twa') === '1';
   try { if (sessionStorage.getItem('sf.umzugSkip') === '1') return; } catch (e) {}
 
   var rest = location.search + location.hash;
@@ -28,7 +29,7 @@
 
   window.SF_UMZUG = { NEW: NEW };
   if (!get('luzifer.v2') || (moved && moved.taken)) { stopApp(); location.replace(NEW + rest); return; }
-  if (standalone) { document.addEventListener('DOMContentLoaded', banner); return; }
+  if (standalone && !twa) { document.addEventListener('DOMContentLoaded', banner); return; }
   stopApp(); go();
 
   /* Restliche App-Skripte nicht mehr starten (sonst holt sie z. B. Nachrichten ab, die dann nur hier lägen). */
