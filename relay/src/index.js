@@ -19,7 +19,9 @@ const MSG_DAYS = 30;
    die neue (app.schmetterlingsfutter.de) holt ihn ab und meldet „fertig“. Der Dienst sieht nur Zufallsbytes. */
 const UMZUG_MAX = 10 * 1024 * 1024;   // Bytes je Umzug
 const UMZUG_PART = 1024 * 1024;       // Bytes je D1-Zeile (Grenze 2 MB)
-const UMZUG_PER_DAY = 3000;           // Umzüge insgesamt je Tag
+const UMZUG_PER_DAY = 500;            // Umzüge insgesamt je Tag
+const UMZUG_IP_DAY = 10;              // Umzüge je Absender (gekürzte Prüfsumme aus Tag + IP) und Tag
+const UMZUG_PARTS_OPEN = 150;         // höchstens so viele MB warten gleichzeitig auf Abholung (D1 kostenlos: 500 MB je Datenbank)
 const UMZUG_KEEP_H = 48;
 const isUmzugId = (s) => typeof s === 'string' && /^[a-f0-9]{32}$/.test(s);
 async function umzug(url, req, env) {
@@ -32,6 +34,9 @@ async function umzug(url, req, env) {
     const day = new Date(t).toISOString().slice(0, 10);
     const c = await env.DB.prepare('SELECT COUNT(*) AS n FROM umzug_meta WHERE day = ?').bind(day).first();
     if (c && c.n >= UMZUG_PER_DAY) return err('busy', 429, req, env);
+    const open = await env.DB.prepare('SELECT COALESCE(SUM(parts), 0) AS n FROM umzug_meta WHERE taken = 0 AND created > ?').bind(t - UMZUG_KEEP_H * 3600000).first();
+    if (open && open.n + Math.ceil(buf.length / UMZUG_PART) > UMZUG_PARTS_OPEN) return err('busy', 429, req, env);
+    if (!(await rate(env, req, t, 'umzug', UMZUG_IP_DAY))) return err('limit', 429, req, env);
     const id = randomHex(16), parts = Math.ceil(buf.length / UMZUG_PART), st = [];
     for (let i = 0; i < parts; i++) st.push(env.DB.prepare('INSERT INTO umzug (id, part, data) VALUES (?, ?, ?)').bind(id, i, buf.slice(i * UMZUG_PART, (i + 1) * UMZUG_PART)));
     st.push(env.DB.prepare('INSERT INTO umzug_meta (id, parts, created, day, taken) VALUES (?, ?, ?, ?, 0)').bind(id, parts, t, day));
@@ -71,7 +76,8 @@ function randomHex(bytes) {
 function corsHeaders(req, env) {
   const origin = req.headers.get('Origin') || '';
   const allowed = (env.ALLOWED_ORIGINS || '').split(',').map((s) => s.trim()).filter(Boolean);
-  const ok = allowed.includes(origin) || allowed.includes('*');
+  const dev = env.DEV === '1' && /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin); // nur `wrangler dev --var DEV:1`
+  const ok = allowed.includes(origin) || dev;
   return {
     'Access-Control-Allow-Origin': ok ? origin : allowed[0] || 'null',
     'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
@@ -89,6 +95,14 @@ const isDev = (s) => typeof s === 'string' && /^[a-f0-9]{16,64}$/.test(s);
 const isTok = (s) => typeof s === 'string' && /^[a-f0-9]{32,64}$/.test(s);
 const isPair = (s) => typeof s === 'string' && /^[A-Z2-9]{6}$/.test(s);
 const isDeck = (s) => typeof s === 'string' && /^[a-z0-9_-]{1,32}$/.test(s);
+const isJt = (s) => typeof s === 'string' && /^[a-f0-9]{32}$/.test(s);
+/* Vergleich ohne Zeitverrat (Laufzeit hängt nicht davon ab, ab welcher Stelle die Zeichenfolgen abweichen) */
+function sameStr(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) return false;
+  let d = 0; for (let i = 0; i < a.length; i++) d |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return d === 0;
+}
+const PAIR_NEW_IP_DAY = 20, PAIR_NEW_DAY = 3000, PAIR_JOIN_IP_DAY = 30;
 const now = () => Date.now();
 
 /* Idee spenden: anonyme Vorschläge für neue Inhalte. Keine Paar- oder Geräte-Kennung, nur Datum, Art und Text. */
@@ -105,9 +119,10 @@ async function shortHash(text) {
    Die App schickt höchstens einmal am Tag die Zähler der Vortage: {ver, days:[{day, c:{schlüssel:anzahl}, q:{quelle:{begriff:anzahl}}}]}.
    Keine Kennung, keine Uhrzeit. Gespeichert wird nur die Summe je Tag, Version und Schlüssel. */
 const STATS_KEY = /^[a-z0-9_:.-]{1,64}$/;
+const STATS_ROWS_IP_DAY = 1500, STATS_ROWS_DAY = 30000; // geschriebene Zeilen je Absender bzw. insgesamt je Tag
 const STATS_TERM = /^[a-z0-9äöüß][a-z0-9äöüß .&+-]{1,39}$/;
 const STATS_SRC = ['shop', 'frag'];
-const STATS_MAX_KEYS = 300, STATS_MAX_N = 500, STATS_MAX_TERMS = 30, STATS_PER_DAY = 200, STATS_TOTAL_DAY = 50000, STATS_KEEP_DAYS = 400;
+const STATS_MAX_KEYS = 300, STATS_MAX_N = 500, STATS_MAX_TERMS = 30, STATS_PER_DAY = 20, STATS_TOTAL_DAY = 20000, STATS_KEEP_DAYS = 400;
 function statsDays(body, t) {
   if (!body || typeof body.ver !== 'string' || !/^\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(body.ver) || !Array.isArray(body.days) || !body.days.length || body.days.length > 7) return null;
   const today = new Date(t).toISOString().slice(0, 10), oldest = new Date(t - 8 * 864e5).toISOString().slice(0, 10), out = [];
@@ -198,13 +213,22 @@ function buOut(r, voter) {
   return { id: r.id, title: r.title, body: r.body, author: r.author, cat: r.cat, claps: r.claps, wings: r.wings, created: r.created, week: r.week, yt: r.yt || '', gift: !!r.gift, aid: String(r.akey || '').slice(0, 10), mine: !!(voter && r.akey === voter) };
 }
 const buScore = (r) => r.claps + 3 * r.wings;
-async function buRate(env, req, t, kind, limit) {
+/* Bremse je Absender: gekürzte Prüfsumme aus Tag und IP-Adresse (Tabelle buehne_rate, wird am Folgetag gelöscht).
+   Gezählt wird nur, was durchgelassen wird; abgelehnte Anfragen schreiben nichts (schont das Schreibkontingent). */
+async function rate(env, req, t, kind, limit, add) {
+  const inc = add || 1;
   const day = new Date(t).toISOString().slice(0, 10);
   const who = await shortHash(day + '|' + (req.headers.get('CF-Connecting-IP') || 'local') + '|bu');
   const row = await env.DB.prepare('SELECT n FROM buehne_rate WHERE day = ? AND who = ? AND kind = ?').bind(day, who, kind).first();
-  if (row && row.n >= limit) return false;
-  await env.DB.prepare('INSERT INTO buehne_rate (day, who, kind, n) VALUES (?, ?, ?, 1) ON CONFLICT(day, who, kind) DO UPDATE SET n = n + 1').bind(day, who, kind).run();
+  if (row && row.n + inc > limit) return false;
+  await env.DB.prepare('INSERT INTO buehne_rate (day, who, kind, n) VALUES (?, ?, ?, ?) ON CONFLICT(day, who, kind) DO UPDATE SET n = n + excluded.n').bind(day, who, kind, inc).run();
   return true;
+}
+/* Gesamtbremse je Tag und Art (alle Absender zusammen), damit das Schreibkontingent von D1 nie aufgebraucht wird */
+async function rateTotal(env, t, kind, limit) {
+  const day = new Date(t).toISOString().slice(0, 10);
+  const r = await env.DB.prepare('SELECT COALESCE(SUM(n), 0) AS n FROM buehne_rate WHERE day = ? AND kind = ?').bind(day, kind).first();
+  return !(r && r.n >= limit);
 }
 async function buList(env, body, t) {
   const voter = isKey(body.key) ? await keyHash(body.key) : null;
@@ -263,7 +287,7 @@ async function buehne(path, req, env, body, t) {
     if (total && total.n >= BU.postsTotalDay) return [429, { error: 'later' }];
     const dup = await env.DB.prepare("SELECT id FROM poems WHERE body = ? AND status != 'removed' LIMIT 1").bind(text).first();
     if (dup) return [409, { error: 'dup' }];
-    if (!(await buRate(env, req, t, 'post', BU.postsIpDay))) return [429, { error: 'limit' }];
+    if (!(await rate(env, req, t, 'post', BU.postsIpDay))) return [429, { error: 'limit' }];
     const flag = BU_REVIEW.test(title + ' ' + text + ' ' + author) ? 'wort' : null;
     const status = flag ? 'review' : 'live';
     const r = await env.DB.prepare('INSERT INTO poems (created, week, title, body, author, cat, akey, yt, gift, shop, status, flag) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
@@ -280,7 +304,7 @@ async function buehne(path, req, env, body, t) {
       const w = await env.DB.prepare("SELECT COUNT(*) AS n FROM poem_votes WHERE voter = ? AND kind = 'wing' AND day = ?").bind(me, day).first();
       if (w && w.n >= BU.wingsPerDay) return [429, { error: 'wings' }];
     }
-    if (!(await buRate(env, req, t, 'vote', BU.votesIpDay))) return [429, { error: 'limit' }];
+    if (!(await rate(env, req, t, 'vote', BU.votesIpDay))) return [429, { error: 'limit' }];
     const ins = await env.DB.prepare('INSERT OR IGNORE INTO poem_votes (poem_id, voter, kind, day) VALUES (?, ?, ?, ?)').bind(p.id, me, kind, day).run();
     if (ins.meta && ins.meta.changes) await env.DB.prepare('UPDATE poems SET ' + (kind === 'wing' ? 'wings = wings + 1' : 'claps = claps + 1') + ' WHERE id = ?').bind(p.id).run();
     const now2 = await env.DB.prepare('SELECT claps, wings FROM poems WHERE id = ?').bind(p.id).first();
@@ -292,7 +316,7 @@ async function buehne(path, req, env, body, t) {
     if (!reason || !Number.isInteger(body.id)) return [400, { error: 'input' }];
     const p = await env.DB.prepare("SELECT id, reports, status FROM poems WHERE id = ? AND status != 'removed'").bind(body.id).first();
     if (!p) return [404, { error: 'unknown' }];
-    if (!(await buRate(env, req, t, 'report', BU.reportsIpDay))) return [429, { error: 'limit' }];
+    if (!(await rate(env, req, t, 'report', BU.reportsIpDay))) return [429, { error: 'limit' }];
     const note = buClean(typeof body.note === 'string' ? body.note : '', false).slice(0, 200) || null;
     const ins = await env.DB.prepare('INSERT OR IGNORE INTO poem_votes (poem_id, voter, kind, day, reason) VALUES (?, ?, ?, ?, ?)').bind(p.id, me, 'report', day, reason + (note ? ': ' + note : '')).run();
     if (ins.meta && ins.meta.changes) {
@@ -324,8 +348,8 @@ async function auth(env, body) {
   const p = await env.DB.prepare('SELECT * FROM pairs WHERE id = ?').bind(body.pair).first();
   if (!p) return null;
   let role = null;
-  if (p.a_dev === body.dev && p.a_tok === body.token) role = 'a';
-  else if (p.b_dev === body.dev && p.b_tok === body.token) role = 'b';
+  if (p.a_dev === body.dev && sameStr(p.a_tok, body.token)) role = 'a';
+  else if (p.b_dev && p.b_dev === body.dev && sameStr(p.b_tok, body.token)) role = 'b';
   if (!role) return null;
   const other = role === 'a' ? p.b_dev : p.a_dev;
   return { pair: p, role, dev: body.dev, other };
@@ -360,10 +384,13 @@ async function handle(req, env, ctx) {
   /* ---- Paar anlegen ---- */
   if (url.pathname === '/pair/new') {
     if (!isDev(body.dev)) return err('dev', 400, req, env);
+    if (body.jt !== undefined && !isJt(body.jt)) return err('input', 400, req, env);
+    if (!(await rateTotal(env, t, 'pairnew', PAIR_NEW_DAY))) return err('later', 429, req, env);
+    if (!(await rate(env, req, t, 'pairnew', PAIR_NEW_IP_DAY))) return err('limit', 429, req, env);
     for (let i = 0; i < 5; i++) {
       const id = randomCode(6), tok = randomHex(16);
       try {
-        await env.DB.prepare('INSERT INTO pairs (id, created, a_dev, a_tok, last_seen) VALUES (?, ?, ?, ?, ?)').bind(id, t, body.dev, tok, t).run();
+        await env.DB.prepare('INSERT INTO pairs (id, created, a_dev, a_tok, last_seen, jt) VALUES (?, ?, ?, ?, ?, ?)').bind(id, t, body.dev, tok, t, body.jt || null).run();
         return json({ pair: id, token: tok }, 200, req, env);
       } catch (e) { /* ID-Kollision: nochmal */ }
     }
@@ -372,8 +399,11 @@ async function handle(req, env, ctx) {
   /* ---- Paar beitreten ---- */
   if (url.pathname === '/pair/join') {
     if (!isPair(body.pair) || !isDev(body.dev)) return err('input', 400, req, env);
+    if (!(await rate(env, req, t, 'pairjoin', PAIR_JOIN_IP_DAY))) return err('limit', 429, req, env);
     const p = await env.DB.prepare('SELECT * FROM pairs WHERE id = ?').bind(body.pair).first();
     if (!p) return err('unknown', 404, req, env);
+    /* Neue Paare (ab 3.48.0) verlangen den Beitritts-Nachweis aus dem geheimen Teil des Codes – die Paar-ID allein reicht nicht */
+    if (p.jt && !(isJt(body.jt) && sameStr(body.jt, p.jt))) return err(isJt(body.jt) ? 'unknown' : 'update', isJt(body.jt) ? 404 : 426, req, env);
     if (p.a_dev === body.dev) return err('same device', 409, req, env);
     if (p.b_dev && p.b_dev !== body.dev) return err('full', 409, req, env);
     const tok = randomHex(16);
@@ -408,6 +438,9 @@ async function handle(req, env, ctx) {
     if (total && total.n >= STATS_TOTAL_DAY) return err('later', 429, req, env);
     const mine = await env.DB.prepare('SELECT n FROM stats_rate WHERE day = ? AND who = ?').bind(day, who).first();
     if (mine && mine.n >= STATS_PER_DAY) return err('limit', 429, req, env);
+    const rows = days.reduce((n, d) => n + d.cc.length + d.qq.length, 0);
+    if (!(await rateTotal(env, t, 'statsrows', STATS_ROWS_DAY))) return err('later', 429, req, env);
+    if (!(await rate(env, req, t, 'statsrows', STATS_ROWS_IP_DAY, Math.max(1, rows)))) return err('limit', 429, req, env);
     const st = [env.DB.prepare('INSERT INTO stats_rate (day, who, n) VALUES (?, ?, 1) ON CONFLICT(day, who) DO UPDATE SET n = n + 1').bind(day, who)];
     days.forEach((d) => {
       d.cc.forEach(([k, n]) => st.push(env.DB.prepare('INSERT INTO stats (day, ver, k, n) VALUES (?, ?, ?, ?) ON CONFLICT(day, ver, k) DO UPDATE SET n = n + excluded.n').bind(d.day, body.ver, k, n)));
@@ -419,7 +452,7 @@ async function handle(req, env, ctx) {
 
   const a = await auth(env, body);
   if (!a) return err('auth', 401, req, env);
-  await env.DB.prepare('UPDATE pairs SET last_seen = ? WHERE id = ?').bind(t, a.pair.id).run();
+  if (t - (a.pair.last_seen || 0) > 3600000) await env.DB.prepare('UPDATE pairs SET last_seen = ? WHERE id = ?').bind(t, a.pair.id).run(); // höchstens stündlich: spart Schreibkontingent
 
   /* ---- Status ---- */
   if (url.pathname === '/status') {
@@ -528,7 +561,7 @@ async function cleanup(env) {
 export default {
   async fetch(req, env, ctx) {
     try { return await handle(req, env, ctx); }
-    catch (e) { return json({ error: 'server', detail: String(e && e.message || e) }, 500, req, env); }
+    catch (e) { console.error('relay', e && e.stack || e); return json({ error: 'server' }, 500, req, env); } // Einzelheiten nur im Cloudflare-Protokoll
   },
   async scheduled(event, env, ctx) { ctx.waitUntil(cleanup(env)); }
 };

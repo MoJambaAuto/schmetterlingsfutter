@@ -26,11 +26,22 @@
   function randomCode(len) { const b = new Uint8Array(len); crypto.getRandomValues(b); let s = ''; for (let i = 0; i < len; i++) s += ALPHABET[b[i] % ALPHABET.length]; return s; }
   function randomHex(n) { const b = new Uint8Array(n); crypto.getRandomValues(b); return Array.from(b, (x) => x.toString(16).padStart(2, '0')).join(''); }
   function devId() { const s = P(); if (!s.deviceId) { s.deviceId = randomHex(16); L.save(); } return s.deviceId; }
-  const fmtCode = (pair, secret) => pair + '-' + secret.slice(0, 6) + '-' + secret.slice(6);
+  /* 3.48.0: Geheimer Teil des Codes 20 Zeichen (100 Bit) statt 12 (60 Bit). Alte 18-stellige Codes gelten weiter. */
+  const SECRET_LEN = 20;
+  const fmtCode = (pair, secret) => pair + '-' + (secret.length === 12 ? secret.slice(0, 6) + '-' + secret.slice(6) : secret.match(/.{1,5}/g).join('-'));
   function parseCode(raw) {
     const clean = String(raw || '').toUpperCase().replace(/[^A-Z0-9]/g, '').replace(/0/g, 'O').replace(/1/g, 'I');
-    if (clean.length !== 18 || !/^[A-Z2-9]+$/.test(clean)) return null;
+    if ((clean.length !== 18 && clean.length !== 6 + SECRET_LEN) || !/^[A-Z2-9]+$/.test(clean)) return null;
     return { pair: clean.slice(0, 6), secret: clean.slice(6) };
+  }
+  const CODE_HINT = 'Code prüfen – 26 Zeichen wie ABCDEF-GHJKL-MNPQR-STUVW-XYZ23';
+  /* Beitritts-Nachweis: aus dem geheimen Teil abgeleitet (HKDF, eigener Zweck), verrät den Schlüssel nicht.
+     Der Dienst lässt nur beitreten, wer ihn kennt – die Paar-ID allein reicht nicht. */
+  async function joinProof(secret) {
+    if (!subtle) return undefined;
+    const base = await subtle.importKey('raw', enc.encode(secret), 'HKDF', false, ['deriveBits']);
+    const bits = await subtle.deriveBits({ name: 'HKDF', hash: 'SHA-256', salt: enc.encode('schmetterlingsfutter|join'), info: enc.encode('join') }, base, 128);
+    return Array.from(new Uint8Array(bits), (x) => x.toString(16).padStart(2, '0')).join('');
   }
 
   /* ---------- Krypto ---------- */
@@ -72,13 +83,14 @@
 
   /* ---------- Koppeln ---------- */
   async function createPair() {
-    const r = await post('/pair/new', { dev: devId() }, true);
-    P().partner = { pair: r.pair, token: r.token, secret: randomCode(12), role: 'a', joined: false, name: '', since: new Date().toISOString() };
+    const secret = randomCode(SECRET_LEN);
+    const r = await post('/pair/new', { dev: devId(), jt: await joinProof(secret) }, true);
+    P().partner = { pair: r.pair, token: r.token, secret, role: 'a', joined: false, name: '', since: new Date().toISOString() };
     L.save(); keys = null; return P().partner;
   }
   async function joinPair(code) {
-    const c = parseCode(code); if (!c) throw new Error('Code unvollständig – 18 Zeichen, z. B. ABCDEF-GHJKLM-NPQRST');
-    const r = await post('/pair/join', { pair: c.pair, dev: devId() }, true);
+    const c = parseCode(code); if (!c) throw new Error(CODE_HINT);
+    const r = await post('/pair/join', { pair: c.pair, dev: devId(), jt: await joinProof(c.secret) }, true);
     P().partner = { pair: c.pair, token: r.token, secret: c.secret, role: 'b', joined: true, name: '', since: new Date().toISOString() };
     L.save(); keys = null;
     await send(Object.assign({ t: 'hello', name: S().sender, pron: S().pron || '' }, window.LZD ? { dates: window.LZD.payload() } : {}));
@@ -746,7 +758,7 @@
     if (window.LZC) return window.LZC.chooser();
     L.openSheet('<h3>💞 Apps verbinden</h3><p class="about" style="margin-bottom:14px">Dann landen Botschaften und Gutscheine direkt in der App von ' + L.esc(S().receiver) + ', und bei den Gleichklang-Spielen antwortet ihr beide heimlich auf dem eigenen Handy. Ohne Konto, verschlüsselt.</p>' +
       '<div class="row wrap" style="margin-bottom:14px"><button class="pill-btn primary" data-new>Ich erzeuge den Code</button></div>' +
-      '<div class="field"><label for="pf-code">… oder ich habe einen Code von ' + L.esc(S().receiver) + '</label><input id="pf-code" maxlength="24" placeholder="ABCDEF-GHJKLM-NPQRST" autocomplete="off" autocapitalize="characters" spellcheck="false"></div>' +
+      '<div class="field"><label for="pf-code">… oder ich habe einen Code von ' + L.esc(S().receiver) + '</label><input id="pf-code" maxlength="34" placeholder="ABCDEF-GHJKL-MNPQR-STUVW-XYZ23" autocomplete="off" autocapitalize="characters" spellcheck="false"></div>' +
       '<div class="row"><button class="pill-btn ghost" data-cancel>Abbrechen</button><button class="pill-btn" data-join>Beitreten</button></div>', (sh) => {
       sh.querySelector('[data-cancel]').onclick = L.closeSheet;
       sh.querySelector('[data-new]').onclick = async (e) => {
@@ -758,11 +770,11 @@
     });
   }
   async function doJoin(code, btn) {
-    const c = parseCode(code); if (!c) { L.toast('Code prüfen – 18 Zeichen wie ABCDEF-GHJKLM-NPQRST'); return; }
+    const c = parseCode(code); if (!c) { L.toast(CODE_HINT); return; }
     if (btn) { btn.disabled = true; btn.textContent = '…'; }
     try { await joinPair(code); L.closeSheet(); renderAll(); if (window.LZC) window.LZC.celebrate(S().receiver); else { L.toast('💞 Verbunden! ' + S().receiver + ' bekommt gleich Bescheid.'); L.spawnHearts(14); } setTimeout(() => pull(true), 1500); return true; }
     catch (e) {
-      const msg = e.code === 'full' ? 'Dieser Code ist schon mit einem anderen Gerät verbunden.' : e.code === 'unknown' ? 'Code unbekannt oder abgelaufen (48 h).' : e.code === 'same device' ? 'Das ist dein eigener Code.' : (e.message || 'Fehler');
+      const msg = e.code === 'full' ? 'Dieser Code ist schon mit einem anderen Gerät verbunden.' : e.code === 'unknown' ? 'Code unbekannt oder abgelaufen (48 h).' : e.code === 'same device' ? 'Das ist dein eigener Code.' : e.code === 'update' ? 'Bitte die App deines Schatzes aktualisieren (einmal schließen und neu öffnen) – dann klappt es.' : e.status === 429 ? 'Zu viele Versuche. Bitte morgen nochmal.' : (e.message || 'Fehler');
       L.toast(msg); if (btn) { btn.disabled = false; btn.textContent = 'Beitreten'; }
       return false;
     }

@@ -27,12 +27,29 @@ Er verbindet die Apps zweier Partner. Er sieht **keine Inhalte**:
    ```
 5. Die ausgegebene Adresse (z. B. `https://schmetterlingsfutter-relay.<konto>.workers.dev`) in `js/data.js` bei `relayUrl` eintragen, App neu veröffentlichen.
 
+## Sicherheit (ab 3.48.0)
+
+- **Beitritt nur mit Nachweis:** Neue Apps schicken beim Anlegen `jt` (aus dem geheimen Teil des Codes per HKDF abgeleitet, Zweck „join“). `/pair/join` verlangt denselben Wert; ohne → `426 update`, falsch → `404 unknown`. Alte Paare ohne `jt` gelten weiter.
+- **Bremsen je Absender** (gekürzte Prüfsumme aus Tag + IP, Tabelle `buehne_rate`): Paar anlegen 20/Tag (insgesamt 3.000), Beitritt 30/Tag, Umzug 10/Tag (insgesamt 500, höchstens 150 MB warten gleichzeitig), Zähler 20 Sendungen bzw. 1.500 Zeilen/Tag (insgesamt 30.000 Zeilen). Grund: Cloudflare D1 kostenlos = 500 MB je Datenbank und 100.000 geschriebene Zeilen/Tag; wird das überschritten, steht der ganze Dienst bis 0 Uhr UTC.
+- `last_seen` wird höchstens stündlich geschrieben (spart Schreibkontingent).
+- Fehlerantworten ohne interne Details (stehen nur im Cloudflare-Protokoll).
+- CORS nur für die echten App-Adressen; lokal `wrangler dev --var DEV:1`.
+- Test: `node relay/test/sicherheit.test.mjs`
+- Die App-Seiten haben eine Content-Security-Policy (Meta-Tag). **Wer das Inline-Skript in `index.html` oder `umzug.html` ändert, muss den `sha256-…`-Wert im Meta-Tag neu berechnen**, sonst läuft es nicht.
+
+**Veröffentlichen dieser Änderung (Reihenfolge wichtig):**
+```bash
+cd relay
+npx wrangler d1 migrations apply schmetterlingsfutter --remote   # zuerst: Spalte pairs.jt (0007)
+npx wrangler deploy
+```
+
 ## Lokal testen
 
 ```bash
 cd relay
 npx wrangler d1 migrations apply schmetterlingsfutter --local
-npx wrangler dev --port 8787
+npx wrangler dev --port 8787 --var DEV:1
 ```
 Die App nutzt automatisch `http://localhost:8787`, wenn sie selbst von `localhost`/`127.0.0.1` geladen wird. Für einen Test gegen den echten Dienst im Browser `localStorage.setItem('sf.relay','prod')` setzen.
 
