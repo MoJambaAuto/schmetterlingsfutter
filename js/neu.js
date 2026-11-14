@@ -12,6 +12,7 @@
 
   /* Was ist neu – kurz, in Alltagssprache. Neueste zuerst. */
   D.news = [
+    { v: '3.48.1', items: ['🔒 Verbindungs-Codes noch sicherer – am einfachsten per QR-Code oder Link koppeln'] },
     { v: '3.48.0', items: ['🔒 Mehr Sicherheit: neue Verbindungs-Codes sind länger und lassen sich nicht mehr erraten – bestehende Verbindungen bleiben, wie sie sind'] },
     { v: '3.45.0', items: ['🎵 Eure Lieder vom Liebeslied-Pad als MP3 oder WAV herunterladen (⬇ neben jedem Lied)', '🎹 Das Pad ist kompakter: alle Töne und die Aufnahme passen auf einen Bildschirm'] },
     { v: '3.44.0', items: ['❤️ 😂 🥹 Schnell reagieren: unter jeder Nachricht vom Schatz – dein Schatz sieht deine Reaktion in „Post“'] },

@@ -40,7 +40,7 @@
     L.openSheet('<h3>💞 Handys verbinden</h3><p class="about" style="font-size:17px;margin-bottom:12px">Einer zeigt den Code, der andere scannt ihn – fertig. Ohne Konto, verschlüsselt.</p>' +
       '<button type="button" class="pair-choice" data-scan><span class="pc-i">📷</span><span class="pc-b"><b>Code scannen</b><small>' + name + ' zeigt den Code in der App</small></span></button>' +
       '<button type="button" class="pair-choice" data-show><span class="pc-i">✨</span><span class="pc-b"><b>Meinen Code zeigen</b><small>' + name + ' scannt ihn mit der App</small></span></button>' +
-      '<details class="pair-manual"><summary>Code lieber eintippen</summary><div class="field" style="margin-top:10px"><input id="pf-code" maxlength="34" placeholder="ABCDEF-GHJKL-MNPQR-STUVW-XYZ23" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Code"></div><button class="pill-btn" data-join>Beitreten</button></details>' +
+      '<details class="pair-manual"><summary>Code lieber eintippen</summary><div class="field" style="margin-top:10px"><input id="pf-code" maxlength="40" placeholder="ABCDEF-GHJKL-MNPQR-STUVW-XYZ234-…" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Code"></div><button class="pill-btn" data-join>Beitreten</button></details>' +
       '<div class="row" style="margin-top:12px"><button class="pill-btn ghost" data-cancel>Später</button></div>', (sh) => {
       sh.querySelector('[data-cancel]').onclick = L.closeSheet;
       sh.querySelector('[data-scan]').onclick = () => { L.closeSheet(); scan(); };
@@ -133,7 +133,7 @@
     if (root) { root.remove(); root = null; } document.documentElement.classList.remove('cam-open');
   }
   function typeSheet() {
-    L.openSheet('<h3>⌨️ Code eintippen</h3><div class="field"><label for="pf-code2">Code von ' + esc(S().receiver) + '</label><input id="pf-code2" maxlength="34" placeholder="ABCDEF-GHJKL-MNPQR-STUVW-XYZ23" autocomplete="off" autocapitalize="characters" spellcheck="false"></div>' +
+    L.openSheet('<h3>⌨️ Code eintippen</h3><div class="field"><label for="pf-code2">Code von ' + esc(S().receiver) + '</label><input id="pf-code2" maxlength="40" placeholder="ABCDEF-GHJKL-MNPQR-STUVW-XYZ234-…" autocomplete="off" autocapitalize="characters" spellcheck="false"></div>' +
       '<div class="row"><button class="pill-btn ghost" data-cancel>Abbrechen</button><button class="pill-btn primary" data-join>Beitreten</button></div>', (sh) => {
       sh.querySelector('[data-cancel]').onclick = L.closeSheet;
       sh.querySelector('[data-join]').onclick = (e) => P().doJoin(sh.querySelector('#pf-code2').value, e.currentTarget);

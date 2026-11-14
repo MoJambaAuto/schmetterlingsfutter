@@ -26,15 +26,16 @@
   function randomCode(len) { const b = new Uint8Array(len); crypto.getRandomValues(b); let s = ''; for (let i = 0; i < len; i++) s += ALPHABET[b[i] % ALPHABET.length]; return s; }
   function randomHex(n) { const b = new Uint8Array(n); crypto.getRandomValues(b); return Array.from(b, (x) => x.toString(16).padStart(2, '0')).join(''); }
   function devId() { const s = P(); if (!s.deviceId) { s.deviceId = randomHex(16); L.save(); } return s.deviceId; }
-  /* 3.48.0: Geheimer Teil des Codes 20 Zeichen (100 Bit) statt 12 (60 Bit). Alte 18-stellige Codes gelten weiter. */
-  const SECRET_LEN = 20;
-  const fmtCode = (pair, secret) => pair + '-' + (secret.length === 12 ? secret.slice(0, 6) + '-' + secret.slice(6) : secret.match(/.{1,5}/g).join('-'));
+  /* 3.48.1: Geheimer Teil des Codes 26 Zeichen (130 Bit) statt 12 (60 Bit) – gekoppelt wird per QR-Code/Link, Eintippen ist nur Notweg.
+     Ältere Codes (12 und 20 Zeichen) gelten weiter. */
+  const SECRET_LEN = 26;
+  const fmtCode = (pair, secret) => pair + '-' + (secret.length === 12 ? secret.slice(0, 6) + '-' + secret.slice(6) : secret.length === 26 ? secret.slice(0, 20).match(/.{5}/g).join('-') + '-' + secret.slice(20) : secret.match(/.{1,5}/g).join('-'));
   function parseCode(raw) {
     const clean = String(raw || '').toUpperCase().replace(/[^A-Z0-9]/g, '').replace(/0/g, 'O').replace(/1/g, 'I');
-    if ((clean.length !== 18 && clean.length !== 6 + SECRET_LEN) || !/^[A-Z2-9]+$/.test(clean)) return null;
+    if (![18, 26, 6 + SECRET_LEN].includes(clean.length) || !/^[A-Z2-9]+$/.test(clean)) return null;
     return { pair: clean.slice(0, 6), secret: clean.slice(6) };
   }
-  const CODE_HINT = 'Code prüfen – 26 Zeichen wie ABCDEF-GHJKL-MNPQR-STUVW-XYZ23';
+  const CODE_HINT = 'Code prüfen – am einfachsten den QR-Code scannen oder den Link öffnen';
   /* Beitritts-Nachweis: aus dem geheimen Teil abgeleitet (HKDF, eigener Zweck), verrät den Schlüssel nicht.
      Der Dienst lässt nur beitreten, wer ihn kennt – die Paar-ID allein reicht nicht. */
   async function joinProof(secret) {
@@ -758,7 +759,7 @@
     if (window.LZC) return window.LZC.chooser();
     L.openSheet('<h3>💞 Apps verbinden</h3><p class="about" style="margin-bottom:14px">Dann landen Botschaften und Gutscheine direkt in der App von ' + L.esc(S().receiver) + ', und bei den Gleichklang-Spielen antwortet ihr beide heimlich auf dem eigenen Handy. Ohne Konto, verschlüsselt.</p>' +
       '<div class="row wrap" style="margin-bottom:14px"><button class="pill-btn primary" data-new>Ich erzeuge den Code</button></div>' +
-      '<div class="field"><label for="pf-code">… oder ich habe einen Code von ' + L.esc(S().receiver) + '</label><input id="pf-code" maxlength="34" placeholder="ABCDEF-GHJKL-MNPQR-STUVW-XYZ23" autocomplete="off" autocapitalize="characters" spellcheck="false"></div>' +
+      '<div class="field"><label for="pf-code">… oder ich habe einen Code von ' + L.esc(S().receiver) + '</label><input id="pf-code" maxlength="40" placeholder="ABCDEF-GHJKL-MNPQR-STUVW-XYZ234-…" autocomplete="off" autocapitalize="characters" spellcheck="false"></div>' +
       '<div class="row"><button class="pill-btn ghost" data-cancel>Abbrechen</button><button class="pill-btn" data-join>Beitreten</button></div>', (sh) => {
       sh.querySelector('[data-cancel]').onclick = L.closeSheet;
       sh.querySelector('[data-new]').onclick = async (e) => {
