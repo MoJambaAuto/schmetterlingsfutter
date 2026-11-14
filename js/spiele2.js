@@ -19,9 +19,9 @@
   const KINDS = {
     raupe: { icon: '🐛', title: 'Raupe rät', sub: 'Wort erraten, bevor die Raupe einschläft', modes: ['relay', 'pass'], def: 'relay' },
     wiese: { icon: '🌼', title: 'Wiese durchsuchen', sub: 'Schmetterlinge verstecken und finden', modes: ['relay', 'pass'], def: 'relay' },
-    wuerfel: { icon: '🎲', title: 'Würfelwiese', sub: '5 Würfel, 13 Kombinationen', modes: ['pass', 'relay'], def: 'pass' },
+    wuerfel: { icon: '🎲', title: 'Würfelwiese', sub: '5 Würfel, 13 Kombinationen', modes: ['relay', 'pass'], def: 'relay' },
     beete: { icon: '🌸', title: 'Blumenbeete', sub: 'Zäune ziehen, Beete schließen', modes: ['pass', 'relay'], def: 'pass' },
-    wanderzug: { icon: '🦋', title: 'Wanderzug', sub: 'Backgammon mit Raupen und Schmetterlingen', modes: ['pass', 'relay'], def: 'pass' },
+    wanderzug: { icon: '🦋', title: 'Wanderzug', sub: 'Backgammon mit Raupen und Schmetterlingen', modes: ['relay', 'pass'], def: 'relay' },
     quiz: { icon: '🧐', title: 'Wahr oder Falter?', sub: 'Echt oder erfunden? Schmetterlings-Wissen im Duell', modes: ['pass', 'relay'], def: 'pass' }
   };
   const PRIZES = ['10 Minuten Nackenmassage', 'Frühstück ans Bett', 'Lieblingsessen kochen', 'Heute den Abwasch übernehmen', 'Füße massieren', 'Den Film für heute Abend aussuchen', 'Einen kleinen Liebesbrief schreiben', 'Ein Lied vorsingen', 'Ein Bad mit Kerzen vorbereiten', '15 Minuten kuscheln, Handys weg', 'Haare kraulen', 'Morgen Kaffee oder Tee ans Bett', 'Gewinner wählt den Spaziergang', 'Ein Tänzchen in der Küche', 'Eis holen gehen', 'Gewinner bestimmt das Abendprogramm'];
@@ -103,14 +103,25 @@
   /* ---------- Start: Spielweise und Einsatz wählen ---------- */
   function newGame(kind) {
     const K = KINDS[kind]; let mode = on() ? K.def : 'pass'; let prize = '';
-    L.openSheet('<h3>' + K.icon + ' ' + esc(K.title) + '</h3><p class="about" style="font-size:17px;margin-bottom:10px">' + esc(K.sub) + '.</p>' +
+    /* 3.46.0: laufende Spiele dieser Art oben anbieten – ein Spiel an einem Handy blockiert so keinen Neustart über zwei Handys */
+    const run = Object.values(store()).filter((x) => x.kind === kind && x.turn !== 'done' && !x.ab).sort((a, b) => b.updated - a.updated);
+    const runHtml = run.length ? '<div class="field"><label>Laufende Spiele</label><div class="g2-run">' + run.map((x) => '<button type="button" class="pill-btn' + (x.mode === 'relay' && x.turn === x.me ? ' primary' : '') + '" data-run="' + esc(x.id) + '">' + (x.mode === 'pass' ? '▶ Weiterspielen · an einem Handy' : x.turn === x.me ? '▶ Du bist dran · zwei Handys' : '⏳ ' + esc(you()) + ' ist dran · ansehen') + '</button>').join('') + '</div></div><label class="g2-newh">Neues Spiel</label>' : '';
+    L.openSheet('<h3>' + K.icon + ' ' + esc(K.title) + '</h3><p class="about" style="font-size:17px;margin-bottom:10px">' + esc(K.sub) + '.</p>' + runHtml +
       '<div class="field"><label>Wie spielt ihr?</label><div class="chips" id="g2Mode">' +
-      '<button type="button" data-m="pass">📱 An einem Handy</button>' + (on() ? '<button type="button" data-m="relay">📱📱 Zwei Handys</button>' : '') + '</div><small class="g2-hint" id="g2ModeHint"></small></div>' +
+      '<button type="button" data-m="relay">📱📱 Zwei Handys</button><button type="button" data-m="pass">📱 An einem Handy</button></div><small class="g2-hint" id="g2ModeHint"></small><button type="button" class="pill-btn small hidden" id="g2Pair">💞 Jetzt verbinden</button></div>' +
       '<div class="field"><label>Einsatz: Wer verliert, schenkt …</label><div class="chips" id="g2Prize"><button type="button" data-p="" class="on">Ohne Einsatz</button>' + shuffle(PRIZES).slice(0, 5).map((p) => '<button type="button" data-p="' + esc(p) + '">' + esc(p) + '</button>').join('') + '<button type="button" data-own>✏️ Eigener</button></div><input id="g2Own" class="hidden" maxlength="60" placeholder="z. B. Pizza ausgeben" autocomplete="off"></div>' +
       '<div class="row" style="margin-top:6px"><button class="pill-btn ghost" data-cancel>Abbrechen</button><button class="pill-btn primary" data-go>Los geht’s</button></div>', (sh) => {
-      const setMode = (m) => { mode = m; sh.querySelectorAll('#g2Mode button').forEach((b) => b.classList.toggle('on', b.dataset.m === m)); sh.querySelector('#g2ModeHint').textContent = m === 'pass' ? 'Setzt euch zusammen und reicht das Handy hin und her.' : 'Jeder spielt auf dem eigenen Handy, Zug um Zug.'; };
+      const go = sh.querySelector('[data-go]'), pair = sh.querySelector('#g2Pair');
+      const setMode = (m) => {
+        mode = m; const off = m === 'relay' && !on();
+        sh.querySelectorAll('#g2Mode button').forEach((b) => b.classList.toggle('on', b.dataset.m === m));
+        sh.querySelector('#g2ModeHint').textContent = m === 'pass' ? 'Setzt euch zusammen und reicht das Handy hin und her.' : off ? 'Dafür verbindet ihr zuerst eure Apps – danach spielt jeder auf dem eigenen Handy, auch von unterwegs.' : 'Jeder spielt auf dem eigenen Handy, Zug um Zug – auch über Entfernung.';
+        pair.classList.toggle('hidden', !off); go.disabled = off;
+      };
       setMode(mode);
       sh.querySelectorAll('#g2Mode button').forEach((b) => b.onclick = () => setMode(b.dataset.m));
+      pair.onclick = () => { L.closeSheet(); if (window.LZC) window.LZC.chooser(); };
+      sh.querySelectorAll('[data-run]').forEach((b) => b.onclick = () => { L.closeSheet(); open(b.dataset.run); });
       const own = sh.querySelector('#g2Own');
       sh.querySelectorAll('#g2Prize button').forEach((b) => b.onclick = () => {
         sh.querySelectorAll('#g2Prize button').forEach((x) => x.classList.toggle('on', x === b));
@@ -659,7 +670,7 @@
     const b = document.createElement('button'); b.type = 'button'; b.className = 'deck' + (turn ? ' st-turn' : '');
     const chip = turn ? '<span class="chip-st turn">Du bist dran</span>' : wait ? '<span class="chip-st wait">' + esc(you()) + ' ist dran</span>' : ''; /* 3.43.0: überall dieselben drei Zustände */
     b.innerHTML = '<span class="d-ico">' + K.icon + '</span><div class="d-body"><div class="d-title">' + esc(K.title) + '</div>' + (chip || '<div class="d-sub">' + esc(K.sub) + '</div>') + '</div><span class="d-go">›</span>';
-    b.onclick = () => { const g = turn || pass || wait; if (g) open(g.id); else newGame(kind); };
+    b.onclick = () => { if (turn) open(turn.id); else newGame(kind); }; /* 3.46.0: sonst Auswahl mit laufenden Spielen */
     return b;
   }
   function addTiles() {
@@ -696,6 +707,10 @@
 .g2-p { font-size:17px; line-height:1.45; margin:6px 0 10px; color:var(--text-soft); }
 .g2-wait { text-align:center; font-size:17px; font-weight:700; color:var(--accent-2); margin:14px 0; }
 .g2-hint { display:block; font-size:15px; color:var(--text-muted); margin-top:4px; }
+#g2Pair { margin-top:8px; }
+.g2-run { display:flex; flex-direction:column; gap:8px; }
+.g2-run .pill-btn { width:100%; justify-content:flex-start; text-align:left; }
+.g2-newh { display:block; font-weight:700; margin:4px 0 6px; }
 .g2-pls { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:2px 0 12px; }
 .g2-pl { display:flex; align-items:center; gap:8px; padding:9px 12px; border-radius:16px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08); min-width:0; position:relative; transition:all .25s; }
 .g2-pl.cur { background:rgba(255,255,255,.1); }
