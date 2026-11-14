@@ -13,7 +13,9 @@
   const C = (k) => window.LZS && window.LZS.count(k);
   const on = () => !!(P() && P().paired() && P().joined());
   const you = () => (P() ? P().partnerName() : S().receiver);
-  const rnd = (n) => Math.floor(Math.random() * n);
+  /* 3.47.2: Zufall aus dem Betriebssystem (crypto.getRandomValues), ohne Verzerrung: Werte oberhalb des letzten vollen Vielfachen von n werden neu gezogen */
+  const rbuf = new Uint32Array(1);
+  const rnd = (n) => { if (!(window.crypto && crypto.getRandomValues)) return Math.floor(Math.random() * n); const lim = 4294967296 - (4294967296 % n); let x; do { crypto.getRandomValues(rbuf); x = rbuf[0]; } while (x >= lim); return x % n; };
   const clone = (o) => JSON.parse(JSON.stringify(o));
 
   const KINDS = {
