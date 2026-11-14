@@ -100,14 +100,15 @@
     if (obj.t === 'hello' && window.LZW) obj = Object.assign({ likes: window.LZW.payload() }, obj);
     const at = Date.now();
     const body = await encrypt(Object.assign({ at }, obj));
-    const res = await post('/msg/send', QUIET[obj.t] ? { body, quiet: true } : { body });
-    if (!QUIET[obj.t]) { noteSent(obj, at); window.LZS && window.LZS.count('send:' + obj.t); }
+    const quiet = QUIET[obj.t] || obj.live === true; /* 3.47.0: Live-Züge im offenen Spiel */
+    const res = await post('/msg/send', quiet ? { body, quiet: true } : { body });
+    if (!quiet) { noteSent(obj, at); window.LZS && window.LZS.count('send:' + obj.t); }
     // jede Geste an den Schatz ist Futter für den gemeinsamen Schmetterling
-    if (window.LZX && obj.t !== 'hello' && obj.t !== 'matchdone') { try { window.LZX.feed(obj.t); } catch (e) {} }
+    if (window.LZX && !quiet && obj.t !== 'hello' && obj.t !== 'matchdone') { try { window.LZX.feed(obj.t); } catch (e) {} }
     return res;
   }
   let pulling = false, lastPull = 0;
-  async function pull(force) {
+  async function pull(force, light) {
     if (!paired() || !online() || pulling) return; if (!force && Date.now() - lastPull < 8000) return;
     pulling = true;
     try {
@@ -128,7 +129,7 @@
       }
       if (ids.length) await post('/msg/ack', { ids });
       if (news) { L.save(); renderAll(); }
-      else if (r.joined !== undefined) renderAll();
+      else if (r.joined !== undefined && !light) renderAll();
     } catch (e) {
       if (e.status === 401) { /* Paar wurde vom Partner getrennt */ pushLocalOff(); P().partner = null; L.save(); renderAll(); L.toast(partnerName() + ' hat die Verbindung getrennt'); }
     } finally { pulling = false; }

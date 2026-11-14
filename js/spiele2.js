@@ -346,9 +346,9 @@
     spinDice(el);
     const rb = el.querySelector('[data-roll]'); if (rb) rb.onclick = () => {
       st.dice = st.dice.map((v, i) => (st.held[i] && st.rolls > 0 ? v : 1 + rnd(6))); st.rolls++; L.haptic(12); rolledAt = Date.now();
-      g.updated = Date.now(); L.save(); render();
+      g.updated = Date.now(); L.save(); render(); liveSend(g, 'roll');
     };
-    el.querySelectorAll('.d3[data-d]:not([disabled])').forEach((b) => b.onclick = () => { const i = Number(b.dataset.d); st.held[i] = !st.held[i]; L.haptic(6); L.save(); render(); });
+    el.querySelectorAll('.d3[data-d]:not([disabled])').forEach((b) => b.onclick = () => { const i = Number(b.dataset.d); st.held[i] = !st.held[i]; L.haptic(6); L.save(); render(); liveSend(g, 'hold'); });
     el.querySelectorAll('[data-c]').forEach((b) => b.onclick = () => {
       st.card[cur][b.dataset.c] = catScore(b.dataset.c, st.dice); st.rolls = 0; st.held = [false, false, false, false, false];
       const full = (p) => CATS.every(([k]) => st.card[p][k] != null);
@@ -511,9 +511,9 @@
       const ns = apply(st, cur, m); Object.assign(st, ns); g.sel = null; L.haptic(hit ? 30 : 8);
       if (st.off[cur] >= 15) { g.turn = 'done'; g.winner = cur; st.left = []; commit(g); return; }
       if (!st.left.length || !legal(st, cur).length) { if (!st.left.length) return endTurn(); }
-      g.updated = Date.now(); L.save(); render(); if (hit) L.toast('💥 Geschlagen – zurück in die Mitte!');
+      g.updated = Date.now(); L.save(); render(); liveSend(g, hit ? 'hit' : 'move'); if (hit) L.toast('💥 Geschlagen – zurück in die Mitte!');
     };
-    const rb = el.querySelector('[data-roll]'); if (rb) rb.onclick = () => { const a = 1 + rnd(6), b = 1 + rnd(6); st.dice = a === b ? [a, a, a, a] : [a, b]; st.left = st.dice.slice(); L.haptic(12); rolledAt = Date.now(); g.updated = Date.now(); L.save(); render(); };
+    const rb = el.querySelector('[data-roll]'); if (rb) rb.onclick = () => { const a = 1 + rnd(6), b = 1 + rnd(6); st.dice = a === b ? [a, a, a, a] : [a, b]; st.left = st.dice.slice(); L.haptic(12); rolledAt = Date.now(); g.updated = Date.now(); L.save(); render(); liveSend(g, 'roll'); };
     const ps = el.querySelector('[data-pass]'); if (ps) ps.onclick = endTurn;
     const of = el.querySelector('[data-off]'); if (of) of.onclick = () => { const m = targets.filter((x) => x.to === 'off').sort((a, b) => a.d - b.d)[0]; if (m) doMove(m); };
     el.querySelectorAll('[data-pt]').forEach((b) => b.addEventListener('click', () => {
@@ -564,7 +564,7 @@
   /* ---------- Bildschirm ---------- */
   const RENDER = { raupe: raupeRender, wiese: wieseRender, wuerfel: wuerfelRender, beete: beeteRender, wanderzug: wanderRender, quiz: quizRender };
   let curId = null;
-  function waitHtml(g) { return '<div class="g2-wait">⏳ ' + esc(you()) + ' ist dran. Du bekommst Bescheid.</div>'; }
+  function waitHtml(g) { return Date.now() - (liveSeen[g.id] || 0) < 120000 ? '<div class="g2-wait g2-live"><span class="g2-livedot"></span>' + esc(you()) + ' spielt gerade – du schaust live zu</div>' : '<div class="g2-wait">⏳ ' + esc(you()) + ' ist dran. Du bekommst Bescheid.</div>'; }
   function open(id) {
     const g = store()[id]; if (!g) return; if (g.ab) { L.toast(KINDS[g.kind].icon + ' Dieses Spiel wurde beendet'); return; } curId = id;
     (S().inbox || []).forEach((m) => { if (m.t === 'spiel' && m.gid === id) m.read = true; }); L.save();
@@ -572,6 +572,7 @@
     if (!el) { el = document.createElement('div'); el.id = 'g2Screen'; el.className = 'g2'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); document.body.appendChild(el); document.documentElement.classList.add('cam-open'); }
     if (g.unsent && g.mode === 'relay') { g.n--; g.unsent = false; commit(g); }
     render(); if (P()) P().renderAll();
+    liveStart(g);
   }
   function render() {
     const el = $('g2Screen'); if (!el) return; const g = store()[curId]; if (!g) return close();
@@ -583,7 +584,34 @@
     RENDER[g.kind](g, el.querySelector('.g2-body'));
     if (!(S().g2help || {})[g.kind] && !el.querySelector('.g2-hand')) helpShow(g.kind);
   }
-  function close() { const el = $('g2Screen'); if (el) el.remove(); document.documentElement.classList.remove('cam-open'); curId = null; refreshOutside(); }
+  function close() { const g = store()[curId]; liveStop(g); const el = $('g2Screen'); if (el) el.remove(); document.documentElement.classList.remove('cam-open'); curId = null; refreshOutside(); }
+
+  /* ---------- Live zuschauen (3.47.0) ----------
+     Wer ein Spiel über zwei Handys offen hat, meldet das still an (op 'watch', alle 60 s erneuert, beim Schließen 'unwatch').
+     Solange der Schatz zuschaut, geht jeder Wurf und jeder Einzelzug als stille Nachricht (op 'live') hinterher.
+     Bei offenem Spiel holt die App alle 2,5 s ab. Live-Nachrichten tragen die alte Zugnummer n – ältere Versionen verwerfen sie still. */
+  const liveSeen = {}; let liveChain = Promise.resolve(), pollT = null, watchT = null;
+  function sendQuiet(g, op, ev) { if (g.mode !== 'relay' || !on()) return; const o = { t: 'spiel', k: g.kind, id: g.id, n: g.n, st: op === 'live' ? g.st : {}, turn: g.turn, op, live: true }; if (ev) o.ev = ev; liveChain = liveChain.then(() => P().send(o)).catch(() => {}); }
+  function liveSend(g, ev) { if (g && g.mode === 'relay' && g.watchUntil > Date.now() && g.turn !== 'done') sendQuiet(g, 'live', ev); }
+  function liveStart(g) {
+    liveStop(null); if (!g || g.mode !== 'relay' || g.turn === 'done' || !on()) return;
+    sendQuiet(g, 'watch'); watchT = setInterval(() => { const x = store()[curId]; if (x && x.turn !== 'done' && document.visibilityState === 'visible') sendQuiet(x, 'watch'); }, 60000);
+    pollT = setInterval(() => { const x = store()[curId]; if (!x || x.turn === 'done') return; if (document.visibilityState === 'visible') P().pull(true, true); }, 2500);
+    P().pull(true, true);
+  }
+  function liveStop(g) { if (pollT) clearInterval(pollT); if (watchT) clearInterval(watchT); pollT = watchT = null; if (g && g.mode === 'relay' && g.turn !== 'done') sendQuiet(g, 'unwatch'); }
+  document.addEventListener('visibilitychange', () => { const g = store()[curId]; if (!g || g.mode !== 'relay' || g.turn === 'done') return; sendQuiet(g, document.visibilityState === 'visible' ? 'watch' : 'unwatch'); if (document.visibilityState === 'visible') P().pull(true, true); });
+  async function liveGot(obj) {
+    const g = store()[obj.id]; if (!g || g.mode !== 'relay') return false;
+    if (obj.op === 'watch') { g.watchUntil = Date.now() + 95000; if (curId === g.id && myTurn(g)) liveSend(g, 'sync'); return false; }
+    if (obj.op === 'unwatch') { g.watchUntil = 0; return false; }
+    /* op 'live': nur Vorschau des laufenden Zugs, nur bei offenem Spiel, nie während man selbst dran ist */
+    if (obj.n !== g.n || curId !== g.id || myTurn(g) || g.turn === 'done') return false;
+    g.st = obj.st; liveSeen[g.id] = Date.now(); if (obj.ev === 'roll') rolledAt = Date.now();
+    render(); if (obj.ev === 'roll' || obj.ev === 'hit') L.haptic(obj.ev === 'hit' ? 20 : 6);
+    await new Promise((r) => setTimeout(r, obj.ev === 'roll' ? 900 : 550)); /* mehrere Schritte nacheinander zeigen */
+    return false;
+  }
   /* Spiel-Menü: So geht’s · Neu starten · Spiel beenden (3.34.0) */
   function menu(g) {
     const el = $('g2Screen'); if (!el) return; const K = KINDS[g.kind], done = g.turn === 'done';
@@ -644,6 +672,8 @@
   /* ---------- Nachrichten vom Schatz ---------- */
   function received(obj, created) {
     if (!KINDS[obj.k] || typeof obj.id !== 'string' || obj.id.length > 40 || !Number.isInteger(obj.n) || !obj.st || typeof obj.st !== 'object') return false;
+    if (obj.op === 'watch' || obj.op === 'unwatch' || obj.op === 'live') return liveGot(obj);
+    if (store()[obj.id]) liveSeen[obj.id] = 0;
     const gs = store(); let g = gs[obj.id];
     if (!g) { if (obj.op !== 'new') return false; g = gs[obj.id] = { id: obj.id, kind: obj.k, mode: 'relay', mine: false, me: 'b', turn: 'a', n: 0, prize: String(obj.prize || '').slice(0, 60), created: created || Date.now(), updated: Date.now(), st: null }; }
     if (obj.n <= g.n) return false; // schon bekannt
@@ -706,6 +736,10 @@
 .g2-body { max-width:520px; margin:0 auto; }
 .g2-p { font-size:17px; line-height:1.45; margin:6px 0 10px; color:var(--text-soft); }
 .g2-wait { text-align:center; font-size:17px; font-weight:700; color:var(--accent-2); margin:14px 0; }
+.g2-live { display:flex; align-items:center; justify-content:center; gap:8px; }
+.g2-livedot { width:10px; height:10px; border-radius:50%; background:#ff4d6d; box-shadow:0 0 0 0 rgba(255,77,109,.6); animation:g2pulse 1.4s infinite; flex:none; }
+@keyframes g2pulse { 0% { box-shadow:0 0 0 0 rgba(255,77,109,.6); } 70% { box-shadow:0 0 0 9px rgba(255,77,109,0); } 100% { box-shadow:0 0 0 0 rgba(255,77,109,0); } }
+@media (prefers-reduced-motion: reduce) { .g2-livedot { animation:none; } }
 .g2-hint { display:block; font-size:15px; color:var(--text-muted); margin-top:4px; }
 #g2Pair { margin-top:8px; }
 .g2-run { display:flex; flex-direction:column; gap:8px; }
