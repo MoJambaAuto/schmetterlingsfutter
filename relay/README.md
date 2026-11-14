@@ -37,6 +37,8 @@ Er verbindet die Apps zweier Partner. Er sieht **keine Inhalte**:
 - Test: `node relay/test/sicherheit.test.mjs`
 - Die App-Seiten haben eine Content-Security-Policy (Meta-Tag). **Wer das Inline-Skript in `index.html` oder `umzug.html` ändert, muss den `sha256-…`-Wert im Meta-Tag neu berechnen**, sonst läuft es nicht.
 
+**Automatisch veröffentlichen (seit 14.11.2026):** Cloudflare Workers Builds ist mit `MoJambaAuto/schmetterlingsfutter-app` (Branch `main`, Ordner `relay`, nur Änderungen unter `relay/*`) verbunden. Jeder Push dorthin führt `npx wrangler deploy` aus; Bau-Status im Cloudflare-Dashboard unter Worker → Deployments. **Datenbank-Migrationen laufen NICHT automatisch** – neue Dateien in `migrations/` vorher von Hand anwenden (siehe unten oder D1-Konsole, dann Zeile in `d1_migrations` eintragen).
+
 **Veröffentlichen dieser Änderung (Reihenfolge wichtig):**
 ```bash
 cd relay
