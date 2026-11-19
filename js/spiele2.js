@@ -30,6 +30,25 @@
   const NUDGES = ['Jetzt mal 10 Minuten Handys weg: Erzählt euch den schönsten Moment eurer Woche.', 'Handys umdrehen und eine Runde Umarmung – mindestens 20 Sekunden.', 'Kurze Pause vom Bildschirm: Macht euch zusammen einen Tee.', 'Legt die Handys weg und plant euer nächstes Date – nur mit Stift und Zettel.', 'Handys aus der Hand: Wer schafft es, den anderen zuerst zum Lachen zu bringen?'];
 
   function store() { const s = S(); if (!s.games2) s.games2 = {}; return s.games2; }
+  /* 3.48.3: Je Spielart läuft höchstens EIN Spiel über zwei Handys. Bis 3.48.2 legte die Kachel ein zweites an, während der Schatz
+     dran war, und wer gleichzeitig startete, hatte zwei parallel. Jetzt öffnet die Kachel das laufende Spiel. Treffen trotzdem zwei
+     aufeinander (gleichzeitig gestartet, alte Version), gewinnt auf beiden Handys dasselbe – das neuere (höhere Kennung) –, das
+     andere endet still, ohne Mitteilung. */
+  const live2 = (g) => g.mode === 'relay' && g.turn !== 'done' && !g.ab;
+  const newer = (a, b) => (a.id > b.id ? -1 : a.id < b.id ? 1 : 0);
+  const relayRun = (kind) => (on() ? Object.values(store()).filter((x) => x.kind === kind && live2(x)).sort(newer)[0] || null : null);
+  const markRead = (id) => (S().inbox || []).forEach((m) => { if (m.t === 'spiel' && m.gid === id) m.read = true; });
+  function retire(g) {
+    markRead(g.id);
+    if (g.mine && !g.annc && !g.n) { delete store()[g.id]; return; } // kennt der Schatz noch nicht
+    g.ab = true; g.dup = 1; g.finished = true; g.turn = 'done'; g.winner = null; g.n += 100; g.updated = Date.now();
+    if (on()) P().send({ t: 'spiel', k: g.kind, id: g.id, n: g.n, st: g.st, turn: 'done', prize: g.prize, winner: null, op: 'move', ab: 1, dup: 1, live: true }).catch(() => {});
+  }
+  function dedupe(kind) {
+    const rs = Object.values(store()).filter((x) => x.kind === kind && live2(x)).sort(newer);
+    const old = rs.slice(1); old.forEach(retire); if (old.length) L.save();
+    return { keep: rs[0] || null, retired: old };
+  }
   const nameOf = (g, p) => g.mode === 'pass' ? (p === 'a' ? (g.mine ? S().sender : you()) : (g.mine ? you() : S().sender)) : (p === g.me ? 'Du' : you());
   const myTurn = (g) => g.turn !== 'done' && (g.mode === 'pass' || g.turn === g.me);
   const other = (p) => (p === 'a' ? 'b' : 'a');
@@ -103,11 +122,14 @@
   }
 
   /* ---------- Start: Spielweise und Einsatz wählen ---------- */
-  function newGame(kind) {
-    const K = KINDS[kind]; let mode = on() ? K.def : 'pass'; let prize = '';
-    /* 3.46.0: laufende Spiele dieser Art oben anbieten – ein Spiel an einem Handy blockiert so keinen Neustart über zwei Handys */
-    const run = Object.values(store()).filter((x) => x.kind === kind && x.turn !== 'done' && !x.ab).sort((a, b) => b.updated - a.updated);
-    const runHtml = run.length ? '<div class="field"><label>Laufende Spiele</label><div class="g2-run">' + run.map((x) => '<button type="button" class="pill-btn' + (x.mode === 'relay' && x.turn === x.me ? ' primary' : '') + '" data-run="' + esc(x.id) + '">' + (x.mode === 'pass' ? '▶ Weiterspielen · an einem Handy' : x.turn === x.me ? '▶ Du bist dran · zwei Handys' : '⏳ ' + esc(you()) + ' ist dran · ansehen') + '</button>').join('') + '</div></div><label class="g2-newh">Neues Spiel</label>' : '';
+  function newGame(kind, again) {
+    const K = KINDS[kind];
+    /* 3.48.3: Läuft schon ein Spiel über zwei Handys, geht es dort weiter (selbst dran: spielen, sonst live zuschauen) – kein zweites daneben */
+    const r = relayRun(kind); if (r) { open(r.id); if (again && !r.mine) L.toast(K.icon + ' ' + you() + ' hat schon ein neues Spiel gestartet'); return; }
+    let mode = on() ? K.def : 'pass'; let prize = '';
+    /* 3.46.0: ein Spiel an einem Handy blockiert keinen Start über zwei Handys – 3.48.3: ein neues Spiel ersetzt es aber */
+    const run = Object.values(store()).filter((x) => x.kind === kind && x.mode === 'pass' && x.turn !== 'done').sort((a, b) => b.updated - a.updated);
+    const runHtml = run.length ? '<div class="field"><label>Laufendes Spiel</label><div class="g2-run"><button type="button" class="pill-btn" data-run="' + esc(run[0].id) + '">▶ Weiterspielen · an einem Handy</button></div></div><label class="g2-newh">Neues Spiel – das laufende endet</label>' : '';
     L.openSheet('<h3>' + K.icon + ' ' + esc(K.title) + '</h3><p class="about" style="font-size:17px;margin-bottom:10px">' + esc(K.sub) + '.</p>' + runHtml +
       '<div class="field"><label>Wie spielt ihr?</label><div class="chips" id="g2Mode">' +
       '<button type="button" data-m="relay">📱📱 Zwei Handys</button><button type="button" data-m="pass">📱 An einem Handy</button></div><small class="g2-hint" id="g2ModeHint"></small><button type="button" class="pill-btn small hidden" id="g2Pair">💞 Jetzt verbinden</button></div>' +
@@ -130,13 +152,21 @@
         if (b.hasAttribute('data-own')) { own.classList.remove('hidden'); own.focus(); prize = null; } else { own.classList.add('hidden'); prize = b.dataset.p; }
       });
       sh.querySelector('[data-cancel]').onclick = L.closeSheet;
-      sh.querySelector('[data-go]').onclick = () => {
+      sh.querySelector('[data-go]').onclick = async () => {
         const pz = prize === null ? own.value.trim() : prize;
+        if (mode === 'relay') {
+          /* 3.48.3: kurz abholen – hat der Schatz gerade selbst eins gestartet, spielt ihr das */
+          go.disabled = true;
+          try { await Promise.race([P().pull(true, true), new Promise((res) => setTimeout(res, 2500))]); } catch (e) {}
+          if (!go.isConnected) return; // Fenster inzwischen geschlossen
+          const r2 = relayRun(kind); if (r2) { L.closeSheet(); open(r2.id); L.toast(K.icon + ' ' + you() + ' hat schon ein neues Spiel gestartet'); return; }
+        }
+        Object.values(store()).forEach((x) => { if (x.kind === kind && x.mode === 'pass' && x.turn !== 'done') delete store()[x.id]; });
         const g = { id: uid('s'), kind, mode, mine: true, me: 'a', turn: 'a', n: 0, prize: pz || '', created: Date.now(), updated: Date.now(), st: null };
         INIT[kind](g); store()[g.id] = g; L.save(); L.closeSheet(); C('g2_new:' + kind + ':' + mode + (pz ? ':prize' : ''));
         open(g.id);
-        /* Beginnt der Schatz (Wanderzug-Los), muss das Spiel sofort rüber */
-        if (g.mode === 'relay' && g.turn !== g.me) commit(g, { toast: KINDS[kind].icon + ' ' + you() + ' beginnt' });
+        /* Beginnt der Schatz (Wanderzug-Los), muss das Spiel sofort rüber – sonst still ankündigen (3.48.3) */
+        if (g.mode === 'relay') { if (g.turn !== g.me) commit(g, { toast: KINDS[kind].icon + ' ' + you() + ' beginnt' }); else announce(g); }
       };
     });
   }
@@ -146,12 +176,23 @@
   async function commit(g, opts) {
     g.n++; g.updated = Date.now(); L.save(); livePending = null; /* echter Zug ersetzt wartende Live-Stände */
     if (g.mode === 'relay') {
-      try { await P().send({ t: 'spiel', k: g.kind, id: g.id, n: g.n, st: g.st, turn: g.turn, prize: g.prize, winner: g.winner || null, op: g.n === 1 ? 'new' : 'move' }); }
+      /* 3.48.3: eigenes Spiel geht als 'new', bis eine Sendung angekommen ist – sonst legt die App des Schatzes es nie an */
+      try { await P().send({ t: 'spiel', k: g.kind, id: g.id, n: g.n, st: g.st, turn: g.turn, prize: g.prize, winner: g.winner || null, op: g.n === 1 || (g.mine && !g.annc) ? 'new' : 'move' }); g.annc = 1; g.unsent = false; L.save(); }
       catch (e) { L.toast('Senden fehlgeschlagen – der Zug ist gespeichert, nochmal öffnen und erneut senden'); g.unsent = true; L.save(); }
     }
     if (g.turn === 'done') finish(g);
     render(); refreshOutside();
     if (opts && opts.toast && g.mode === 'relay' && g.turn !== 'done') L.toast(opts.toast);
+  }
+  /* 3.48.3: Neues Spiel über zwei Handys sofort ankündigen (still, ohne Anstupsen) – der Schatz sieht es gleich und startet kein zweites */
+  const annP = {};
+  async function announce(g) {
+    if (g.mode !== 'relay' || !on() || g.n) return;
+    g.n = 1; g.updated = Date.now(); annP[g.id] = 1; L.save();
+    try { await P().send({ t: 'spiel', k: g.kind, id: g.id, n: g.n, st: clone(g.st), turn: g.turn, prize: g.prize, winner: null, op: 'new', live: true }); g.annc = 1; }
+    catch (e) { g.unsent = true; }
+    delete annP[g.id]; L.save();
+    if (g.annc && curId === g.id && live2(g)) sendQuiet(g, 'watch'); // erst jetzt kennt der Schatz das Spiel
   }
   function refreshOutside() { if (G()) G().renderHub(); if (P()) P().renderAll(); }
 
@@ -182,7 +223,7 @@
         cp.disabled = true; cp.textContent = '✓ Erledigt';
       };
       box.querySelector('[data-close]').onclick = close;
-      box.querySelector('[data-again]').onclick = () => { close(); newGame(g.kind); };
+      box.querySelector('[data-again]').onclick = () => { close(); newGame(g.kind, true); };
     }, 700);
   }
 
@@ -568,7 +609,9 @@
   let curId = null;
   function waitHtml(g) { return Date.now() - (liveSeen[g.id] || 0) < 120000 ? '<div class="g2-wait g2-live"><span class="g2-livedot"></span>' + esc(you()) + ' spielt gerade – du schaust live zu</div>' : '<div class="g2-wait">⏳ ' + esc(you()) + ' ist dran. Du bekommst Bescheid.</div>'; }
   function open(id) {
-    const g = store()[id]; if (!g) return; if (g.ab) { L.toast(KINDS[g.kind].icon + ' Dieses Spiel wurde beendet'); return; } curId = id;
+    const g = store()[id]; if (!g) return;
+    if (g.ab) { const r = g.dup && relayRun(g.kind); if (r) return open(r.id); L.toast(KINDS[g.kind].icon + ' Dieses Spiel wurde beendet'); return; } /* 3.48.3: altes Doppel → laufendes Spiel */
+    curId = id;
     (S().inbox || []).forEach((m) => { if (m.t === 'spiel' && m.gid === id) m.read = true; }); L.save();
     let el = $('g2Screen');
     if (!el) { el = document.createElement('div'); el.id = 'g2Screen'; el.className = 'g2'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); document.body.appendChild(el); document.documentElement.classList.add('cam-open'); }
@@ -578,7 +621,7 @@
   }
   function render() {
     const el = $('g2Screen'); if (!el) return; const g = store()[curId]; if (!g) return close();
-    const K = KINDS[g.kind]; ensureDefs();
+    const K = KINDS[g.kind]; ensureDefs(); el.dataset.gid = g.id;
     el.innerHTML = '<div class="g2-top"><button type="button" class="icon-btn" data-x aria-label="Schließen – später weiterspielen" title="Schließen – später weiterspielen">✕</button><span class="g2-title">' + esc(K.title) + '</span><button type="button" class="icon-btn" data-menu aria-label="Spiel-Menü: So geht’s, neu starten, beenden" title="Spiel-Menü">⋯</button></div>' +
       (g.prize ? '<div class="g2-prizebar">🎁 Einsatz: ' + esc(g.prize) + '</div>' : '') + '<div class="g2-body g2-' + g.kind + '"></div>';
     el.querySelector('[data-x]').onclick = close;
@@ -602,7 +645,7 @@
   function liveSend(g, ev) { if (g && g.mode === 'relay' && g.watchUntil > Date.now() && g.turn !== 'done') sendQuiet(g, 'live', ev); }
   function liveStart(g) {
     liveStop(null); if (!g || g.mode !== 'relay' || g.turn === 'done' || !on()) return;
-    sendQuiet(g, 'watch'); watchT = setInterval(() => { const x = store()[curId]; if (x && x.turn !== 'done' && document.visibilityState === 'visible') sendQuiet(x, 'watch'); }, 60000);
+    if (!annP[g.id]) sendQuiet(g, 'watch'); /* 3.48.3: läuft die Ankündigung noch, meldet announce() das Zuschauen danach */ watchT = setInterval(() => { const x = store()[curId]; if (x && x.turn !== 'done' && document.visibilityState === 'visible') sendQuiet(x, 'watch'); }, 60000);
     pollT = setInterval(() => { const x = store()[curId]; if (!x || x.turn === 'done') return; if (document.visibilityState === 'visible') P().pull(true, true); }, 2500);
     P().pull(true, true);
   }
@@ -670,11 +713,13 @@
   /* Neu starten: gleiche Spielweise und gleicher Einsatz, ohne erneutes Auswählen */
   function restart(g) {
     const mode = g.mode === 'relay' && !on() ? 'pass' : g.mode;
+    /* 3.48.3: hat der Schatz schon neu gestartet, spielt ihr das – kein zweites */
+    const r = mode === 'relay' ? relayRun(g.kind) : null; if (r && r.id !== g.id) { open(r.id); L.toast(KINDS[g.kind].icon + ' ' + you() + ' hat schon ein neues Spiel gestartet'); return; }
     const n = { id: uid('s'), kind: g.kind, mode, mine: true, me: 'a', turn: 'a', n: 0, prize: g.prize || '', created: Date.now(), updated: Date.now(), st: null };
     INIT[g.kind](n); store()[n.id] = n; L.save(); C('g2_new:' + g.kind + ':' + mode + ':restart');
     if (g.turn === 'done' && g.mode === 'pass') delete store()[g.id];
     open(n.id);
-    if (n.mode === 'relay' && n.turn !== n.me) commit(n, { toast: KINDS[g.kind].icon + ' ' + you() + ' beginnt' });
+    if (n.mode === 'relay') { if (n.turn !== n.me) commit(n, { toast: KINDS[g.kind].icon + ' ' + you() + ' beginnt' }); else announce(n); }
   }
   /* An einem Handy: Übergabe-Hinweis, damit die andere Person nicht ins Versteck schaut */
   function handover(g, p, soft) {
@@ -691,16 +736,34 @@
     if (store()[obj.id]) liveSeen[obj.id] = 0;
     liveQ = liveQ.filter((x) => x.id !== obj.id);
     const gs = store(); let g = gs[obj.id];
+    /* 3.48.3: Der Schatz hat ein doppeltes Spiel aufgeräumt – hier ebenfalls still beenden (fertige Spiele behalten ihr Ergebnis) */
+    if (obj.dup) {
+      if (g && live2(g)) {
+        g.ab = true; g.dup = 1; g.finished = true; g.turn = 'done'; g.winner = null; g.n = Math.max(g.n, obj.n); g.updated = Date.now(); markRead(g.id); L.save();
+        if (curId === g.id) { close(); const k = relayRun(g.kind); if (k) open(k.id); L.toast(KINDS[g.kind].icon + ' Doppeltes Spiel beendet – ihr spielt im neueren weiter'); }
+        if (G()) G().renderHub();
+      }
+      return false;
+    }
+    const fresh = !g;
     if (!g) { if (obj.op !== 'new') return false; g = gs[obj.id] = { id: obj.id, kind: obj.k, mode: 'relay', mine: false, me: 'b', turn: 'a', n: 0, prize: String(obj.prize || '').slice(0, 60), created: created || Date.now(), updated: Date.now(), st: null }; }
     if (obj.n <= g.n) return false; // schon bekannt
     g.st = obj.st; g.n = obj.n; g.turn = ['a', 'b', 'done'].includes(obj.turn) ? obj.turn : g.turn; g.winner = obj.winner || null; g.updated = Date.now();
     if (obj.ab) { g.ab = true; g.finished = true; g.turn = 'done'; g.winner = null; }
+    /* 3.48.3: Gleichzeitig gestartet? Auf beiden Handys gewinnt das neuere Spiel. Ist das eingehende das ältere, endet es hier still. */
+    let swap = false;
+    if (fresh && live2(g)) {
+      const d = dedupe(g.kind);
+      if (d.keep && d.keep.id !== g.id) { if (G()) G().renderHub(); return true; }
+      swap = d.retired.some((x) => x.id === curId);
+    }
     const K = KINDS[g.kind], name = you();
-    const text = g.ab ? K.icon + ' ' + name + ' hat ' + K.title + ' beendet' : g.turn === 'done' ? K.icon + ' ' + K.title + ': Spiel vorbei' : g.turn === g.me ? K.icon + ' ' + name + ': ' + K.title + ' – du bist dran' : K.icon + ' ' + K.title + ': ' + name + ' hat gezogen';
+    const text = g.ab ? K.icon + ' ' + name + ' hat ' + K.title + ' beendet' : g.turn === 'done' ? K.icon + ' ' + K.title + ': Spiel vorbei' : swap ? K.icon + ' ' + name + ' hat gleichzeitig gestartet – ihr spielt jetzt dieses Spiel' : g.turn === g.me ? K.icon + ' ' + name + ': ' + K.title + ' – du bist dran' : fresh ? K.icon + ' ' + name + ' hat ' + K.title + ' gestartet' : K.icon + ' ' + K.title + ': ' + name + ' hat gezogen';
     const s = S(); if (!s.inbox) s.inbox = []; s.inbox = s.inbox.filter((m) => !(m.t === 'spiel' && m.gid === g.id));
     s.inbox.push({ id: uid('m'), t: 'spiel', gid: g.id, text, at: created || Date.now(), read: false });
     L.toast(text); L.save();
-    if (curId === g.id) { if (g.ab) close(); else { render(); if (g.turn === 'done') finish(g); } }
+    if (swap) open(g.id);
+    else if (curId === g.id) { if (g.ab) close(); else { render(); if (g.turn === 'done') finish(g); } }
     if (G()) G().renderHub();
     return true;
   }
@@ -716,7 +779,7 @@
     const b = document.createElement('button'); b.type = 'button'; b.className = 'deck' + (turn ? ' st-turn' : '');
     const chip = turn ? '<span class="chip-st turn">Du bist dran</span>' : wait ? '<span class="chip-st wait">' + esc(you()) + ' ist dran</span>' : ''; /* 3.43.0: überall dieselben drei Zustände */
     b.innerHTML = '<span class="d-ico">' + K.icon + '</span><div class="d-body"><div class="d-title">' + esc(K.title) + '</div>' + (chip || '<div class="d-sub">' + esc(K.sub) + '</div>') + '</div><span class="d-go">›</span>';
-    b.onclick = () => { if (turn) open(turn.id); else newGame(kind); }; /* 3.46.0: sonst Auswahl mit laufenden Spielen */
+    b.onclick = () => newGame(kind); /* 3.48.3: newGame öffnet ein laufendes Spiel über zwei Handys (dran oder zuschauen), sonst die Auswahl */
     return b;
   }
   function addTiles() {
@@ -739,6 +802,18 @@
     P().on('spiel', received);
     P().inboxType('spiel', { icon: '🎲', meta: 'Spiel – antippen', open: (m) => open(m.gid) });
   }
+  /* 3.48.3: beim Start aufräumen, was ältere Versionen doppelt angelegt haben: je Spielart bleibt das neueste Spiel über zwei Handys
+     (auf beiden Handys dasselbe) und das zuletzt gespielte an einem Handy */
+  (function tidy() {
+    try {
+      let ch = false;
+      Object.keys(KINDS).forEach((k) => {
+        if (on() && dedupe(k).retired.length) ch = true;
+        Object.values(store()).filter((x) => x.kind === k && x.mode === 'pass' && x.turn !== 'done').sort((a, b) => b.updated - a.updated).slice(1).forEach((x) => { delete store()[x.id]; ch = true; });
+      });
+      if (ch) L.save();
+    } catch (e) {}
+  })();
   const style = document.createElement('style'); style.textContent = CSS(); document.head.appendChild(style);
   hook();
   window.LZG2 = { helpShow, die3d, bfly, PC, newGame, open, games: store, received, legal, movesFor, apply, bgStart, catScore, KINDS, PRIZES };
