@@ -12,6 +12,7 @@
 
   /* Was ist neu – kurz, in Alltagssprache. Neueste zuerst. */
   D.news = [
+    { v: '3.48.4', items: ['🕸️ Falterjagd draußen: der nächste Falter fliegt dir jetzt entgegen – kein Suchen mehr nach unerreichbaren Stellen'] },
     { v: '3.48.3', items: ['🎲 Spiele zu zweit: pro Spiel läuft nur noch eine Partie – auch wenn ihr gleichzeitig startet'] },
     { v: '3.48.1', items: ['🔒 Verbindungs-Codes noch sicherer – am einfachsten per QR-Code oder Link koppeln'] },
     { v: '3.48.0', items: ['🔒 Mehr Sicherheit: neue Verbindungs-Codes sind länger und lassen sich nicht mehr erraten – bestehende Verbindungen bleiben, wie sie sind'] },

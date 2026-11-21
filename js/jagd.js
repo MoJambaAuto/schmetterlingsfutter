@@ -67,6 +67,12 @@
   function inRing(pt, ring) { let c = false; for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) { const [xi, yi] = ring[i], [xj, yj] = ring[j]; if ((yi > pt[1]) !== (yj > pt[1]) && pt[0] < (xj - xi) * (pt[1] - yi) / (yj - yi) + xi) c = !c; } return c; }
   function inPoly(pt, g) { if (!g) return false; const polys = g.type === 'Polygon' ? [g.coordinates] : g.type === 'MultiPolygon' ? g.coordinates : []; return polys.some((p) => inRing(pt, p[0]) && !p.slice(1).some((h) => inRing(pt, h))); }
   const dist = (a, b) => { const R = 6371000, toR = Math.PI / 180, dLat = (b.lat - a.lat) * toR, dLon = (b.lon - a.lon) * toR; const x = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * toR) * Math.cos(b.lat * toR) * Math.sin(dLon / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(x)); };
+  /* 3.48.4: Falter fliegen dir entgegen. Vorher saßen sie fest an einem Zufallspunkt, oft in Gärten, auf Feldern oder hinter Zäunen –
+     man kam nicht auf 45 m heran (Mo im Test: „nicht näher als 98, lassen sich nicht fangen“). Jetzt fliegt der nächste Falter im Umkreis
+     von 150 m mit ca. 1,5 m/s auf dich zu und bleibt dann ca. 15 m vor dir. s.pull = schon zurückgelegte Meter in deine Richtung. */
+  const PULL = 1.5, STAY = 15;
+  const effD = (s) => (me ? Math.max(0, dist(me, s) - (s.pull || 0)) : 1e9);
+  function posOf(s) { if (!me || !s.pull) return [s.lon, s.lat]; const d = dist(me, s), f = d > 0 ? Math.min(1, s.pull / d) : 1; return [s.lon + (me.lon - s.lon) * f, s.lat + (me.lat - s.lat) * f]; }
 
   /* ---------- Laden ---------- */
   let mlP = null;
@@ -97,7 +103,7 @@
   }
 
   /* ---------- Karte ---------- */
-  let fastN = 0, root = null, map = null, watchId = null, me = null, meMarker = null, markers = {}, spawns = {}, lastFix = null, fast = false, timer = null, follow = true;
+  let fastN = 0, pullT = null, root = null, map = null, watchId = null, me = null, meMarker = null, markers = {}, spawns = {}, lastFix = null, fast = false, timer = null, follow = true;
   async function start() {
     css(); C('jagd_open');
     root = document.createElement('div'); root.className = 'jagd'; root.setAttribute('role', 'dialog'); root.setAttribute('aria-label', 'Falterjagd');
@@ -121,6 +127,7 @@
     map = new ml.Map({ container: root.querySelector('.jg-map'), style: STYLE, center: [7.1, 50.7], zoom: 16, minZoom: 14, pitch: 30, attributionControl: { compact: true } });
     map.on('dragstart', () => { follow = false; });
     map.on('idle', classify); map.on('moveend', classify);
+    pullT = setInterval(pullTick, 1000); /* 3.48.4 */
     if (sim) { gotFix(sim); return; }
     if (!('geolocation' in navigator)) { info('Dieses Handy gibt keinen Standort heraus.'); return; }
     watchId = navigator.geolocation.watchPosition((p) => gotFix({ lat: p.coords.latitude, lon: p.coords.longitude, acc: p.coords.accuracy, speed: p.coords.speed, t: Date.now() }),
@@ -149,14 +156,25 @@
     if (!me || !map) return;
     const win = Math.floor(Date.now() / WIN), want = {};
     if (!fast) cellsAround(me.lat, me.lon, 2).forEach((c) => spawnsIn(c, win).forEach((s) => { if (!st().got[s.id]) want[s.id] = s; }));
+    /* 3.48.4: ein Falter, der gerade zu dir fliegt, verschwindet nicht beim Viertelstundenwechsel */
+    if (!fast) Object.values(spawns).forEach((s) => { if (s.pull > 0 && !st().got[s.id] && dist(me, s) <= AR_MAX + 50) want[s.id] = s; });
     Object.keys(markers).forEach((id) => { if (!want[id]) { markers[id].remove(); delete markers[id]; delete spawns[id]; } });
     Object.keys(want).forEach((id) => { if (!spawns[id]) spawns[id] = want[id]; });
     classify();
     const near = Object.values(spawns).filter((s) => s.i != null && !s.skip);
     info(fast ? '🚗 Zu schnell unterwegs – Falter zeigen sich nur zu Fuß' : near.length ? '🦋 ' + near.length + ' Falter in der Nähe' + (me.acc > 60 ? ' · Standort ungenau' : '') : '🌿 Gerade keine Falter in der Nähe – geh ein Stück weiter');
-    let closest = null; near.forEach((s) => { const d = dist(me, s); if (!closest || d < closest.d) closest = { s, d }; });
+    let closest = null; near.forEach((s) => { const d = effD(s); if (!closest || d < closest.d) closest = { s, d }; });
     hint(!fast && closest ? (closest.d <= RANGE ? 'Ein Falter ist ganz nah – antippen zum Fangen!' : 'Nächster Falter: ' + Math.round(closest.d) + ' m') : '');
-    Object.values(markers).forEach((m) => { const s = m._sf; m.getElement().classList.toggle('near', dist(me, s) <= RANGE); });
+    Object.values(markers).forEach((m) => { const s = m._sf; m.getElement().classList.toggle('near', effD(s) <= RANGE); });
+  }
+  /* 3.48.4: jede Sekunde fliegt der nächste Falter (bis 150 m) ein Stück auf dich zu */
+  function pullTick() {
+    if (!me || fast || !root) return;
+    let best = null;
+    Object.values(spawns).forEach((s) => { if (s.i == null || s.skip || st().got[s.id]) return; const d = dist(me, s); if (d > AR_MAX) return; const e = Math.max(0, d - (s.pull || 0)); if (!best || e < best.e) best = { s, d, e }; });
+    if (!best || best.e <= STAY) return;
+    best.s.pull = Math.min((best.s.pull || 0) + PULL, best.d - STAY);
+    const m = markers[best.s.id]; if (m) m.setLngLat(posOf(best.s));
   }
   /* Lebensraum am Ort des Falters aus den gezeichneten Kartenebenen lesen */
   function classify() {
@@ -186,14 +204,14 @@
     const el = document.createElement('button'); el.type = 'button'; el.className = 'jg-bf' + (s.i >= 6 ? ' rare' : ''); el.setAttribute('aria-label', 'Falter');
     el.innerHTML = img(s.i, 'mk') + '<i class="jg-sh"></i>';
     el.style.setProperty('--d', (s.r3 * 2).toFixed(2) + 's');
-    el.onclick = (e) => { e.stopPropagation(); const d = me ? dist(me, s) : 1e9; if (d > RANGE) { L.toast('Noch ' + Math.round(d - RANGE + 5) + ' m näher ran – dann klappt’s'); return; } catchScreen(s); };
-    const m = new window.maplibregl.Marker({ element: el }).setLngLat([s.lon, s.lat]).addTo(map); m._sf = s; markers[s.id] = m;
-    if (me) el.classList.toggle('near', dist(me, s) <= RANGE);
+    el.onclick = (e) => { e.stopPropagation(); const d = effD(s); if (d > RANGE) { L.toast('Noch ' + Math.round(d - RANGE + 5) + ' m näher ran – dann klappt’s'); return; } catchScreen(s); };
+    const m = new window.maplibregl.Marker({ element: el }).setLngLat(posOf(s)).addTo(map); m._sf = s; markers[s.id] = m;
+    if (me) el.classList.toggle('near', effD(s) <= RANGE);
   }
   function stop() {
     arStop();
     if (watchId != null) { try { navigator.geolocation.clearWatch(watchId); } catch (e) {} watchId = null; }
-    clearInterval(timer); timer = null;
+    clearInterval(timer); timer = null; clearInterval(pullT); pullT = null;
     if (map) { try { map.remove(); } catch (e) {} map = null; }
     markers = {}; spawns = {}; meMarker = null; me = null; lastFix = null; fast = false; fastN = 0; follow = true;
     if (root) { root.remove(); root = null; }
@@ -300,7 +318,7 @@
     if (!me || fast) return [];
     return Object.values(spawns).filter((s) => !s.skip && !st().got[s.id]).map((s) => {
       if (s.i == null) { if (!guess) return null; s.hab = s.hab || 'open'; s.i = pick('open', s); s.guess = 1; }
-      const d = dist(me, s); return d > AR_MAX ? null : { s, key: s.id, i: s.i, dist: d, bearing: bearingTo(me, s), near: d <= RANGE };
+      if (dist(me, s) > AR_MAX + (s.pull ? 50 : 0)) return null; const d = effD(s); return { s, key: s.id, i: s.i, dist: d, bearing: bearingTo(me, s), near: d <= RANGE, come: !!s.pull };
     }).filter(Boolean).sort((a, b) => a.dist - b.dist);
   }
   function arInit() {
@@ -334,7 +352,7 @@
     const W = ar.lay.clientWidth, H = ar.lay.clientHeight, hd = A() ? A().heading() : null, list = arTargets(false), seen = {};
     list.forEach((t, k) => {
       seen[t.key] = 1; let el = ar.els[t.key];
-      if (!el) { el = document.createElement('button'); el.type = 'button'; el.className = 'jg-sp' + (t.i >= 7 ? ' rare' : ''); el.innerHTML = img(t.i, 'fly'); el.setAttribute('aria-label', falter(t.i).name); el.onclick = () => { const s = spawns[t.key]; if (!s || !me) return; const d = dist(me, s); if (d > RANGE) { L.toast(falter(s.i).name + ': noch ' + Math.round(d) + ' m – geh in diese Richtung'); return; } catchScreen(s); }; ar.spr.appendChild(el); ar.els[t.key] = el; }
+      if (!el) { el = document.createElement('button'); el.type = 'button'; el.className = 'jg-sp' + (t.i >= 7 ? ' rare' : ''); el.innerHTML = img(t.i, 'fly'); el.setAttribute('aria-label', falter(t.i).name); el.onclick = () => { const s = spawns[t.key]; if (!s || !me) return; const d = effD(s); if (d > RANGE) { L.toast(falter(s.i).name + (s.pull ? ' fliegt zu dir – noch ' + Math.round(d) + ' m' : ': noch ' + Math.round(d) + ' m – geh in diese Richtung')); return; } catchScreen(s); }; ar.spr.appendChild(el); ar.els[t.key] = el; }
       /* Richtung im Bild: mit Kompass echt, ohne Kompass nahe Falter in der Mitte, ferne verteilt */
       const r = hd != null ? rel(t.bearing - hd) : t.near ? (k % 3 - 1) * 12 : (k % 5 - 2) * 18;
       const vis = Math.abs(r) < HFOV / 2 + 8; el.style.display = vis ? '' : 'none'; if (!vis) return;
@@ -353,7 +371,7 @@
     const near = list.filter((t) => t.near), far = list.find((t) => !t.near);
     ar.tip.textContent = !me ? '📍 Suche deinen Standort …' : fast ? '🚗 Zu schnell – Falter zeigen sich nur zu Fuß' :
       near.length ? (near.length === 1 ? '🦋 ' + falter(near[0].i).name + ' ist ganz nah' + (hd != null && Math.abs(rel(near[0].bearing - hd)) > HFOV / 2 ? ' – ' + sideOf(near[0].bearing - hd) : ' – antippen!') : '🦋 ' + near.length + ' Falter ganz nah – antippen!') :
-      far ? 'Nächster Falter: ' + falter(far.i).name + ', ' + Math.round(far.dist) + ' m' + (hd != null ? ' ' + sideOf(far.bearing - hd) : '') :
+      far ? (far.come ? '🦋 ' + falter(far.i).name + ' fliegt zu dir – ' + Math.round(far.dist) + ' m' : 'Nächster Falter: ' + falter(far.i).name + ', ' + Math.round(far.dist) + ' m') + (hd != null ? ' ' + sideOf(far.bearing - hd) : '') :
       Object.keys(spawns).length && !Object.values(spawns).some((s) => s.i != null) ? '🔎 Schaue nach Faltern in der Umgebung …' : '🌿 Hier fliegt gerade keiner – geh ein Stück weiter';
     if (hd == null && me && !ar.noCompass) { ar.noCompass = 1; L.toast('Kein Kompass gefunden – Richtungen sind ungefähr'); }
   }
