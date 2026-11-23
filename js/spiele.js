@@ -445,7 +445,7 @@
     box.appendChild(tile('🔥', 'Worauf habt ihr heute Bock?', '', () => P().playDeck('bock')));
     box.appendChild(tile('💬', 'Klartext', '', () => { L.showSub('play', 'klartext'); if (window.LZN && window.LZN.render) window.LZN.render(); window.scrollTo(0, 0); }, hotExtra(hot.klartext)));
     sec('Draußen');
-    box.appendChild(tile('🕸️', 'Falterjagd', '', ext('LZJ', (J) => J.open())));
+    box.appendChild(tile('💞', 'Falterspaziergang', '', ext('LZJ', (J) => J.open()))); /* 3.49.0: Falterjagd → Falterspaziergang */
     box.appendChild(tile('✨', 'Falter zu Besuch', '', ext('LZA', (A) => A.visit())));
     box.appendChild(tile('🌸', 'Papillon in der Heide', '', heide));
     sec('Kreativ');

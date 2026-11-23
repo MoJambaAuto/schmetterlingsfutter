@@ -251,7 +251,7 @@
       '<div class="fx-grid">' + grid + '</div>' +
       (have >= LADDER.length ? '' : '<p class="about" style="font-size:15px;color:var(--text-muted);margin-top:8px">Nach allen neun Arten kommen Prachtformen – schillernd, mit Sternenglanz und in Regenbogenfarben.</p>') +
       '<p class="wi-hintp"><button type="button" class="wi-link" data-hilfe>🌱 Echten Faltern helfen</button></p>' +
-      '<div class="row wrap" style="margin-top:12px">' + (window.LZJ ? '<button class="pill-btn primary" data-jagd>🕸️ Draußen fangen</button>' : '') + '<button class="pill-btn ghost" data-cancel>Schließen</button></div>', (sh) => {
+      '<div class="row wrap" style="margin-top:12px">' + (window.LZJ ? '<button class="pill-btn primary" data-jagd>💞 Falterspaziergang</button>' : '') + '<button class="pill-btn ghost" data-cancel>Schließen</button></div>', (sh) => {
       sh.querySelector('[data-cancel]').onclick = L.closeSheet;
       const jb = sh.querySelector('[data-jagd]'); if (jb) jb.onclick = () => { L.closeSheet(); if (document.querySelector('.jagd')) return; setTimeout(() => window.LZJ.open(), 60); };
       sh.querySelectorAll('.fx-cell').forEach((c) => c.onclick = () => {

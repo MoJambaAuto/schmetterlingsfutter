@@ -12,6 +12,7 @@
 
   /* Was ist neu – kurz, in Alltagssprache. Neueste zuerst. */
   D.news = [
+    { v: '3.49.0', items: ['💞 Neu: der Falterspaziergang – geht zusammen raus, alle paar Minuten kommt ein Falter zum Fangen, danach eine Frage für euch zwei. Ohne Karte, ohne Suchen.'] },
     { v: '3.48.4', items: ['🕸️ Falterjagd draußen: der nächste Falter fliegt dir jetzt entgegen – kein Suchen mehr nach unerreichbaren Stellen'] },
     { v: '3.48.3', items: ['🎲 Spiele zu zweit: pro Spiel läuft nur noch eine Partie – auch wenn ihr gleichzeitig startet'] },
     { v: '3.48.1', items: ['🔒 Verbindungs-Codes noch sicherer – am einfachsten per QR-Code oder Link koppeln'] },
