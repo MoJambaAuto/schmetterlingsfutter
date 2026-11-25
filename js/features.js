@@ -99,6 +99,7 @@
   function amazonUrl(q) {
     if (window.LZP) return window.LZP.amazonUrl(q);
     const tag = (D.affiliateTag || '').trim();
+    if (L.inTwa && L.inTwa()) return L.webGift(q, 0, !tag); /* 3.50.0: Play-App über die Website */
     return 'https://www.amazon.de/s?k=' + encodeURIComponent(q) + (tag ? '&tag=' + encodeURIComponent(tag) : '');
   }
   function giftSheet(o) {

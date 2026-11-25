@@ -24,6 +24,8 @@
   try { if (sessionStorage.getItem('sf.umzugSkip') === '1') return; } catch (e) {}
 
   var rest = location.search + location.hash;
+  /* 3.50.0: Play-App merkt sich das auch an der neuen Adresse (Amazon-Knöpfe gehen dort über die Website) */
+  if (twa && !/[?&]twa=1(&|$)/.test(location.search)) rest = (location.search ? location.search + '&' : '?') + 'twa=1' + location.hash;
   var standalone = false; try { standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; } catch (e) {}
   var moved = null; try { moved = JSON.parse(get('sf.umzug') || 'null'); } catch (e) {}
 

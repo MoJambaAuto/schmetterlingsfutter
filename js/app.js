@@ -640,6 +640,8 @@
     book: () => { if (window.LZX && window.LZX.book) window.LZX.book(); },
     news: () => { if (window.LZU && window.LZU.newsSheet) window.LZU.newsSheet(); },
     hilfe: () => { if (window.LZWI && window.LZWI.hilfe) window.LZWI.hilfe(); },
+    /* 3.50.0: Papillons Fund des Tages auf der Website */
+    funde: () => { if (window.LZS) window.LZS.count('funde_open'); window.open('https://schmetterlingsfutter.de/funde/', '_blank', 'noopener'); },
     setdate: () => { $('btnSetDate').click(); },
     send: () => showView('send'),
     post: () => showView('post'),
@@ -755,10 +757,24 @@
     if (navigator.share) { try { await navigator.share({ text }); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
     try { await navigator.clipboard.writeText(text); toast('Kopiert 📋'); } catch (e) { toast('Teilen nicht möglich'); }
   }
+  /* 3.50.0 (AE-09): Läuft die App als Play-App (TWA)? Gleiche Abfrage wie js/umzug.js (Herkunft android-app://…, Merker sf.twa);
+     dazu ?twa=1, das umzug.js beim Umzug aus der alten Play-App mitgibt. In der Play-App führen Amazon-Knöpfe erst auf
+     schmetterlingsfutter.de/geschenk/ – Amazon-Partnerlinks stehen dann nur auf der Website. Im Browser bleibt alles gleich. */
+  function inTwa() {
+    try {
+      if (/^android-app:\/\/de\.mojamba\.schmetterlingsfutter/.test(document.referrer || '') || /[?&]twa=1(&|$)/.test(location.search)) localStorage.setItem('sf.twa', '1');
+      return localStorage.getItem('sf.twa') === '1';
+    } catch (e) { return false; }
+  }
+  /* q = Suchbegriff, cent = Höchstbetrag (Preisfilter), noTag = Stelle verlinkt heute ohne Partnerkennung */
+  function webGift(q, cent, noTag) {
+    return 'https://schmetterlingsfutter.de/geschenk/?q=' + encodeURIComponent(q) + (cent > 0 ? '&m=' + Math.round(cent) : '') + (noTag ? '&a=1' : '');
+  }
+  inTwa();
   window.LZ = {
     get S() { return S; }, save, fmt, esc, pick, toast, openSheet, closeSheet, confirmSheet, promptSheet,
     spawnHearts, showMessage, showView, showSub, haptic, fmtDate, parseISODate, atMidnight, todayKey, shareText, renderHeader,
-    setToggle, showEnvelope, renderTime, ago, tidyMsg
+    setToggle, showEnvelope, renderTime, ago, tidyMsg, inTwa, webGift
   };
 
   /* Melden: schickt den Wortlaut der Vorlage (ohne eure Namen) an die Redaktion */

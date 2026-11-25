@@ -76,6 +76,9 @@ html[data-view]:not([data-view="home"]) #app .occasion-chip { display:none; }
 
 /* ---------- Schicken ---------- */
 #app .tiles.four { grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; }
+/* 3.50.0: eine breite Kachel (Papillons Fund des Tages auf Heute) */
+#app .tiles.one { grid-template-columns:1fr; }
+#app .tiles.one .tile { min-height:64px; flex-direction:row; gap:10px; }
 #app .quick-row .tile { min-height:80px; padding:6px 2px; gap:4px; }
 #app .quick-row .tile-t { font-size:16px; }
 #app .quick-head { align-self:stretch; margin:4px 0 4px; }

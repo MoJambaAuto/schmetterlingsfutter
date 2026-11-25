@@ -330,6 +330,8 @@
     const tag = (adult && !D.affiliateAdult) ? '' : (D.affiliateTag || '').trim();
     /* 3.26.0: Suchbegriff passend zur Person (nicht bei eigener Suche) und Budget als Preisfilter */
     const W = window.LZW; if (W && !raw && !adult) q = W.query(q);
+    /* 3.50.0 (AE-09): in der Play-App über die Website, Budget als Höchstbetrag in Cent */
+    if (L.inTwa && L.inTwa()) { const m = ((W ? W.priceParam() : '').match(/p_36%3A-(\d+)/) || [])[1]; return L.webGift(q, +m || 0, !tag); }
     return 'https://www.amazon.de/s?k=' + encodeURIComponent(q) + (W ? W.priceParam() : '') + (tag ? '&tag=' + encodeURIComponent(tag) : '');
   }
   function tips(key, n) {

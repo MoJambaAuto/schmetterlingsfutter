@@ -134,7 +134,7 @@
         if (i >= 0) sel.splice(i, 1); else { if (sel.length >= prod().max) sel.shift(); sel.push(l); }
         sel.sort((a, c) => all.indexOf(a) - all.indexOf(c)); draw(sh);
       });
-      sh.querySelector('[data-amz]').onclick = async () => { await copyText(); C('bu_gift_click:' + pid + ':amazon'); window.open(P() ? P().amazonUrl(prod().q, false, true) : 'https://www.amazon.de/s?k=' + encodeURIComponent(prod().q), '_blank', 'noopener'); };
+      sh.querySelector('[data-amz]').onclick = async () => { await copyText(); C('bu_gift_click:' + pid + ':amazon'); window.open(P() ? P().amazonUrl(prod().q, false, true) : (L.inTwa && L.inTwa() ? L.webGift(prod().q, 0, true) : 'https://www.amazon.de/s?k=' + encodeURIComponent(prod().q)), '_blank', 'noopener'); };
       sh.querySelector('[data-card]').onclick = () => { L.closeSheet(); shareImage(p, sel); };
       const sb = sh.querySelector('[data-shop]'); if (sb) sb.onclick = () => { C('bu_shop_click:' + p.id); window.open(p.shop, '_blank', 'noopener'); };
     });
