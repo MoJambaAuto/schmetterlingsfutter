@@ -106,7 +106,7 @@
       const urls = Array.from(used).map((id) => p._media[id]).filter(Boolean).map((m) => new URL(ed.dir + m.file, location.href).href);
       o.total = urls.length;
       const mark = 'sf.pfade.cache.' + ed.id, want = String(p.editionVersion) + '|' + urls.length;
-      if (ls(mark) && ls(mark) !== want) await caches.delete(cacheName(ed)); /* neue Fassung des Pakets: Fotos neu holen */
+      if (ls(mark) && ls(mark) !== want && navigator.onLine !== false) await caches.delete(cacheName(ed)); /* 3.53.3: ohne Netz die alten Fotos behalten */ /* neue Fassung des Pakets: Fotos neu holen */
       const c = await caches.open(cacheName(ed));
       const have = new Set((await c.keys()).map((r) => r.url));
       const todo = urls.filter((u) => !have.has(u)); o.n = urls.length - todo.length; paintOff(ed);

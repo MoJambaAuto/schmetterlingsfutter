@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "editionId": "fuerteventura-sued",
-  "editionVersion": "0.2.1-draft",
+  "editionVersion": "0.2.2-draft",
   "title": "Liebespfade · Fuerteventura Süden",
   "status": "draft",
   "language": "de",
@@ -373,7 +373,7 @@
           },
           "arrivalRules": {
             "allowManualCheckIn": true,
-            "safetyNote": "Keine Wertsachen im Auto lassen – auch nicht im Kofferraum. Nur auf dem befestigten Platz bleiben. Warme Jacke mitnehmen – oben ist es windig."
+            "safetyNote": "Keine Wertsachen im Auto lassen – auch nicht im Kofferraum. Bei unserem Besuch lagen auf dem Parkplatz unten an der Straße viele Glasscherben von eingeschlagenen Autoscheiben. Der Weg hinauf wirkt kurz, ist aber zu weit, um schnell zurück am Auto zu sein. Oben nur auf dem befestigten Platz bleiben und eine warme Jacke mitnehmen – es ist windig."
           },
           "safety": {
             "publicAccessVerified": false,
