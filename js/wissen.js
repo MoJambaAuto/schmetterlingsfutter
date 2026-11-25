@@ -79,8 +79,10 @@
     return d.getDate() % 2 === 0 ? hash(key + '|s') % n : n + hash(key + '|a') % ALLG.length;
   }
   let cur = null; // gerade gezeigte Tatsache (für „Noch eins“)
+  /* 3.53.0: frische Tatsache des Tages aus der Futter-Engine (tagesfutter.js) zuerst, sonst die eingebauten */
+  const frisch = () => (window.LZT && window.LZT.heute('wissen')) || null;
   function cardHtml() {
-    const m = new Date().getMonth(), i = todayIdx(), t = pool(m)[i];
+    const m = new Date().getMonth(), f = frisch(), t = f ? f.t : pool(m)[todayIdx()];
     return '<span class="eyebrow wi-eb">🦋 Falter-Wissen · ' + MONAT[m] + '</span><span class="wi-t">' + esc(t) + '</span>';
   }
   function renderCard() {
@@ -89,14 +91,14 @@
     let c = $('wiCard');
     if (!c) { c = document.createElement('button'); c.type = 'button'; c.id = 'wiCard'; c.className = 'card soft wi-card'; c.setAttribute('aria-label', 'Falter-Wissen öffnen'); c.onclick = () => { C('wi_card'); sheet(); }; }
     if (at.nextElementSibling !== c) at.after(c);
-    const sig = L.todayKey(); if (c.dataset.sig === sig) return; c.dataset.sig = sig; c.innerHTML = cardHtml();
+    const f = frisch(); const sig = L.todayKey() + (f ? '|' + f.id : ''); if (c.dataset.sig === sig) return; c.dataset.sig = sig; c.innerHTML = cardHtml();
   }
   function sheet(startAt) {
-    const m = new Date().getMonth(), list = pool(m);
-    cur = typeof startAt === 'number' ? startAt : todayIdx();
+    const m = new Date().getMonth(), f = frisch(), vorn = f ? 1 : 0, list = (f ? [f.t] : []).concat(pool(m));
+    cur = typeof startAt === 'number' ? startAt + vorn : (f ? 0 : todayIdx() + vorn);
     L.openSheet('<h3>🦋 Falter-Wissen</h3><p class="wi-big" id="wiBig"></p><p class="wi-sub" id="wiSub"></p>' +
       '<div class="row wrap" style="justify-content:center"><button class="pill-btn primary" data-next>Noch eins</button><button class="pill-btn" data-hilfe>🌱 Echten Faltern helfen</button><button class="pill-btn ghost" data-cancel>Schließen</button></div>', (sh) => {
-      const draw = () => { sh.querySelector('#wiBig').textContent = list[cur]; sh.querySelector('#wiSub').textContent = cur < SAISON[m].length ? 'Passt gerade zum ' + MONAT[m] : 'Wusstest du schon?'; };
+      const draw = () => { sh.querySelector('#wiBig').textContent = list[cur]; sh.querySelector('#wiSub').textContent = cur < vorn ? 'Neu heute' : cur - vorn < SAISON[m].length ? 'Passt gerade zum ' + MONAT[m] : 'Wusstest du schon?'; };
       draw();
       sh.querySelector('[data-next]').onclick = () => { cur = (cur + 1) % list.length; L.haptic(5); draw(); C('wi_next'); };
       sh.querySelector('[data-cancel]').onclick = L.closeSheet;
@@ -213,5 +215,6 @@
   window.LZWI = { ART, HEIDE, QUIZ, steck, moreRow, moreRows, hint, hilfe, sheet, renderCard, todayFact: () => pool(new Date().getMonth())[todayIdx()] };
   renderCard();
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') renderCard(); });
+  document.addEventListener('lzt-neu', renderCard); /* 3.53.0 */
   setInterval(renderCard, 60000);
 })();

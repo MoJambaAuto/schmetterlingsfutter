@@ -357,13 +357,17 @@
   /* ---------- Start ---------- */
   /* ---------- 6. Piek des Tages ---------- */
   function hash(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return Math.abs(h >>> 0); }
+  /* 3.53.0: Gibt es für heute einen frischen Flügelschlag aus der Futter-Engine (tagesfutter.js), kommt der zuerst.
+     „Etwas anderes“ wählt weiter aus den eingebauten. Kennung für „Erledigt“: Zahl = eingebaut, 'f:<id>' = Tagesfutter. */
+  const piekId = (p) => (p && p.id ? 'f:' + p.id : D.pieks.indexOf(p));
   function todaysPiek() {
     const s = S(); const key = L.todayKey();
     if (s.piekOverride && s.piekOverride.date === key) return D.pieks[s.piekOverride.idx];
+    const f = window.LZT && window.LZT.heute('piek'); if (f) return f;
     return D.pieks[hash(key + '|piek|' + s.sender) % D.pieks.length];
   }
   function renderPiek() {
-    const s = S(); const key = L.todayKey(); const p = todaysPiek(); const idx = D.pieks.indexOf(p);
+    const s = S(); const key = L.todayKey(); const p = todaysPiek(); const idx = piekId(p);
     // erledigt gilt je Aufgabe: kommt eine neue (neuer Tag oder „Etwas anderes“), ist sie wieder offen
     if (!s.piekDoneIdx) s.piekDoneIdx = {};
     if (s.piekDone[key] === true && !s.piekDoneIdx[key]) s.piekDoneIdx[key] = [idx]; // Übernahme aus älteren Versionen
@@ -377,7 +381,7 @@
     if (window.LZP) { window.LZP.mountTips($('piekTips'), 'piek_' + p.c, 'Hilft dabei'); window.LZP.mountTips($('thanksTips'), 'thanks', 'Danke mit etwas Kleinem'); }
   }
   $('btnPiekDone').onclick = () => {
-    const s = S(); const key = L.todayKey(); const idx = D.pieks.indexOf(todaysPiek());
+    const s = S(); const key = L.todayKey(); const idx = piekId(todaysPiek());
     if (!s.piekDoneIdx) s.piekDoneIdx = {}; const list = s.piekDoneIdx[key] || (s.piekDoneIdx[key] = []); if (list.indexOf(idx) >= 0) return;
     list.push(idx); s.piekDone[key] = true; s.piekCount++;
     Object.keys(s.piekDoneIdx).sort().slice(0, -14).forEach((k) => delete s.piekDoneIdx[k]);
@@ -385,7 +389,7 @@
     L.toast(L.pick(['Papillon schlägt begeistert mit den Flügeln. 🦋', 'So geht Liebe im Alltag. ✓', 'Erledigt. Schmetterlinge gefüttert. 🦋', 'Kein Wort zu ' + s.receiver + '. Einfach gemacht. Stark.']));
   };
   $('btnPiekOther').onclick = () => {
-    const s = S(); let idx; const cur = D.pieks.indexOf(todaysPiek());
+    const s = S(); let idx; const cur = piekId(todaysPiek());
     do { idx = Math.floor(Math.random() * D.pieks.length); } while (idx === cur && D.pieks.length > 1);
     s.piekOverride = { date: L.todayKey(), idx }; L.save(); renderPiek();
   };
@@ -438,6 +442,7 @@
   document.querySelector('.seg[data-seg="wishes"] [data-sub="thanks"]').addEventListener('click', renderThanks);
   $('nav-wishes').addEventListener('click', renderThanks);
   $('nav-home').addEventListener('click', renderPiek);
+  document.addEventListener('lzt-neu', renderPiek); /* 3.53.0: Tagesfutter frisch geladen */
   // App bleibt oft tagelang offen: bei Rückkehr und bei Tageswechsel neu zeichnen
   let piekDay = L.todayKey();
   const piekFresh = () => { piekDay = L.todayKey(); renderPiek(); renderOccasionChip(); };
