@@ -1,0 +1,1220 @@
+{
+  "schemaVersion": "1.0.0",
+  "editionId": "fuerteventura-sued",
+  "editionVersion": "0.2.0-draft",
+  "title": "Liebespfade · Fuerteventura Süden",
+  "status": "draft",
+  "language": "de",
+  "destination": {
+    "country": "ES",
+    "region": "Fuerteventura",
+    "area": "Süden (Jandía, Pájara, Betancuria)"
+  },
+  "summary": "Zwei Routen für Paare, vor Ort erprobt im November 2026: ein ruhiger Vormittag an Lagune, Leuchtturm und Hafen und ein Tag mit Aussicht, Bergdorf und Höhlen.",
+  "provenance": {
+    "fieldCheckedAt": "2026-11-22",
+    "fieldCheckedBy": "Liebespfade-Team (Mo und Partnerin)",
+    "note": "Feldbesuch 21./22.11.2026 durch Mo und Partnerin; Fakten aus Quellen vom 19.11.2026, vor Veröffentlichung erneut prüfen.",
+    "approvedBy": null
+  },
+  "candidates": [
+    {
+      "id": "lotsenpunkt-lagune",
+      "kind": "lotsenpunkt",
+      "title": "Lagune von Sotavento",
+      "lat": 28.11741,
+      "lon": -14.2598,
+      "source": "GPS-Messung Flugleitstand 21.11.2026",
+      "status": "field_checked",
+      "note": "Öffentlicher Strand; ob ein AR-Schmetterling hier sicher und erlaubt ist, vor Veröffentlichung prüfen.",
+      "arButterfly": {
+        "decision": "ja",
+        "decidedBy": "Mo",
+        "decidedAt": "2026-11-25",
+        "requirement": "professionell umsetzen (Mo: „100 % professionell umgesetzt“)",
+        "status": "geplant",
+        "beforeLaunch": [
+          "Standort vor Ort als sicher und öffentlich zugänglich bestätigen (kein Schutzgebiet betreten, kein Klippenrand, kein Verkehr)",
+          "Schmetterling nur virtuell, nichts vor Ort anbringen",
+          "Funktioniert auch ohne genaues GPS: manueller Check-in als Ausweg",
+          "Art des Schmetterlings passend zur Insel (Quelle Biota/Atlantis)"
+        ]
+      }
+    },
+    {
+      "id": "lotsenpunkt-betancuria",
+      "kind": "lotsenpunkt",
+      "title": "Betancuria",
+      "lat": 28.4244,
+      "lon": -14.05782,
+      "source": "GPS-Messung Flugleitstand 22.11.2026",
+      "status": "field_checked",
+      "note": "Messpunkt im Dorf; genauen Platz vor Veröffentlichung festlegen.",
+      "arButterfly": {
+        "decision": "ja",
+        "decidedBy": "Mo",
+        "decidedAt": "2026-11-25",
+        "requirement": "professionell umsetzen (Mo: „100 % professionell umgesetzt“)",
+        "status": "geplant",
+        "beforeLaunch": [
+          "Standort vor Ort als sicher und öffentlich zugänglich bestätigen (kein Schutzgebiet betreten, kein Klippenrand, kein Verkehr)",
+          "Schmetterling nur virtuell, nichts vor Ort anbringen",
+          "Funktioniert auch ohne genaues GPS: manueller Check-in als Ausweg",
+          "Art des Schmetterlings passend zur Insel (Quelle Biota/Atlantis)"
+        ]
+      }
+    },
+    {
+      "id": "lotsenpunkt-ajuy",
+      "kind": "lotsenpunkt",
+      "title": "Ajuy",
+      "lat": 28.39959,
+      "lon": -14.15578,
+      "source": "GPS-Messung Flugleitstand 22.11.2026",
+      "status": "field_checked",
+      "note": "Messpunkt am Ort; Küstenweg-Sicherheit beachten.",
+      "arButterfly": {
+        "decision": "ja",
+        "decidedBy": "Mo",
+        "decidedAt": "2026-11-25",
+        "requirement": "professionell umsetzen (Mo: „100 % professionell umgesetzt“)",
+        "status": "geplant",
+        "beforeLaunch": [
+          "Standort vor Ort als sicher und öffentlich zugänglich bestätigen (kein Schutzgebiet betreten, kein Klippenrand, kein Verkehr)",
+          "Schmetterling nur virtuell, nichts vor Ort anbringen",
+          "Funktioniert auch ohne genaues GPS: manueller Check-in als Ausweg",
+          "Art des Schmetterlings passend zur Insel (Quelle Biota/Atlantis)"
+        ]
+      }
+    },
+    {
+      "id": "kandidat-butihondo",
+      "kind": "ort",
+      "title": "Playa Butihondo",
+      "lat": 28.06208,
+      "lon": -14.31193,
+      "source": "GPS-Messung Flugleitstand 23.11.2026",
+      "status": "researched",
+      "note": "Plan B am 23.11.; Strand-Check mit 3/3 Sternen, sonst keine Notizen – für eine Route noch zu wenig."
+    },
+    {
+      "id": "kandidat-cofete",
+      "kind": "ort",
+      "title": "Playa de Cofete",
+      "lat": null,
+      "lon": null,
+      "source": "quelle-bus-111",
+      "status": "draft",
+      "note": "Ausgelassen: Unsicherheit beim Rückbus. Mit dem Mietwagen meist nicht erlaubt (Piste). Nur per Bus 111; Fahrplan amtlich prüfen."
+    },
+    {
+      "id": "extra-vollmondabend",
+      "kind": "idee",
+      "title": "Vollmondabend in Jandía",
+      "lat": null,
+      "lon": null,
+      "source": "Fotos 23.11.2026 18:14–18:16; Mondphase laut timeanddate (Vollmond 24.11.2026)",
+      "status": "field_checked",
+      "mediaIds": [
+        "k-vollmond-berge",
+        "k-vollmond-nah"
+      ],
+      "note": "Der Mond ging gegen 18 Uhr über den Bergen auf. Idee für eine Abend-Station rund um Vollmond."
+    },
+    {
+      "id": "kandidat-caleta-de-fuste",
+      "kind": "ort",
+      "title": "Caleta de Fuste – Abschiedsmorgen",
+      "lat": null,
+      "lon": null,
+      "source": "Fotos 24.11.2026 07:04–07:14",
+      "status": "researched",
+      "mediaIds": [
+        "k-caleta-herzen-sand",
+        "k-caleta-turm"
+      ],
+      "note": "Herzen aus Steinen im Sand und der alte Wehrturm, nahe dem Flughafen – passt als letzte Station vor dem Rückflug. Ortsangaben noch prüfen."
+    }
+  ],
+  "routes": [
+    {
+      "id": "lagune-und-leuchtturm",
+      "status": "field_checked",
+      "title": "Lagune & Leuchtturm",
+      "summary": "Ein ruhiger Vormittag im Süden: klares Wasser in der Lagune, ein Holzsteg zum Leuchtturm und Churros im Hafen.",
+      "mood": [
+        "romantic",
+        "explore"
+      ],
+      "estimatedMinutes": 240,
+      "budgetEuro": 12,
+      "travelMode": "car_and_walk",
+      "stops": [
+        {
+          "id": "lagune-risco-del-paso",
+          "title": "Die Lagune von Sotavento",
+          "description": "Bei Risco del Paso liegt hinter einer Sandbank eine flache Lagune. Bei ruhigem Wetter spiegeln sich die Hügel im Wasser. Am schönsten ist es früh: Ab Mittag wird es voll.",
+          "placeId": "risco-del-paso",
+          "geo": {
+            "lat": null,
+            "lon": null,
+            "source": null,
+            "checkedAt": null
+          },
+          "arrivalRules": {
+            "allowManualCheckIn": true,
+            "safetyNote": "Das letzte Stück der Zufahrt und der Parkplatz sind nicht asphaltiert. Viele Mietverträge erlauben nur Asphalt – prüft euren Vertrag und lauft notfalls das letzte Stück. Bei Flut wird die Sandbank überspült: Rückweg im Blick behalten."
+          },
+          "safety": {
+            "publicAccessVerified": false,
+            "permission": "unverified"
+          },
+          "roles": {
+            "partnerA": {
+              "task": "Such dir ein Detail im Wasser aus – eine Muschel, eine Spiegelung, ein Muster im Sand. Verrate es nicht."
+            },
+            "partnerB": {
+              "task": "Deine Person hat sich ein Detail im Wasser gemerkt. Finde es mit höchstens drei Ja-Nein-Fragen."
+            }
+          },
+          "challenge": {
+            "type": "conversation",
+            "instructions": "Setzt euch ans Wasser und erzählt euch: Woran merkt ihr, dass ihr gerade wirklich Urlaub habt?",
+            "fallback": "Kein Strand in der Nähe? Beschreibt euch gegenseitig den schönsten Ort am Wasser, an dem ihr je zusammen wart."
+          },
+          "mediaIds": [
+            "k-sotavento-lagune-flach",
+            "k-sotavento-reiher",
+            "sotavento-lagune-spiegelung",
+            "k-sotavento-lagune-felsen",
+            "k-sotavento-duenen",
+            "sotavento-strand-duenen",
+            "sotavento-lagune-weite"
+          ],
+          "sourceIds": [
+            "quelle-sotavento"
+          ],
+          "fieldCheck": {
+            "date": "2026-11-21",
+            "romance": 4,
+            "practical": 4,
+            "minutesOnSite": 105,
+            "costTwoEuro": 0,
+            "tips": [
+              "Möglichst früh kommen – dann sind kaum Leute da.",
+              "Ab Mittag stark überlaufen und weniger romantisch.",
+              "Tipp vom Team: zum Sonnenaufgang hinfahren.",
+              "Am 21.11. fast windstill, gegen 11 Uhr sonnig.",
+              "Ein weißer Reiher (vermutlich Seidenreiher) fischte in der Lagune."
+            ]
+          },
+          "offers": {
+            "status": "offen",
+            "note": "Noch keine Angebote. Nur echte, angesehene Direktlinks, als Werbung gekennzeichnet."
+          },
+          "reviewStatus": "not_reviewed",
+          "story": {
+            "text": "Wir waren kurz nach zehn an der Lagune, und es war fast windstill. Das Wasser lag so ruhig da, dass sich die Hügel darin spiegelten. Mitten in der Lagune stand ein weißer Reiher und suchte nach Futter. Bis zum Mittag hatten wir den Ort fast für uns – danach wurde es schnell voll. Unser Tipp: Kommt früh, am besten zum Sonnenaufgang.",
+            "status": "vorschlag_claude",
+            "note": "Von Claude aus Fotos und Notizen vorgeschrieben – Mo korrigiert."
+          }
+        },
+        {
+          "id": "holzsteg-saladar",
+          "title": "Holzsteg zum Leuchtturm",
+          "description": "In Morro Jable führt ein Holzsteg über den Saladar, ein geschütztes Feuchtgebiet, direkt auf den Leuchtturm zu. Unterwegs steht eine Figur, die auf einer schrägen Stange balanciert.",
+          "placeId": "saladar-morro-jable",
+          "geo": {
+            "lat": null,
+            "lon": null,
+            "source": null,
+            "checkedAt": null
+          },
+          "arrivalRules": {
+            "allowManualCheckIn": true,
+            "safetyNote": "Der Saladar ist ein Schutzgebiet: nur auf dem Steg und den Wegen bleiben, nichts mitnehmen."
+          },
+          "safety": {
+            "publicAccessVerified": false,
+            "permission": "unverified"
+          },
+          "roles": {
+            "partnerA": {
+              "task": "Schau dir die balancierende Figur an. Überleg dir heimlich, wofür sie in eurer Beziehung stehen könnte."
+            },
+            "partnerB": {
+              "task": "Geh ein paar Schritte voraus und such den Punkt, an dem der Leuchtturm genau in der Mitte des Stegs steht. Warte dort."
+            }
+          },
+          "challenge": {
+            "type": "conversation",
+            "instructions": "Erzählt euch eure Gedanken: Was hält euch beide im Gleichgewicht, wenn es mal wackelt?",
+            "fallback": "Kein Steg in der Nähe? Nennt euch abwechselnd drei Dinge, die euch im Alltag Halt geben."
+          },
+          "mediaIds": [
+            "k-holzsteg-leuchtturm",
+            "k-liebesschloss-meer",
+            "morrojable-holzsteg-leuchtturm",
+            "k-saladar-leuchtturm",
+            "morrojable-skulptur-leuchtturm",
+            "morrojable-skulptur-hochformat",
+            "k-leuchtturm-meer"
+          ],
+          "sourceIds": [
+            "quelle-saladar"
+          ],
+          "fieldCheck": {
+            "date": "2026-11-21",
+            "romance": 4,
+            "practical": 3,
+            "minutesOnSite": null,
+            "costTwoEuro": 0,
+            "tips": [
+              "Kurzer, flacher Weg – passt gut nach dem Strand."
+            ]
+          },
+          "offers": {
+            "status": "offen",
+            "note": "Noch keine Angebote. Nur echte, angesehene Direktlinks, als Werbung gekennzeichnet."
+          },
+          "reviewStatus": "not_reviewed",
+          "story": {
+            "text": "In Morro Jable führt ein langer Holzsteg über den Saladar, ein kleines Feuchtgebiet mit hohem Gras, direkt auf den Leuchtturm zu. An einem Geländer über dem Meer hängt ein Liebesschloss, dahinter liegen Segelboote in der Bucht. Wir waren zweimal hier: Es ist der perfekte kurze Spaziergang nach dem Strand.",
+            "status": "vorschlag_claude",
+            "note": "Von Claude aus Fotos und Notizen vorgeschrieben – Mo korrigiert."
+          }
+        },
+        {
+          "id": "cafe-im-hafen",
+          "title": "Kaffee im Hafen",
+          "description": "Im Hafen von Morro Jable gibt es ein kleines Lokal der Fischergenossenschaft mit Terrasse. Das Team hat dort Churros mit Schokolade und einen Barraquito probiert – den typischen kanarischen Kaffee mit Kondensmilch.",
+          "placeId": "hafen-morro-jable",
+          "geo": {
+            "lat": null,
+            "lon": null,
+            "source": null,
+            "checkedAt": null
+          },
+          "arrivalRules": {
+            "allowManualCheckIn": true,
+            "safetyNote": "Für zwei kostete der Besuch am 21.11. rund 11 €. Preise können sich ändern."
+          },
+          "safety": {
+            "publicAccessVerified": false,
+            "permission": "unverified"
+          },
+          "roles": {
+            "partnerA": {
+              "task": "Bestell heimlich etwas für deine Person, von dem du glaubst, dass es ihr schmeckt."
+            },
+            "partnerB": {
+              "task": "Rate, was deine Person für dich bestellt hat, bevor es kommt."
+            }
+          },
+          "challenge": {
+            "type": "conversation",
+            "instructions": "Probiert beide alles und vergebt Noten von 1 bis 5. Wer lag mit seiner Wahl besser?",
+            "fallback": "Kein Café offen? Erzählt euch, welches Essen euch an diese Reise erinnern soll."
+          },
+          "mediaIds": [
+            "k-hafen-reiher-boot",
+            "k-barraquito",
+            "k-cofradia-schild"
+          ],
+          "sourceIds": [],
+          "fieldCheck": {
+            "date": "2026-11-21",
+            "romance": 4,
+            "practical": 3,
+            "minutesOnSite": null,
+            "costTwoEuro": 11.1,
+            "tips": [
+              "Gute Churros und guter Barraquito (Notiz vom Team).",
+              "Lokal NICHT als Partner eingetragen – nur eigener Besuch als Gast.",
+              "Ein Graureiher saß auf einem Fischerboot im Hafen."
+            ]
+          },
+          "offers": {
+            "status": "offen",
+            "note": "Noch keine Angebote. Nur echte, angesehene Direktlinks, als Werbung gekennzeichnet."
+          },
+          "reviewStatus": "not_reviewed",
+          "story": {
+            "text": "Im Hafen saß ein Graureiher ganz ruhig auf einem Fischerboot, als würde er auf den Fang warten. Ein paar Schritte weiter, bei der Fischergenossenschaft, gab es für uns Churros mit Schokolade und einen Barraquito – den kanarischen Kaffee in bunten Schichten. Einfach, ehrlich und mit Blick aufs Wasser.",
+            "status": "vorschlag_claude",
+            "note": "Von Claude aus Fotos und Notizen vorgeschrieben – Mo korrigiert."
+          }
+        }
+      ]
+    },
+    {
+      "id": "aussicht-und-bergdorf",
+      "status": "field_checked",
+      "title": "Aussicht & Bergdorf",
+      "summary": "Ein ganzer Tag in den Bergen: weiter Blick vom Sternen-Aussichtspunkt, das alte Bergdorf Betancuria und die Höhlen von Ajuy an der Küste.",
+      "mood": [
+        "explore",
+        "surprise"
+      ],
+      "estimatedMinutes": 420,
+      "budgetEuro": 40,
+      "travelMode": "car_and_walk",
+      "stops": [
+        {
+          "id": "mirador-sicasumbre",
+          "title": "Aussichtspunkt Sicasumbre",
+          "description": "An der Straße FV-605 liegt ein Aussichtspunkt mit Steinmauern und Parkplatz. Von hier sieht man über braune Hügel bis zum Meer und hinunter zu den Stränden von Jandía. Nachts ist er ein offizieller Platz zum Sterneschauen.",
+          "placeId": "mirador-sicasumbre",
+          "geo": {
+            "lat": null,
+            "lon": null,
+            "source": null,
+            "checkedAt": null
+          },
+          "arrivalRules": {
+            "allowManualCheckIn": true,
+            "safetyNote": "Nur auf dem befestigten Platz bleiben. Warme Jacke mitnehmen – oben ist es windig."
+          },
+          "safety": {
+            "publicAccessVerified": false,
+            "permission": "unverified"
+          },
+          "roles": {
+            "partnerA": {
+              "task": "Such dir einen Punkt am Horizont aus und merk ihn dir. Gleich wirst du ihn beschreiben – ohne zu zeigen."
+            },
+            "partnerB": {
+              "task": "Hör dir die Beschreibung an und finde den Punkt am Horizont."
+            }
+          },
+          "challenge": {
+            "type": "conversation",
+            "instructions": "Stellt euch an die Mauer und erzählt euch: Wohin würdet ihr als Nächstes gern zusammen reisen?",
+            "fallback": "Keine Aussicht? Beschreibt euch gegenseitig die weiteste Aussicht, die ihr je hattet."
+          },
+          "mediaIds": [
+            "sicasumbre-blick-jandia",
+            "k-sicasumbre-ziege-schild",
+            "sicasumbre-steinmauer",
+            "sicasumbre-panorama",
+            "sicasumbre-bergland",
+            "sicasumbre-steinmann",
+            "sicasumbre-meer",
+            "sicasumbre-weg-gipfel",
+            "sicasumbre-westkueste",
+            "sicasumbre-tal-gelaender",
+            "sicasumbre-schild-ziege"
+          ],
+          "sourceIds": [
+            "quelle-sicasumbre"
+          ],
+          "fieldCheck": {
+            "date": "2026-11-22",
+            "romance": null,
+            "practical": null,
+            "minutesOnSite": 15,
+            "costTwoEuro": 0,
+            "tips": [
+              "Am 22.11. kurz vor 11 Uhr besucht, auf dem Weg nach Norden.",
+              "Sterne vergeben fehlt für diesen Ort – beim Prüfen ergänzen.",
+              "Die Ziegenfigur mit dem Schild „Fuerteventura“ steht hier am Aussichtspunkt."
+            ]
+          },
+          "offers": {
+            "status": "offen",
+            "note": "Noch keine Angebote. Nur echte, angesehene Direktlinks, als Werbung gekennzeichnet."
+          },
+          "reviewStatus": "not_reviewed",
+          "story": {
+            "text": "Auf dem Weg in den Norden haben wir am Aussichtspunkt Sicasumbre angehalten – und sind länger geblieben als geplant. Von der Steinmauer sieht man über braune Hügel bis zum Meer und hinunter auf die Strände von Jandía. Nachts kommen hier Sternengucker hin; uns hat schon die Aussicht am Vormittag gereicht.",
+            "status": "vorschlag_claude",
+            "note": "Von Claude aus Fotos und Notizen vorgeschrieben – Mo korrigiert."
+          }
+        },
+        {
+          "id": "betancuria-dorf",
+          "title": "Das alte Bergdorf Betancuria",
+          "description": "Betancuria ist der alte Hauptort der Insel, ein weißes Dorf zwischen Bergen mit der ältesten Kirche der Insel. Ein Vormittag reicht für einen Bummel.",
+          "placeId": "betancuria",
+          "geo": {
+            "lat": null,
+            "lon": null,
+            "source": null,
+            "checkedAt": null
+          },
+          "arrivalRules": {
+            "allowManualCheckIn": true,
+            "safetyNote": "Laut Team gibt es im ganzen Ort nur eine öffentliche Toilette, sie kostet 1 € – Kleingeld mitnehmen. Die Bergstraße FV-30 ist kurvig: langsam fahren."
+          },
+          "safety": {
+            "publicAccessVerified": false,
+            "permission": "unverified"
+          },
+          "roles": {
+            "partnerA": {
+              "task": "Such im Dorf eine Tür oder ein Fenster, hinter dem du gern mit deiner Person wohnen würdest. Merk sie dir."
+            },
+            "partnerB": {
+              "task": "Lass dich zu der Tür führen und rate, warum sie ausgesucht wurde."
+            }
+          },
+          "challenge": {
+            "type": "conversation",
+            "instructions": "Erzählt euch, wie euer Traumhaus aussehen würde – und was davon ihr schon heute habt.",
+            "fallback": "Kein Dorf in der Nähe? Zeichnet zusammen euer Traumhaus auf ein Blatt."
+          },
+          "mediaIds": [
+            "k-betancuria-ortsschild",
+            "k-betancuria-kirchturm",
+            "k-betancuria-herz",
+            "k-betancuria-tal",
+            "k-betancuria-windmuehle",
+            "k-betancuria-schmetterling",
+            "k-betancuria-taube",
+            "k-betancuria-kaktusfeigen",
+            "k-betancuria-alte-presse",
+            "k-betancuria-wegweiser",
+            "k-betancuria-kirchplatz"
+          ],
+          "sourceIds": [
+            "quelle-betancuria"
+          ],
+          "fieldCheck": {
+            "date": "2026-11-22",
+            "romance": 5,
+            "practical": 4,
+            "minutesOnSite": null,
+            "costTwoEuro": 9.7,
+            "tips": [
+              "Höchste Romantik-Note der Reise (5 von 5).",
+              "Eigenes Foto eines echten Schmetterlings an einer Hecke (Art noch bestimmen)."
+            ]
+          },
+          "offers": {
+            "status": "offen",
+            "note": "Noch keine Angebote. Nur echte, angesehene Direktlinks, als Werbung gekennzeichnet."
+          },
+          "reviewStatus": "not_reviewed",
+          "story": {
+            "text": "Betancuria war für uns der romantischste Ort der Reise. Weiße Häuser, pinke Bougainvilleen, eine alte Windmühle und mitten im Dorf die Kirche Santa María. Auf einer Mauer über dem Tal steht ein großes Herz aus Metall, und an einer Hecke saß ein kleiner Schmetterling. Wichtig: Im ganzen Ort gibt es nur eine öffentliche Toilette, sie kostet 1 €.",
+            "status": "vorschlag_claude",
+            "note": "Von Claude aus Fotos und Notizen vorgeschrieben – Mo korrigiert."
+          }
+        },
+        {
+          "id": "cuevas-de-ajuy",
+          "title": "Die Höhlen von Ajuy",
+          "description": "Im Fischerdorf Ajuy führt ein Küstenweg vom schwarzen Strand zu großen Höhlen in der Steilküste. Der Weg ist frei zugänglich.",
+          "placeId": "ajuy",
+          "geo": {
+            "lat": null,
+            "lon": null,
+            "source": null,
+            "checkedAt": null
+          },
+          "arrivalRules": {
+            "allowManualCheckIn": true,
+            "safetyNote": "Nicht bei hoher Brandung in die Höhlen, nicht an die Klippenkante, feste Schuhe."
+          },
+          "safety": {
+            "publicAccessVerified": false,
+            "permission": "unverified"
+          },
+          "roles": {
+            "partnerA": {
+              "task": "Lausch auf dem Weg zu den Höhlen auf ein Geräusch, das du mit deiner Person verbindest. Behalte es für dich."
+            },
+            "partnerB": {
+              "task": "Rate, welches Geräusch deine Person ausgesucht hat. Tipp: Frag nach Ort, Stimmung oder Lautstärke."
+            }
+          },
+          "challenge": {
+            "type": "conversation",
+            "instructions": "Erzählt euch eine schöne gemeinsame Erinnerung und sucht drei Stichwörter dafür.",
+            "fallback": "Zu viel Brandung oder geschlossen? Erfindet zu euren drei Stichwörtern einen gemeinsamen Ausflug."
+          },
+          "mediaIds": [
+            "k-ajuy-steilkueste",
+            "k-ajuy-hoehle",
+            "k-ajuy-krake",
+            "k-ajuy-ziege-hell",
+            "k-ajuy-ziege-schwarz",
+            "k-ajuy-ziege-felsen",
+            "k-ajuy-dorf-strand"
+          ],
+          "sourceIds": [
+            "quelle-ajuy"
+          ],
+          "fieldCheck": {
+            "date": "2026-11-22",
+            "romance": 4,
+            "practical": 4,
+            "minutesOnSite": null,
+            "costTwoEuro": 27.7,
+            "tips": [
+              "Mittagessen im Restaurant am Ort: zu zweit 27,70 € (Kassenbon vom 22.11.).",
+              "Wilde Ziegen in den Felsen am Küstenweg (22.11. gegen 17 Uhr)."
+            ]
+          },
+          "offers": {
+            "status": "offen",
+            "note": "Noch keine Angebote. Nur echte, angesehene Direktlinks, als Werbung gekennzeichnet."
+          },
+          "reviewStatus": "not_reviewed",
+          "story": {
+            "text": "Ajuy ist ein kleines Fischerdorf an einem schwarzen Sandstrand. Nach einer Stärkung im Restaurant am Strand sind wir den Küstenweg zu den Höhlen gegangen: hohe Felswände, eine Holztreppe hinunter in die Grotte und das Meer, das gegen die Steine schlägt. In den Felsen am Weg kletterten wilde Ziegen. Am späten Nachmittag wird das Licht hier golden.",
+            "status": "vorschlag_claude",
+            "note": "Von Claude aus Fotos und Notizen vorgeschrieben – Mo korrigiert."
+          }
+        }
+      ]
+    }
+  ],
+  "species": [
+    {
+      "id": "distelfalter",
+      "scientificName": "Vanessa cardui",
+      "commonNameDe": "Distelfalter",
+      "sourceIds": [
+        "quelle-falter"
+      ],
+      "evidence": "Für Fuerteventura nachgewiesen (Tennent 2004, Datenbank Biota/Atlantis der Kanarischen Regierung).",
+      "image": {
+        "status": "fehlt",
+        "kind": "KI-Illustration, als solche gekennzeichnet – erst nach Mos Ja erstellen"
+      }
+    },
+    {
+      "id": "kanarischer-admiral",
+      "scientificName": "Vanessa vulcania",
+      "commonNameDe": "Kanarischer Admiral",
+      "sourceIds": [
+        "quelle-falter"
+      ],
+      "evidence": "Für Fuerteventura nachgewiesen (Tennent 2004, Datenbank Biota/Atlantis der Kanarischen Regierung).",
+      "image": {
+        "status": "fehlt",
+        "kind": "KI-Illustration, als solche gekennzeichnet – erst nach Mos Ja erstellen"
+      }
+    },
+    {
+      "id": "afrikanischer-monarch",
+      "scientificName": "Danaus chrysippus",
+      "commonNameDe": "Afrikanischer Monarch",
+      "sourceIds": [
+        "quelle-falter"
+      ],
+      "evidence": "Für Fuerteventura nachgewiesen (Tennent 2004, Datenbank Biota/Atlantis der Kanarischen Regierung).",
+      "image": {
+        "status": "fehlt",
+        "kind": "KI-Illustration, als solche gekennzeichnet – erst nach Mos Ja erstellen"
+      }
+    },
+    {
+      "id": "eigene-beobachtung-betancuria",
+      "scientificName": null,
+      "commonNameDe": "Kleiner brauner Falter (Art offen)",
+      "sourceIds": [],
+      "observation": {
+        "date": "2026-11-22",
+        "place": "Betancuria",
+        "mediaId": "k-betancuria-schmetterling",
+        "by": "Liebespfade-Team"
+      },
+      "evidence": "Eigenes Foto. Art noch nicht bestimmt – Vorschlag zum Prüfen: Pelargonien-Bläuling (Cacyreus marshalli), der laut Tennent 2004 auf Fuerteventura vorkommt. Vor Veröffentlichung von Fachleuten bestätigen lassen.",
+      "image": {
+        "status": "eigenes_foto",
+        "kind": "echtes Foto (kein KI-Bild)"
+      }
+    }
+  ],
+  "media": [
+    {
+      "id": "k-sotavento-lagune-flach",
+      "file": "bilder/k-sotavento-lagune-flach.jpg",
+      "alt": "Flache Lagune bei Ebbe, im Hintergrund die Strandhütte und Hügel",
+      "station": "lagune-risco-del-paso",
+      "credit": "Eigene Aufnahme, Liebespfade-Team",
+      "rights": "own",
+      "peopleCheck": "keine Personen erkannt",
+      "capturedOn": "2026-11-21",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "k-sotavento-reiher",
+      "file": "bilder/k-sotavento-reiher.jpg",
+      "alt": "Ein weißer Reiher steht im flachen Wasser der Lagune",
+      "station": "lagune-risco-del-paso",
+      "credit": "Eigene Aufnahme, Liebespfade-Team",
+      "rights": "own",
+      "peopleCheck": "keine Personen erkannt",
+      "capturedOn": "2026-11-21",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "sotavento-lagune-spiegelung",
+      "file": "bilder/sotavento-lagune-spiegelung.jpg",
+      "alt": "Flache Lagune von Sotavento, die Hügel spiegeln sich im klaren Wasser",
+      "station": "lagune-risco-del-paso",
+      "credit": "Eigene Aufnahme, Liebespfade-Team",
+      "rights": "own",
+      "peopleCheck": "keine Personen erkannt",
+      "capturedOn": "2026-11-21",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "k-sotavento-lagune-felsen",
+      "file": "bilder/k-sotavento-lagune-felsen.jpg",
+      "alt": "Lagune unter dunklen Felsen, das Wasser fast still",
+      "station": "lagune-risco-del-paso",
+      "credit": "Eigene Aufnahme, Liebespfade-Team",
+      "rights": "own",
+      "peopleCheck": "keine Personen erkannt",
+      "capturedOn": "2026-11-21",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "k-sotavento-duenen",
+      "file": "bilder/k-sotavento-duenen.jpg",
+      "alt": "Sanddünen mit Büschen hinter dem Strand",
+      "station": "lagune-risco-del-paso",
+      "credit": "Eigene Aufnahme, Liebespfade-Team",
+      "rights": "own",
+      "peopleCheck": "keine Personen erkannt",
+      "capturedOn": "2026-11-21",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "sotavento-strand-duenen",
+      "file": "bilder/sotavento-strand-duenen.jpg",
+      "alt": "Breiter Sandstrand mit Dünen und Blick auf die Küste von Jandía",
+      "station": "lagune-risco-del-paso",
+      "credit": "Eigene Aufnahme, Liebespfade-Team",
+      "rights": "own",
+      "peopleCheck": "Mo hat am 25.11.2026 entschieden: rein (Menschen nur winzig in der Ferne oder unscharf)",
+      "capturedOn": "2026-11-21",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "sotavento-lagune-weite",
+      "file": "bilder/sotavento-lagune-weite.jpg",
+      "alt": "Lagune bei Risco del Paso mit Blick zum Strand",
+      "station": "lagune-risco-del-paso",
+      "credit": "Eigene Aufnahme, Liebespfade-Team",
+      "rights": "own",
+      "peopleCheck": "Mo hat am 25.11.2026 entschieden: rein (Menschen nur winzig in der Ferne oder unscharf)",
+      "capturedOn": "2026-11-21",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "k-holzsteg-leuchtturm",
+      "file": "bilder/k-holzsteg-leuchtturm.jpg",
+      "alt": "Langer Holzsteg, am Ende der Leuchtturm",
+      "station": "holzsteg-saladar",
+      "credit": "Eigene Aufnahme, Liebespfade-Team",
+      "rights": "own",
+      "peopleCheck": "keine Personen erkannt",
+      "capturedOn": "2026-11-23",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "k-liebesschloss-meer",
+      "file": "bilder/k-liebesschloss-meer.jpg",
+      "alt": "Ein Liebesschloss am Geländer über dem türkisen Meer, Segelboote in der Bucht",
+      "station": "holzsteg-saladar",
+      "credit": "Eigene Aufnahme, Liebespfade-Team",
+      "rights": "own",
+      "peopleCheck": "keine Personen erkannt",
+      "capturedOn": "2026-11-21",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "morrojable-holzsteg-leuchtturm",
+      "file": "bilder/morrojable-holzsteg-leuchtturm.jpg",
+      "alt": "Holzsteg über den Saladar, am Ende der Leuchtturm",
+      "station": "holzsteg-saladar",
+      "credit": "Eigene Aufnahme, Liebespfade-Team",
+      "rights": "own",
+      "peopleCheck": "keine Personen erkannt",
+      "capturedOn": "2026-11-23",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "k-saladar-leuchtturm",
+      "file": "bilder/k-saladar-leuchtturm.jpg",
+      "alt": "Grünes Feuchtgebiet Saladar, dahinter der Leuchtturm",
+      "station": "holzsteg-saladar",
+      "credit": "Eigene Aufnahme, Liebespfade-Team",
+      "rights": "own",
+      "peopleCheck": "keine Personen erkannt",
+      "capturedOn": "2026-11-21",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "morrojable-skulptur-leuchtturm",
+      "file": "bilder/morrojable-skulptur-leuchtturm.jpg",
+      "alt": "Skulptur am Fußweg, dahinter der Leuchtturm von Morro Jable",
+      "station": "holzsteg-saladar",
+      "credit": "Eigene Aufnahme, Liebespfade-Team",
+      "rights": "own",
+      "peopleCheck": "keine Personen erkannt",
+      "capturedOn": "2026-11-21",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "morrojable-skulptur-hochformat",
+      "file": "bilder/morrojable-skulptur-hochformat.jpg",
+      "alt": "Skulptur auf schräger Stange vor dem Leuchtturm",
+      "station": "holzsteg-saladar",
+      "credit": "Eigene Aufnahme, Liebespfade-Team",
+      "rights": "own",
+      "peopleCheck": "keine Personen erkannt",
+      "capturedOn": "2026-11-21",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "k-leuchtturm-meer",
+      "file": "bilder/k-leuchtturm-meer.jpg",
+      "alt": "Der Leuchtturm von Morro Jable vor dem blauen Meer",
+      "station": "holzsteg-saladar",
+      "credit": "Eigene Aufnahme, Liebespfade-Team",
+      "rights": "own",
+      "peopleCheck": "Mo hat am 25.11.2026 entschieden: rein (Menschen nur winzig in der Ferne oder unscharf)",
+      "capturedOn": "2026-11-22",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "k-hafen-reiher-boot",
+      "file": "bilder/k-hafen-reiher-boot.jpg",
+      "alt": "Ein Graureiher sitzt auf einem kleinen Fischerboot im Hafen",
+      "station": "cafe-im-hafen",
+      "credit": "Eigene Aufnahme, Liebespfade-Team",
+      "rights": "own",
+      "peopleCheck": "keine Personen erkannt",
+      "capturedOn": "2026-11-21",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "k-barraquito",
+      "file": "bilder/k-barraquito.jpg",
+      "alt": "Ein Barraquito: kanarischer Schichtkaffee im Glas",
+      "station": "cafe-im-hafen",
+      "credit": "Eigene Aufnahme, Liebespfade-Team",
+      "rights": "own",
+      "peopleCheck": "Mo hat am 25.11.2026 entschieden: rein (Menschen nur winzig in der Ferne oder unscharf)",
+      "capturedOn": "2026-11-23",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "k-cofradia-schild",
+      "file": "bilder/k-cofradia-schild.jpg",
+      "alt": "Holzschild der Fischergenossenschaft von Morro Jable mit Anker",
+      "station": "cafe-im-hafen",
+      "credit": "Eigene Aufnahme, Liebespfade-Team",
+      "rights": "own",
+      "peopleCheck": "keine Personen erkannt",
+      "capturedOn": "2026-11-23",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "sicasumbre-blick-jandia",
+      "file": "bilder/sicasumbre-blick-jandia.jpg",
+      "alt": "Blick vom Mirador Sicasumbre hinunter zur Landenge und den Stränden von Jandía",
+      "station": "mirador-sicasumbre",
+      "credit": "Eigene Aufnahme, Liebespfade-Team",
+      "rights": "own",
+      "peopleCheck": "keine Personen erkannt",
+      "capturedOn": "2026-11-22",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "k-sicasumbre-ziege-schild",
+      "file": "bilder/k-sicasumbre-ziege-schild.jpg",
+      "alt": "Steinterrasse mit Ziegenfigur und Schild „Fuerteventura“ am Mirador Sicasumbre",
+      "station": "mirador-sicasumbre",
+      "credit": "Eigene Aufnahme, Liebespfade-Team",
+      "rights": "own",
+      "peopleCheck": "keine Personen erkannt",
+      "capturedOn": "2026-11-22",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "sicasumbre-steinmauer",
+      "file": "bilder/sicasumbre-steinmauer.jpg",
+      "alt": "Steinmauer am Aussichtspunkt, Blick auf Hügel und Meer",
+      "station": "mirador-sicasumbre",
+      "credit": "Eigene Aufnahme, Liebespfade-Team",
+      "rights": "own",
+      "peopleCheck": "keine Personen erkannt",
+      "capturedOn": "2026-11-22",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "sicasumbre-panorama",
+      "file": "bilder/sicasumbre-panorama.jpg",
+      "alt": "Panorama über die Hügelketten",
+      "station": "mirador-sicasumbre",
+      "credit": "Eigene Aufnahme, Liebespfade-Team",
+      "rights": "own",
+      "peopleCheck": "keine Personen erkannt",
+      "capturedOn": "2026-11-22",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "sicasumbre-bergland",
+      "file": "bilder/sicasumbre-bergland.jpg",
+      "alt": "Weite braune Hügel bis zum Meer",
+      "station": "mirador-sicasumbre",
+      "credit": "Eigene Aufnahme, Liebespfade-Team",
+      "rights": "own",
+      "peopleCheck": "keine Personen erkannt",
+      "capturedOn": "2026-11-22",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "sicasumbre-steinmann",
+      "file": "bilder/sicasumbre-steinmann.jpg",
+      "alt": "Kleiner Steinmann über dem Tal",
+      "station": "mirador-sicasumbre",
+      "credit": "Eigene Aufnahme, Liebespfade-Team",
+      "rights": "own",
+      "peopleCheck": "keine Personen erkannt",
+      "capturedOn": "2026-11-22",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "sicasumbre-meer",
+      "file": "bilder/sicasumbre-meer.jpg",
+      "alt": "Hang mit Blick auf den Atlantik",
+      "station": "mirador-sicasumbre",
+      "credit": "Eigene Aufnahme, Liebespfade-Team",
+      "rights": "own",
+      "peopleCheck": "keine Personen erkannt",
+      "capturedOn": "2026-11-22",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "sicasumbre-weg-gipfel",
+      "file": "bilder/sicasumbre-weg-gipfel.jpg",
+      "alt": "Weg mit Steinkante, dahinter ein Gipfel",
+      "station": "mirador-sicasumbre",
+      "credit": "Eigene Aufnahme, Liebespfade-Team",
+      "rights": "own",
+      "peopleCheck": "keine Personen erkannt",
+      "capturedOn": "2026-11-22",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "sicasumbre-westkueste",
+      "file": "bilder/sicasumbre-westkueste.jpg",
+      "alt": "Blick auf die Westküste mit Brandung",
+      "station": "mirador-sicasumbre",
+      "credit": "Eigene Aufnahme, Liebespfade-Team",
+      "rights": "own",
+      "peopleCheck": "keine Personen erkannt",
+      "capturedOn": "2026-11-22",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "sicasumbre-tal-gelaender",
+      "file": "bilder/sicasumbre-tal-gelaender.jpg",
+      "alt": "Tal mit Holzgeländer und Meer am Horizont",
+      "station": "mirador-sicasumbre",
+      "credit": "Eigene Aufnahme, Liebespfade-Team",
+      "rights": "own",
+      "peopleCheck": "keine Personen erkannt",
+      "capturedOn": "2026-11-22",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "sicasumbre-schild-ziege",
+      "file": "bilder/sicasumbre-schild-ziege.jpg",
+      "alt": "Steinterrasse mit Ziegenfigur und Schild „Fuerteventura“",
+      "station": "mirador-sicasumbre",
+      "credit": "Eigene Aufnahme, Liebespfade-Team",
+      "rights": "own",
+      "peopleCheck": "keine Personen erkannt",
+      "capturedOn": "2026-11-22",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "k-betancuria-ortsschild",
+      "file": "bilder/k-betancuria-ortsschild.jpg",
+      "alt": "Ortsschild „Betancuria – Villa Histórica“ unter blühenden Bougainvilleen",
+      "station": "betancuria-dorf",
+      "credit": "Eigene Aufnahme, Liebespfade-Team",
+      "rights": "own",
+      "peopleCheck": "keine Personen erkannt",
+      "capturedOn": "2026-11-22",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "k-betancuria-kirchturm",
+      "file": "bilder/k-betancuria-kirchturm.jpg",
+      "alt": "Glockenturm der Kirche Santa María vor tiefblauem Himmel",
+      "station": "betancuria-dorf",
+      "credit": "Eigene Aufnahme, Liebespfade-Team",
+      "rights": "own",
+      "peopleCheck": "keine Personen erkannt",
+      "capturedOn": "2026-11-22",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "k-betancuria-herz",
+      "file": "bilder/k-betancuria-herz.jpg",
+      "alt": "Großes Herz aus Metallgitter auf einer Mauer über dem Dorf",
+      "station": "betancuria-dorf",
+      "credit": "Eigene Aufnahme, Liebespfade-Team",
+      "rights": "own",
+      "peopleCheck": "keine Personen erkannt",
+      "capturedOn": "2026-11-22",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "k-betancuria-tal",
+      "file": "bilder/k-betancuria-tal.jpg",
+      "alt": "Blick über das grüne Tal mit weißen Häusern",
+      "station": "betancuria-dorf",
+      "credit": "Eigene Aufnahme, Liebespfade-Team",
+      "rights": "own",
+      "peopleCheck": "keine Personen erkannt",
+      "capturedOn": "2026-11-22",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "k-betancuria-windmuehle",
+      "file": "bilder/k-betancuria-windmuehle.jpg",
+      "alt": "Alte Holz-Windmühle zwischen Palmen",
+      "station": "betancuria-dorf",
+      "credit": "Eigene Aufnahme, Liebespfade-Team",
+      "rights": "own",
+      "peopleCheck": "keine Personen erkannt",
+      "capturedOn": "2026-11-22",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "k-betancuria-schmetterling",
+      "file": "bilder/k-betancuria-schmetterling.jpg",
+      "alt": "Ein kleiner brauner Schmetterling sitzt auf einem grünen Blatt",
+      "station": "betancuria-dorf",
+      "credit": "Eigene Aufnahme, Liebespfade-Team",
+      "rights": "own",
+      "peopleCheck": "keine Personen erkannt",
+      "capturedOn": "2026-11-22",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "k-betancuria-taube",
+      "file": "bilder/k-betancuria-taube.jpg",
+      "alt": "Eine Taube ruht auf einem Ziegeldach unter Palmwedeln",
+      "station": "betancuria-dorf",
+      "credit": "Eigene Aufnahme, Liebespfade-Team",
+      "rights": "own",
+      "peopleCheck": "keine Personen erkannt",
+      "capturedOn": "2026-11-22",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "k-betancuria-kaktusfeigen",
+      "file": "bilder/k-betancuria-kaktusfeigen.jpg",
+      "alt": "Kaktusfeigen mit roten Früchten",
+      "station": "betancuria-dorf",
+      "credit": "Eigene Aufnahme, Liebespfade-Team",
+      "rights": "own",
+      "peopleCheck": "keine Personen erkannt",
+      "capturedOn": "2026-11-22",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "k-betancuria-alte-presse",
+      "file": "bilder/k-betancuria-alte-presse.jpg",
+      "alt": "Alte Presse aus Holz und Stein auf einem Platz",
+      "station": "betancuria-dorf",
+      "credit": "Eigene Aufnahme, Liebespfade-Team",
+      "rights": "own",
+      "peopleCheck": "keine Personen erkannt",
+      "capturedOn": "2026-11-22",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "k-betancuria-wegweiser",
+      "file": "bilder/k-betancuria-wegweiser.jpg",
+      "alt": "Holzwegweiser „Betancuria“ vor Bougainvilleen",
+      "station": "betancuria-dorf",
+      "credit": "Eigene Aufnahme, Liebespfade-Team",
+      "rights": "own",
+      "peopleCheck": "keine Personen erkannt",
+      "capturedOn": "2026-11-22",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "k-betancuria-kirchplatz",
+      "file": "bilder/k-betancuria-kirchplatz.jpg",
+      "alt": "Kirchplatz mit Palme und der weißen Kirche Santa María",
+      "station": "betancuria-dorf",
+      "credit": "Eigene Aufnahme, Liebespfade-Team",
+      "rights": "own",
+      "peopleCheck": "Mo hat am 25.11.2026 entschieden: rein (Menschen nur winzig in der Ferne oder unscharf)",
+      "capturedOn": "2026-11-22",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "k-ajuy-steilkueste",
+      "file": "bilder/k-ajuy-steilkueste.jpg",
+      "alt": "Steilküste von Ajuy mit Höhlen über dem Wasser",
+      "station": "cuevas-de-ajuy",
+      "credit": "Eigene Aufnahme, Liebespfade-Team",
+      "rights": "own",
+      "peopleCheck": "keine Personen erkannt",
+      "capturedOn": "2026-11-22",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "k-ajuy-hoehle",
+      "file": "bilder/k-ajuy-hoehle.jpg",
+      "alt": "Blick in eine große Höhle mit Holztreppe",
+      "station": "cuevas-de-ajuy",
+      "credit": "Eigene Aufnahme, Liebespfade-Team",
+      "rights": "own",
+      "peopleCheck": "keine Personen erkannt",
+      "capturedOn": "2026-11-22",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "k-ajuy-krake",
+      "file": "bilder/k-ajuy-krake.jpg",
+      "alt": "Steinfigur eines Kraken auf runden Kieseln vor der Felswand",
+      "station": "cuevas-de-ajuy",
+      "credit": "Eigene Aufnahme, Liebespfade-Team",
+      "rights": "own",
+      "peopleCheck": "keine Personen erkannt",
+      "capturedOn": "2026-11-22",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "k-ajuy-ziege-hell",
+      "file": "bilder/k-ajuy-ziege-hell.jpg",
+      "alt": "Eine helle Ziege klettert über dunkle Felsen",
+      "station": "cuevas-de-ajuy",
+      "credit": "Eigene Aufnahme, Liebespfade-Team",
+      "rights": "own",
+      "peopleCheck": "keine Personen erkannt",
+      "capturedOn": "2026-11-22",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "k-ajuy-ziege-schwarz",
+      "file": "bilder/k-ajuy-ziege-schwarz.jpg",
+      "alt": "Eine schwarz-weiße Ziege frisst an einem Busch im Fels",
+      "station": "cuevas-de-ajuy",
+      "credit": "Eigene Aufnahme, Liebespfade-Team",
+      "rights": "own",
+      "peopleCheck": "keine Personen erkannt",
+      "capturedOn": "2026-11-22",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "k-ajuy-ziege-felsen",
+      "file": "bilder/k-ajuy-ziege-felsen.jpg",
+      "alt": "Eine braune Ziege steht auf einem Felsvorsprung",
+      "station": "cuevas-de-ajuy",
+      "credit": "Eigene Aufnahme, Liebespfade-Team",
+      "rights": "own",
+      "peopleCheck": "keine Personen erkannt",
+      "capturedOn": "2026-11-22",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "k-ajuy-dorf-strand",
+      "file": "bilder/k-ajuy-dorf-strand.jpg",
+      "alt": "Das Fischerdorf Ajuy am schwarzen Strand",
+      "station": "cuevas-de-ajuy",
+      "credit": "Eigene Aufnahme, Liebespfade-Team",
+      "rights": "own",
+      "peopleCheck": "Mo hat am 25.11.2026 entschieden: rein (Menschen nur winzig in der Ferne oder unscharf)",
+      "capturedOn": "2026-11-22",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "k-vollmond-berge",
+      "file": "bilder/k-vollmond-berge.jpg",
+      "alt": "Der fast volle Mond geht über rötlichen Bergen auf",
+      "station": "extra",
+      "credit": "Eigene Aufnahme, Liebespfade-Team",
+      "rights": "own",
+      "peopleCheck": "keine Personen erkannt",
+      "capturedOn": "2026-11-23",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "k-vollmond-nah",
+      "file": "bilder/k-vollmond-nah.jpg",
+      "alt": "Der fast volle Mond in Nahaufnahme",
+      "station": "extra",
+      "credit": "Eigene Aufnahme, Liebespfade-Team",
+      "rights": "own",
+      "peopleCheck": "keine Personen erkannt",
+      "capturedOn": "2026-11-23",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "k-caleta-herzen-sand",
+      "file": "bilder/k-caleta-herzen-sand.jpg",
+      "alt": "Herzen aus Steinen im Sand eines Strandes in der Morgendämmerung",
+      "station": "extra",
+      "credit": "Eigene Aufnahme, Liebespfade-Team",
+      "rights": "own",
+      "peopleCheck": "keine Personen erkannt",
+      "capturedOn": "2026-11-24",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "k-caleta-turm",
+      "file": "bilder/k-caleta-turm.jpg",
+      "alt": "Alter runder Wehrturm aus Lavastein",
+      "station": "extra",
+      "credit": "Eigene Aufnahme, Liebespfade-Team",
+      "rights": "own",
+      "peopleCheck": "keine Personen erkannt",
+      "capturedOn": "2026-11-24",
+      "reviewStatus": "not_reviewed"
+    }
+  ],
+  "sources": [
+    {
+      "id": "quelle-sotavento",
+      "title": "Meliá-Blog: Playa de Sotavento",
+      "url": "https://www.melia.com/es/blog/viajar/que-ver-playa-de-sotavento"
+    },
+    {
+      "id": "quelle-saladar",
+      "title": "Visit Fuerteventura: El Saladar de Jandía",
+      "url": "https://www.visitfuerteventura.com/espacios-naturales/fuerteventura/el-saladar-de-jandia/"
+    },
+    {
+      "id": "quelle-sicasumbre",
+      "title": "Visit Fuerteventura: Mirador Astronómico de Sicasumbre",
+      "url": "https://www.visitfuerteventura.com/zonas-de-observacion-de-estrellas/fuerteventura/mirador-astronomico-de-sicasumbre/"
+    },
+    {
+      "id": "quelle-betancuria",
+      "title": "DoYouSpain-Blog: Betancuria",
+      "url": "https://www.doyouspain.com/blog/es/betancuria-fuerteventura-que-ver"
+    },
+    {
+      "id": "quelle-ajuy",
+      "title": "Hoteles Elba: Cuevas de Ajuy",
+      "url": "https://www.hoteleselba.com/blog/cuevas-de-ajuy-fuerteventura"
+    },
+    {
+      "id": "quelle-falter",
+      "title": "Biota/Atlantis (Regierung der Kanaren): Tennent 2004, Tagfalter von Fuerteventura",
+      "url": "https://www.biodiversidadcanarias.es/biota/documento/D01907?pagina=1&tabActive=documentSpeciesTab&fastSearch=&lang=en"
+    },
+    {
+      "id": "quelle-bus-111",
+      "title": "corralejo.info: Bus 111 Morro Jable – Cofete",
+      "url": "https://www.corralejo.info/es/guagua-morro-jable-cofete-punta-jandia/"
+    }
+  ]
+}

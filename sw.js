@@ -1,8 +1,8 @@
 /* Schmetterlingsfutter Service Worker – App-Shell offline verfügbar machen. */
-const CACHE = 'schmetterlingsfutter-v3.51.0';
+const CACHE = 'schmetterlingsfutter-v3.52.0';
 const ASSETS = [
   './', './index.html', './privacy.html', './manifest.webmanifest',
-  './css/app.css', './css/klar.css', './js/umzug.js', './js/data.js', './js/data2.js', './js/vendor/qrcode.js', './js/app.js', './js/features.js', './js/antwort.js', './js/geschenk.js', './js/zurueck.js', './js/jagd.js', './js/raum.js', './js/empfehlung.js', './js/buehne.js', './js/neu.js', './img/falter.webp', './js/partner.js', './js/naehe.js', './js/extra.js', './js/wissen.js', './js/frag.js', './js/anreiz.js', './js/kamera.js', './js/daten.js', './js/koppeln.js', './js/spiele.js', './js/spiele2.js', './js/stats.js',
+  './css/app.css', './css/klar.css', './js/umzug.js', './js/data.js', './js/data2.js', './js/vendor/qrcode.js', './js/app.js', './js/features.js', './js/antwort.js', './js/geschenk.js', './js/zurueck.js', './js/jagd.js', './js/raum.js', './js/empfehlung.js', './js/buehne.js', './js/neu.js', './img/falter.webp', './js/partner.js', './js/naehe.js', './js/extra.js', './js/pfade.js', './pfade/fuerteventura-sued/fuerteventura-sued.json', './js/wissen.js', './js/frag.js', './js/anreiz.js', './js/kamera.js', './js/daten.js', './js/koppeln.js', './js/spiele.js', './js/spiele2.js', './js/stats.js',
   './fonts/PlayfairDisplay-400.woff2', './fonts/PlayfairDisplay-400i.woff2',
   './fonts/Lato-300.woff2', './fonts/Lato-400.woff2', './fonts/Lato-700.woff2',
   './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png', './icons/apple-touch-icon.png'
@@ -13,14 +13,15 @@ self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS.map((u) => new Request(u, { cache: 'reload' })))).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', (e) => {
-  e.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== CACHE && k !== META).map((k) => caches.delete(k)))).then(() => self.clients.claim()));
+  e.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== CACHE && k !== META && k.indexOf('sf-pfade-') !== 0).map((k) => caches.delete(k)))).then(() => self.clients.claim()));
 });
 self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET') return;
   if (new URL(e.request.url).pathname.includes('/hoerprobe/')) return; // Hörprobe immer frisch aus dem Netz
   e.respondWith(
     caches.match(e.request, { ignoreSearch: true }).then((hit) => hit || fetch(e.request).then((res) => {
-      if (res.ok && new URL(e.request.url).origin === location.origin) {
+      /* 3.52.0: Reise-Fotos der Liebespfade liegen in einem eigenen Speicher (sf-pfade-…), der Updates übersteht – hier nicht doppelt ablegen */
+      if (res.ok && new URL(e.request.url).origin === location.origin && !(e.request.url.indexOf('/pfade/') > 0 && e.request.url.indexOf('/bilder/') > 0)) {
         const copy = res.clone(); caches.open(CACHE).then((c) => c.put(e.request, copy));
       }
       return res;

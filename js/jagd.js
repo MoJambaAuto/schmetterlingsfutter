@@ -130,7 +130,8 @@
     return { rec, walkDone: !!(w && w.n >= w.goal) };
   }
   async function catchScreen(s, opts) {
-    const f = falter(s.i), need = HITS[s.i] || 1;
+    css(); /* 3.52.0: Stil auch, wenn der Fangbildschirm ohne Spaziergang geöffnet wird */
+    const f = Object.assign(falter(s.i), opts && opts.name ? { name: opts.name, rar: opts.rar || '' } : null), need = HITS[s.i] || 1; /* 3.52.0: eigener Name (Lotsenfalter der Liebespfade) */
     const el = document.createElement('div'); el.className = 'jagd-fang';
     el.innerHTML = '<video playsinline muted autoplay></video><div class="jf-bg"></div><canvas class="jf-net"></canvas><div class="jf-bf">' + img(s.i, 'fly') + '</div>' +
       '<div class="jf-top"><button type="button" class="jf-x" aria-label="Aufgeben">✕</button><span class="jf-name">' + esc(f.name) + ' <small>' + esc(f.rar) + '</small></span><span class="jf-hits"></span></div>' +
@@ -173,7 +174,7 @@
     function end(ok) {
       if (dead) return; close();
       if (!ok) return missed(s, opts);
-      if (opts && opts.done) { C('besuch_catch:' + s.i); opts.done(true); return; }
+      if (opts && opts.done) { if (!opts.name) C('besuch_catch:' + s.i); opts.done(true); return; }
       const r = recordCatch(s); if (root) update(); caughtSheet(r.rec, r.walkDone);
     }
     el.querySelector('.jf-x').onclick = () => end(false);
@@ -181,7 +182,7 @@
   }
   /* Entwischt: beim Besuch zurück an den Aufrufer, beim Spaziergang kommt derselbe Falter gleich wieder */
   function missed(s, opts) {
-    if (opts && opts.done) { C('besuch_miss:' + s.i); opts.done(false); return; }
+    if (opts && opts.done) { if (!opts.name) C('besuch_miss:' + s.i); opts.done(false); return; }
     C('jagd_miss:' + s.i);
     const w = st().walk; if (w && w.waiting != null) { w.waiting = null; w.prev = Date.now(); w.next = Date.now() + RETRY_S * 1000; w.again = s.i; L.save(); }
     L.toast('🦋 Weggeflattert – gleich kommt er wieder');
@@ -284,6 +285,6 @@
 
   /* Test: LZJ.fastForward() lässt den nächsten Falter sofort kommen, LZJ.walked(m) zählt Meter dazu */
   window.LZJ = { open, start, stop, counts, HAB, fang: () => fang,
-    fangen: (i, done, title) => catchScreen({ i, id: 'b' + Date.now(), hab: 'walk' }, { done, title }), walkEnd,
+    fangen: (i, done, title, extra) => catchScreen({ i, id: 'b' + Date.now(), hab: 'walk' }, Object.assign({ done, title }, extra || null)), walkEnd,
     fastForward: () => { const w = st().walk; if (w) { w.next = Date.now() - 1; update(); } }, walked: (m) => { const w = st().walk; if (w) { w.m = (w.m || 0) + m; update(); } }, _walk: () => st().walk };
 })();

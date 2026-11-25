@@ -12,6 +12,7 @@
 
   /* Was ist neu – kurz, in Alltagssprache. Neueste zuerst. */
   D.news = [
+    /* 3.52.0 (Liebespfade) hat noch keine Zeile: das Reiseziel ist bis zur Freigabe unsichtbar. Beim Freischalten hier ergänzen. */
     { v: '3.51.0', items: ['☀️ Guten Morgen und Gute Nacht: jetzt 30 statt 4 Grüße – und keiner kommt doppelt, bevor alle dran waren'] },
     { v: '3.50.0', items: ['🔍 Neu auf „Heute“: Papillons Fund des Tages – jeden Tag ein kurioses Geschenk, das es wirklich gibt'] },
     { v: '3.49.0', items: ['💞 Neu: der Falterspaziergang – geht zusammen raus, alle paar Minuten kommt ein Falter zum Fangen, danach eine Frage für euch zwei. Ohne Karte, ohne Suchen.'] },

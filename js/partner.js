@@ -157,6 +157,7 @@
       if (name && S().receiver !== name) { S().receiver = name; L.renderHeader(); }
       if (obj.dates && window.LZD) { try { window.LZD.got(obj.dates); } catch (e) {} }
       if (Array.isArray(obj.likes) && window.LZW) { try { window.LZW.got(obj.likes); } catch (e) {} }
+      if (obj.pfad && window.LZPF) { try { window.LZPF.got(obj.pfad); } catch (e) {} } /* 3.52.0: Liebespfade – Stand der gemeinsamen Route */
       if (first) { try { await send(Object.assign({ t: 'hello', name: S().sender, pron: S().pron || '', reply: true }, window.LZD ? { dates: window.LZD.payload() } : {})); } catch (e) {} L.toast('💞 Verbunden mit ' + (name || 'deinem Schatz')); L.spawnHearts(14); }
       if (Array.isArray(obj.seen)) gotSeen(obj.seen, created);
       if (Array.isArray(obj.react)) gotReact(obj.react);
