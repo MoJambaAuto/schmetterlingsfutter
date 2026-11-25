@@ -59,11 +59,11 @@
 
   /* ---------- Schalter für die Lotsenfalter ---------- */
   function arOpen(cand, cfg) {
-    const ar = cand && cand.arButterfly; if (!ar || !cfg) return [];
+    const ar = cand && cand.arButterfly; if (!ar || !cfg) return ['Angaben zum Lotsenfalter fehlen']; /* fehlt etwas, bleibt der Schalter zu */
     if (ar.decision !== 'ja') return ['Keine Entscheidung für einen Falter an diesem Punkt'];
     const need = Array.isArray(ar.beforeLaunch) ? ar.beforeLaunch : [];
     if (!need.length) return ['Vorbedingungen fehlen im Paket'];
-    return need.filter((x, i) => !(cfg.frei && cfg.frei[i] && cfg.frei[i].by && cfg.frei[i].at));
+    return need.filter((x, i) => !(cfg.frei && cfg.frei[i] && cfg.frei[i].by && cfg.frei[i].at && cfg.frei[i].note));
   }
   const arTest = () => LOCAL && ls('sf.pfadeArTest') === '1';
   const arLive = (cand, cfg) => !!(cand && cfg) && (arOpen(cand, cfg).length === 0 || arTest());
@@ -111,7 +111,7 @@
       const have = new Set((await c.keys()).map((r) => r.url));
       const todo = urls.filter((u) => !have.has(u)); o.n = urls.length - todo.length; paintOff(ed);
       let i = 0;
-      const worker = async () => { while (i < todo.length) { const u = todo[i++]; try { const r = await fetch(u, { cache: 'reload' }); if (!r.ok) throw new Error('x'); await c.put(u, r); o.n++; } catch (e) { o.fail = true; } paintOff(ed); } };
+      const worker = async () => { while (i < todo.length) { const u = todo[i++]; try { const r = await fetch(u, { cache: 'reload' }); if (!r.ok || (r.headers.get('content-type') || '').indexOf('image/') !== 0) throw new Error('x'); await c.put(u, r); o.n++; } catch (e) { o.fail = true; } paintOff(ed); } };
       await Promise.all([worker(), worker(), worker()]);
       o.done = o.n >= o.total && o.total > 0;
       if (o.done) { try { localStorage.setItem(mark, want); } catch (e) {} if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); }
@@ -134,7 +134,7 @@
   const fimg = (i, cls) => '<span class="fx-img fx-t0' + (cls ? ' ' + cls : '') + '" style="--c:' + (i % 3) + ';--r:' + Math.floor(i / 3) + '"></span>';
 
   /* ---------- Fenster ---------- */
-  let root = null, stack = [], tick = null;
+  let root = null, stack = [], tick = null, gen = 0;
   function open(target) {
     if (!available()) { L.toast('Liebespfade kommen bald'); return; }
     css(); C('pfad_open');
@@ -145,15 +145,15 @@
       root.querySelector('.pf-back').onclick = back;
       tick = setInterval(beat, 6000);
     }
-    stack = [];
+    stack = []; const g = ++gen; /* verspätete Rückrufe eines früheren Öffnens gelten nicht mehr */
     const a = target === 'weiter' ? active() : null;
     const ed = a ? edOf(a.ed) : visible()[0];
     go({ v: 'ed', ed: ed.id });
-    if (a) { go({ v: 'route', ed: a.ed, route: a.route }); load(ed).then((p) => { const r = p.routes.find((x) => x.id === a.route); if (r && root) go({ v: 'stop', ed: a.ed, route: a.route, k: curIdx(a, r) }); }).catch(() => {}); }
+    if (a) { go({ v: 'route', ed: a.ed, route: a.route }); load(ed).then((p) => { const r = p.routes.find((x) => x.id === a.route); if (r && root && g === gen && cur() && cur().v === 'route' && cur().route === a.route) go({ v: 'stop', ed: a.ed, route: a.route, k: curIdx(a, r) }); }).catch(() => {}); }
   }
   function close() {
     clearInterval(tick); tick = null; closeLb();
-    if (root) { root.remove(); root = null; } stack = [];
+    if (root) { root.remove(); root = null; } stack = []; gen++;
     document.documentElement.classList.remove('pfade-open');
     if (window.LZG && window.LZG.renderHub) { try { window.LZG.renderHub(); } catch (e) {} }
     homeTile();
@@ -407,6 +407,9 @@
       if (n.arr !== s.arr || n.a !== s.a || n.b !== s.b || n.joint !== s.joint || n.planB !== s.planB) { Object.assign(s, n); ch = true; }
     });
     if (num(o.end) && !run.end) { run.end = num(o.end); ch = true; }
+    /* weiß ich mehr als die andere Seite (eine Nachricht ging verloren), bekommt sie meinen ganzen Stand zurück – gleiche Stände lösen nichts aus */
+    const mine = payload(run), theirs = o.st && typeof o.st === 'object' ? o.st : {};
+    if ((mine.end && !num(o.end)) || Object.keys(mine.st).some((id) => { const a = Array.isArray(theirs[id]) ? theirs[id] : []; return mine.st[id].some((v, i) => v && !num(a[i])); })) setTimeout(() => sync(run), 0);
     if (!ch) return;
     L.save();
     if (fresh) { L.toast('🧭 ' + you() + ' hat eine Liebespfade-Route gestartet'); homeTile(); }
