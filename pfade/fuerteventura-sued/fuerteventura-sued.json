@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "editionId": "fuerteventura-sued",
-  "editionVersion": "0.2.0-draft",
+  "editionVersion": "0.2.1-draft",
   "title": "Liebespfade · Fuerteventura Süden",
   "status": "draft",
   "language": "de",
@@ -373,7 +373,7 @@
           },
           "arrivalRules": {
             "allowManualCheckIn": true,
-            "safetyNote": "Nur auf dem befestigten Platz bleiben. Warme Jacke mitnehmen – oben ist es windig."
+            "safetyNote": "Keine Wertsachen im Auto lassen – auch nicht im Kofferraum. Nur auf dem befestigten Platz bleiben. Warme Jacke mitnehmen – oben ist es windig."
           },
           "safety": {
             "publicAccessVerified": false,
@@ -410,13 +410,14 @@
           ],
           "fieldCheck": {
             "date": "2026-11-22",
-            "romance": null,
+            "romance": 5,
             "practical": null,
             "minutesOnSite": 15,
             "costTwoEuro": 0,
             "tips": [
+              "Achtung: Am 22.11.2026 lagen auf dem Parkplatz unten an der Straße viele Scherben eingeschlagener Autoscheiben. Nichts im Auto lassen – vom Aussichtspunkt ist man nicht schnell zurück.",
               "Am 22.11. kurz vor 11 Uhr besucht, auf dem Weg nach Norden.",
-              "Sterne vergeben fehlt für diesen Ort – beim Prüfen ergänzen.",
+              "Romantik 5 von 5 – am schönsten unter dem Sternenhimmel.",
               "Die Ziegenfigur mit dem Schild „Fuerteventura“ steht hier am Aussichtspunkt."
             ]
           },
