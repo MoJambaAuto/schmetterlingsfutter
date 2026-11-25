@@ -3,7 +3,7 @@
 (function () {
   'use strict';
   const D = window.LUZIFER_DATA;
-  D.version = '3.50.0';
+  D.version = '3.51.0';
   /* Grundton des Klavier-Samples fürs Liebeslied-Pad (audio/pad.wav), wird beim Einbau gemessen */
   D.padBase = 174.61;
 
@@ -386,6 +386,65 @@
     "Heute schon gesagt? Du siehst gut aus. Wirklich.",
     "Was immer der Tag bringt: Am Ende lande ich am liebsten bei dir.",
     "Ich hab dich lieb. Von hier bis zum Kühlschrank und zurück, und das mehrmals."
+  );
+
+
+  /* 3.51.0: Guten Morgen und Gute Nacht von je 4 auf je 30 Grüße – vorher wiederholten sie sich fast sofort */
+  D.goodmorning.push(
+    "☀️ Guten Morgen, {r}. Ich hoffe, dein Kaffee ist so stark wie meine Liebe zu dir.",
+    "☀️ Neuer Tag, gleiches Glück: Ich hab dich.",
+    "☀️ Der Wecker war gemein, aber der Gedanke an dich macht alles wieder gut.",
+    "☀️ Guten Morgen! Heute wird gut, ich hab es so beschlossen.",
+    "☀️ Bevor die Welt laut wird: Ich liebe dich.",
+    "☀️ Ich wünsche dir einen Tag voller kleiner Lichtblicke. Einer davon bin hoffentlich ich.",
+    "☀️ Guten Morgen, {r}. Du schaffst heute alles, und ich halte dir den Rücken frei.",
+    "☀️ Aufstehen lohnt sich, denn heute Abend sehen wir uns.",
+    "☀️ Mein Morgen fängt erst richtig an, wenn ich an dich denke. Also jetzt.",
+    "☀️ Guten Morgen, schöner Mensch. Ja, du bist gemeint.",
+    "☀️ Heute schon gelächelt? Dann fang mit diesem Gruß an.",
+    "☀️ Ich schick dir einen Sonnenstrahl. Falls es regnet: Der hier zählt trotzdem.",
+    "☀️ Guten Morgen! Ein Kuss für den Weg, einer für die Mittagspause, einer für später.",
+    "☀️ Du bist mein Lieblingsgrund, morgens aufzustehen.",
+    "☀️ Egal, was heute auf dich wartet: Und am Ende des Tages warte ich auf dich.",
+    "☀️ Guten Morgen, {r}. Ich bin stolz auf dich, einfach so, schon vor dem Frühstück.",
+    "☀️ Frisch aufgewacht und schon verliebt. In dich, wie immer.",
+    "☀️ Ein kleiner Morgengruß, damit dein Tag mit etwas Schönem beginnt.",
+    "☀️ Guten Morgen! Nimm dir heute Zeit für dich, du hast es verdient.",
+    "☀️ Die Sonne ist aufgegangen, aber du bist trotzdem heller.",
+    "☀️ Ich hoffe, du hast gut geschlafen. Ich hab von dir geträumt.",
+    "☀️ Guten Morgen, {r}. Heute ist ein guter Tag, um dich ein bisschen mehr zu lieben.",
+    "☀️ Tief durchatmen, Schultern runter, los geht's. Ich glaub an dich.",
+    "☀️ Guten Morgen! Du bist der beste Teil meines Alltags.",
+    "☀️ Noch müde? Dann denk dran: Heute Abend gibt's Umarmungen.",
+    "☀️ Guten Morgen, mein Herz. Schön, dass es dich gibt."
+  );
+  D.goodnight.push(
+    "🌙 Gute Nacht, {r}. Danke für diesen Tag mit dir.",
+    "🌙 Leg alles ab, was heute schwer war. Ich halte dich fest.",
+    "🌙 Schlaf gut. Morgen ist ein neuer Tag, und ich bin wieder für dich da.",
+    "🌙 Gute Nacht! Ich schick dir eine Decke voller Küsse.",
+    "🌙 Der Tag ist vorbei, meine Liebe zu dir nicht.",
+    "🌙 Mach die Augen zu und denk an etwas Schönes. Am besten an uns.",
+    "🌙 Gute Nacht, {r}. Du hast heute genug getan.",
+    "🌙 Ich wünsche dir einen tiefen Schlaf und süße Träume.",
+    "🌙 Gute Nacht! Wenn du nicht einschlafen kannst: Zähl nicht Schafe, zähl, wie sehr ich dich mag.",
+    "🌙 Egal, wie der Tag war: Du bist und bleibst mein Mensch.",
+    "🌙 Schlaf schön. Ich freu mich schon auf morgen mit dir.",
+    "🌙 Gute Nacht, {r}. Der Mond passt auf dich auf, bis ich wieder da bin.",
+    "🌙 Kuscheln geht auch aus der Ferne. Fühl dich gedrückt.",
+    "🌙 Gute Nacht! Morgen früh denk ich als Erstes an dich.",
+    "🌙 Lass den Tag los. Ich bin stolz auf dich.",
+    "🌙 Träum was Schönes, und wenn's geht, von mir.",
+    "🌙 Gute Nacht, mein Herz. Ruh dich gut aus.",
+    "🌙 Noch ein letzter Gedanke vor dem Schlafen: Ich liebe dich.",
+    "🌙 Gute Nacht! Morgen wird ein guter Tag, ich spür das.",
+    "🌙 Ich puste dir einen Gute-Nacht-Kuss rüber. Fang ihn auf.",
+    "🌙 Gute Nacht, {r}. Du bist mein liebster Gedanke vor dem Einschlafen.",
+    "🌙 Handy weg, Augen zu. Ich bin in Gedanken bei dir.",
+    "🌙 Schlaf gut und tief. Ich bin dankbar für dich.",
+    "🌙 Gute Nacht! Wir sind ein gutes Team, auch im Träumen.",
+    "🌙 Morgen schreiben wir weiter an unserer Geschichte. Jetzt erst mal: schlafen.",
+    "🌙 Gute Nacht, Lieblingsmensch."
   );
 
   /* ---- Gemeinsame Interessen (3.16.0): laufen über die Gleichklang-Technik. Sichtbar wird nur, was beide mögen

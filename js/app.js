@@ -331,8 +331,11 @@
   $('btnNext').onclick = () => { spawnHearts(5); nextMessage(); };
   $('btnKiss').onclick = () => { spawnHearts(6); showMessage({ text: pick(D.kisses), own: false }, 'Ein Kuss'); };
   $('btnHug').onclick = () => { spawnHearts(5); showMessage({ text: pick(D.hugs), own: false }, 'Eine Umarmung'); };
-  $('btnMorning').onclick = () => { spawnHearts(5); showMessage({ text: pick(D.goodmorning), own: false }, 'Guten Morgen'); };
-  $('btnNight').onclick = () => { spawnHearts(5); showMessage({ text: pick(D.goodnight), own: false }, 'Gute Nacht'); };
+  /* 3.51.0: Morgen- und Nachtgrüße aus gemischtem Stapel – Wiederholung erst, wenn alle einmal dran waren */
+  const bags = {};
+  const pickFresh = (key, arr) => { let b = bags[key]; if (!b || !b.length) { b = bags[key] = arr.map((_, i) => i); for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } } return arr[b.pop()]; };
+  $('btnMorning').onclick = () => { spawnHearts(5); showMessage({ text: pickFresh('gm', D.goodmorning), own: false }, 'Guten Morgen'); };
+  $('btnNight').onclick = () => { spawnHearts(5); showMessage({ text: pickFresh('gn', D.goodnight), own: false }, 'Gute Nacht'); };
   $('btnWrite').onclick = () => writeOwn((t) => { if (!$('view-home').classList.contains('active')) showView('home'); showMessage({ text: t, own: true }, 'Persönlich für dich'); });
   $('btnReasons').onclick = () => { const p = $('reasonPanel'); const open = p.classList.toggle('hidden'); if (!open) { renderReasons(); if (window.LZP) window.LZP.mountTips($('reasonTips'), 'reasons', 'Gründe schenken'); p.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } };
   $('btnPlayTile').onclick = () => { showView('play'); showSub('play', 'spiele'); if (window.LZG) window.LZG.renderHub(); window.scrollTo(0, 0); };

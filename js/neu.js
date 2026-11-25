@@ -12,6 +12,7 @@
 
   /* Was ist neu – kurz, in Alltagssprache. Neueste zuerst. */
   D.news = [
+    { v: '3.51.0', items: ['☀️ Guten Morgen und Gute Nacht: jetzt 30 statt 4 Grüße – und keiner kommt doppelt, bevor alle dran waren'] },
     { v: '3.50.0', items: ['🔍 Neu auf „Heute“: Papillons Fund des Tages – jeden Tag ein kurioses Geschenk, das es wirklich gibt'] },
     { v: '3.49.0', items: ['💞 Neu: der Falterspaziergang – geht zusammen raus, alle paar Minuten kommt ein Falter zum Fangen, danach eine Frage für euch zwei. Ohne Karte, ohne Suchen.'] },
     { v: '3.48.4', items: ['🕸️ Falterjagd draußen: der nächste Falter fliegt dir jetzt entgegen – kein Suchen mehr nach unerreichbaren Stellen'] },
