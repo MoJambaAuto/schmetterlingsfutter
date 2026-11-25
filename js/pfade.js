@@ -253,10 +253,11 @@
     body.innerHTML =
       (ph.length ? '<div class="pf-gal"><div class="pf-gal-in">' + ph.map((q, i) => '<button type="button" data-ph="' + i + '"><img src="' + esc(q.src) + '" alt="' + esc(q.alt) + '"' + (i ? ' loading="lazy"' : '') + '></button>').join('') + '</div>' + (ph.length > 1 ? '<span class="pf-gal-n" aria-hidden="true">1 / ' + ph.length + '</span>' : '') + '</div>' : '') +
       '<h1 class="pf-title">' + esc(x.title) + '</h1>' +
+      /* 3.53.2: Warnhinweis direkt unter dem Titel – man soll ihn lesen, bevor man aussteigt (Mo 25.11.2026, Autoaufbrüche Sicasumbre) */
+      (x.arrivalRules && x.arrivalRules.safetyNote ? '<div class="pf-warn"><span aria-hidden="true">⚠️</span><p>' + esc(x.arrivalRules.safetyNote) + '</p></div>' : '') +
       '<div id="pfAct"></div>' +
       '<p class="pf-text">' + esc(x.description || '') + '</p>' +
       (x.story && x.story.text ? '<div class="pf-story"><h2>So war es bei uns</h2><p>' + esc(x.story.text) + '</p></div>' : '') +
-      (x.arrivalRules && x.arrivalRules.safetyNote ? '<div class="pf-warn"><span aria-hidden="true">⚠️</span><p>' + esc(x.arrivalRules.safetyNote) + '</p></div>' : '') +
       (facts || tips.length || src.length ? '<details class="pf-more"><summary>Gut zu wissen</summary>' + (facts ? '<div class="pf-grid">' + facts + '</div>' : '') +
         (tips.length ? '<ul>' + tips.map((t) => '<li>' + esc(t) + '</li>').join('') + '</ul>' : '') +
         (fc.date ? '<p class="pf-small">Vor Ort geprüft am ' + esc(dateDe(fc.date)) + '</p>' : '') +
