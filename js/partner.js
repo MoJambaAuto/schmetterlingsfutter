@@ -336,7 +336,8 @@
     /* 3.26.0: Suchbegriff passend zur Person (nicht bei eigener Suche) und Budget als Preisfilter */
     const W = window.LZW; if (W && !raw && !adult && !plain) q = W.query(q);
     /* 3.50.0 (AE-09): in der Play-App über die Website, Budget als Höchstbetrag in Cent */
-    if (L.inTwa && L.inTwa()) { const m = plain ? 0 : ((W ? W.priceParam() : '').match(/p_36%3A-(\d+)/) || [])[1]; return L.webGift(q, +m || 0, !tag); }
+    /* 3.57.1: Familien-Tipps geben der Website mit, dass die Kennung der Raupenzeit gilt */
+    if (L.inTwa && L.inTwa()) { const m = plain ? 0 : ((W ? W.priceParam() : '').match(/p_36%3A-(\d+)/) || [])[1]; return L.webGift(q, +m || 0, !tag, !!(opt && opt.tag) && tag === (D.affiliateTagFam || '').trim()); }
     return 'https://www.amazon.de/s?k=' + encodeURIComponent(q) + (W && !plain ? W.priceParam() : '') + (tag ? '&tag=' + encodeURIComponent(tag) : '');
   }
   function tips(key, n) {
