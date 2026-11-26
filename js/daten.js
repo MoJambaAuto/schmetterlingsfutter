@@ -114,10 +114,11 @@
       '<div class="field"><label for="dt-pbd">🎂 Geburtstag von ' + esc(pn()) + '</label><input type="date" id="dt-pbd" max="' + L.todayKey() + '" value="' + (S().partnerBirthday || '') + '"></div>';
     L.openSheet('<h3>📅 Unsere Daten</h3>' + rows +
       '<p class="about" style="font-size:16px;margin:4px 0 14px;color:var(--text-soft)">' + (on() ? '🔄 Gemeinsame Daten und dein Geburtstag werden automatisch mit ' + esc(pn()) + ' abgeglichen.' : 'Verbindet eure Apps, dann stehen diese Daten bei euch beiden automatisch gleich drin.') + '</p>' +
+      (window.LZFA ? window.LZFA.dataRow() : '') + /* 3.54.0: Raupenzeit – Zeile „Kinder“, bewusst unter dem Abgleich-Hinweis: sie bleibt auf diesem Handy */
       '<div class="row"><button class="pill-btn ghost" data-cancel>Abbrechen</button><button class="pill-btn primary" data-ok>Speichern</button></div>', (sh) => {
       sh.querySelector('[data-cancel]').onclick = L.closeSheet;
       const fe = focus === 'pbd' ? sh.querySelector('#dt-pbd') : sh.querySelector('#dt-' + focus); if (fe) setTimeout(() => fe.focus(), 120);
-      sh.querySelector('[data-ok]').onclick = () => {
+      const saveAll = (then) => {
         const vals = {}; let bad = false;
         SHARED.map((x) => x[0]).concat(['myBirthday']).forEach((f) => { const v = sh.querySelector('#dt-' + f).value || null; if (v && !valid(v)) bad = true; vals[f] = v; });
         const pbd = sh.querySelector('#dt-pbd').value || null; if (pbd && !valid(pbd)) bad = true;
@@ -125,8 +126,12 @@
         /* Ein bekanntes Datum nicht versehentlich leeren, solange die Apps verbunden sind */
         SHARED.forEach(([f]) => { if (vals[f]) { if (f === 'anniversary') S().anniversary = vals[f]; else store().dates[f] = vals[f]; } else if (!on()) { if (f === 'anniversary') S().anniversary = null; else delete store().dates[f]; } });
         S().myBirthday = vals.myBirthday || null; if (pbd) S().partnerBirthday = pbd;
-        L.save(); L.closeSheet(); check(); rerender(); L.toast('Gespeichert ❤');
+        L.save(); L.closeSheet(); check(); rerender(); L.toast('Gespeichert ❤'); if (then) then();
       };
+      sh.querySelector('[data-ok]').onclick = () => saveAll();
+      /* 3.54.0: Zeile „Kinder“ führt zum Fenster der Raupenzeit; schon geänderte Daten werden vorher gespeichert, damit nichts verloren geht */
+      const fb = sh.querySelector('[data-fam]');
+      if (fb) fb.onclick = () => { const dirty = Array.from(sh.querySelectorAll('input[type=date]')).some((i) => i.value !== i.defaultValue); if (dirty) saveAll(() => window.LZFA.sheet()); else { L.closeSheet(); window.LZFA.sheet(); } };
     });
   }
 

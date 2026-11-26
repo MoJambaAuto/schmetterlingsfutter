@@ -96,6 +96,7 @@
     ['Einstellungen', '📱', 'Auf dem iPhone nutzen', 'iphone apple ios installieren safari bildschirm', 'Öffne die Seite in Safari, tippe auf Teilen und dann „Zum Home-Bildschirm“.', null],
     ['Wir', '💡', 'Idee spenden', 'idee vorschlag feedback verbessern mitmachen', '', () => { if (P()) P().ideaSheet('frage'); }],
     ['Wir', '🚩', 'Etwas melden', 'melden fehler unpassend funktioniert nicht kaputt', '', () => { if (P()) P().reportSheet(''); }],
+    ['Einstellungen', '🐛', 'Kinder und Raupenzeit: Aufgaben und Gutscheine für Eltern-Paare', 'kind kinder baby familie eltern mama papa kinderwunsch schwanger nachwuchs raupenzeit raupe', '', () => { if (window.LZFA) window.LZFA.sheet(); }], /* 3.54.0 */
     ['Einstellungen', '🔒', 'Datenschutz', 'datenschutz daten privat sicher verschluesselt impressum', '', () => { location.href = 'privacy.html'; }],
     ['Einstellungen', '🦋', 'Papillon fliegt vorbei: ein- oder ausschalten', 'schmetterling fliegt fliegen anreiz einladung ausschalten abschalten nervt stoert papillon', '', spot('settings', 'togFly')],
     ['Post', '❤️', 'Auf eine Nachricht reagieren: ❤️ 😂 🥹', 'reagieren reaktion herz lachen gerührt emoji smiley like daumen gefällt antworten schnell', 'In „Post“ unter der Nachricht vom Schatz – oder gleich auf der Karte „Neu von …“.', () => L.showView('post')],

@@ -31,7 +31,7 @@
     if (p && !(p.paired() && p.joined()) && p.RELAY && Math.random() < 0.5) return { key: 'pair', text: 'Verbindet eure Handys – dann landet alles direkt bei ' + name + ' 💞', go: 'Verbinden', run: () => p.pairSheet() };
     const pool = [];
     (D.decks || []).forEach((deck) => {
-      if (deck.talk || (deck.adult && !S().intim)) return;
+      if (deck.talk || deck.quiet || (deck.adult && !S().intim)) return; /* 3.54.0: deck.quiet = dafür wirbt Papillon nicht von sich aus (Kinder: ja, nein, wann?) */
       const rec = (S().matches || {})[deck.id];
       if (rec && deck.daily && rec.date.slice(0, 10) === L.todayKey()) return;
       if (rec && rec.matches === null) return; // wartet ohnehin

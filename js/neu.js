@@ -12,6 +12,7 @@
 
   /* Was ist neu – kurz, in Alltagssprache. Neueste zuerst. */
   D.news = [
+    { v: '3.54.0', items: ['🐛 Neu: Raupenzeit. Sag der App, ob Kinder bei euch ein Thema sind (⚙️ Einstellungen → Kinder) – dann gibt es Flügelschläge, Gutscheine und Fragen, die in euren Alltag passen. Bleibt auf deinem Handy.'] },
     /* 3.52.0 (Liebespfade) hat noch keine Zeile: das Reiseziel ist bis zur Freigabe unsichtbar. Beim Freischalten hier ergänzen. */
     { v: '3.53.0', items: ['💬 Neu auf „Heute“: jeden Tag eine Frage für euch zwei und ein Falter-Quiz – dazu täglich neues Falter-Wissen und neue Flügelschläge, passend zu Advent, Weihnachten & Co.'] },
     { v: '3.51.0', items: ['☀️ Guten Morgen und Gute Nacht: jetzt 30 statt 4 Grüße – und keiner kommt doppelt, bevor alle dran waren'] },

@@ -35,7 +35,9 @@
     hiddenOccasions: [],
     wishFilter: 'alle',
     partner: null, inbox: [], matches: {}, deviceId: null, pendingPair: null,
-    checkins: {}, pauseUntil: null, jingleCat: 'einfachso'
+    checkins: {}, pauseUntil: null, jingleCat: 'einfachso',
+    /* 3.54.0: Raupenzeit (familie.js) – Antwort auf „Sind Kinder bei euch ein Thema?“, bei Kindern nur die Geburtsjahre */
+    family: { v: 1, topic: null, kids: [], share: false, hidden: false, askedAt: null, updatedAt: null, partner: null }
   });
   let S = load();
 

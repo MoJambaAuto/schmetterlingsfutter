@@ -174,7 +174,7 @@
       L.toast('🎟️ Neuer Gutschein von ' + partnerName()); return true;
     }
     if (obj.t === 'match') {
-      const deck = D.decks.find((d) => d.id === obj.deck); if (!deck) return false;
+      const deck = D.decks.find((d) => d.id === obj.deck); if (!deck || deck.local) return false; /* 3.54.0: Decks, die nur an einem Handy laufen (Raupenzeit), nehmen keine Einladung an */
       /* Habe ich diese Runde schon gespielt, ist das keine Einladung, sondern: Ergebnis da */
       const own = s.matches[deck.id];
       if (own && own.mode === 'relay' && own.sd && own.sd === obj.sd && !own.expired) {
@@ -419,7 +419,7 @@
   function playDeck(deckId, forcePass) {
     const deck = deckById(deckId); if (!deck) return;
     if (deck.adult && !S().intim) { L.toast('Erst den Bereich „Zweisamkeit“ in den Einstellungen ⚙️ einschalten (18+)'); return; }
-    const canRelay = !!(paired() && joined() && RELAY);
+    const canRelay = !!(paired() && joined() && RELAY) && !deck.local; /* 3.54.0: deck.local = nur an einem Handy, nichts geht an den Vermittlungsdienst */
     const mode = (!forcePass && canRelay) ? 'relay' : 'pass';
     window.LZS && window.LZS.count('deck_open:' + deck.id);
     { let hit = false; P().inbox.forEach((m) => { if (m.t === 'match' && m.deck === deck.id && !m.read) { m.read = true; hit = true; } }); if (hit) { L.save(); renderInboxBadge(); flushSeen(); } }

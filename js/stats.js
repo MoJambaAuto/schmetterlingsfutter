@@ -23,7 +23,9 @@
   let saveT = null;
   const later = () => { clearTimeout(saveT); saveT = setTimeout(() => L.save(), 1500); };
   function count(key, n) {
-    if (!ok() || !key) return; const b = bucket(), k = cleanKey(key);
+    if (!ok() || !key) return;
+    if (window.LZFA && window.LZFA.silent(key)) return; /* 3.54.0: nichts zählen, woraus die Familien-Phase eines Paares hervorginge (Raupenzeit) */
+    const b = bucket(), k = cleanKey(key);
     if (!(k in b.c) && Object.keys(b.c).length >= MAX_KEYS) return;
     b.c[k] = Math.min(MAX_N, (b.c[k] || 0) + (n || 1)); later();
   }

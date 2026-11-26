@@ -363,6 +363,8 @@
   function todaysPiek() {
     const s = S(); const key = L.todayKey();
     if (s.piekOverride && s.piekOverride.date === key) return D.pieks[s.piekOverride.idx];
+    /* 3.54.0: Raupenzeit – mit Familien-Phase kommt jeden zweiten Tag eine Aufgabe für Eltern-Paare (familie.js), fest nach Datum */
+    const fa = window.LZFA && window.LZFA.piek(key); if (fa) return fa;
     const f = window.LZT && window.LZT.heute('piek'); if (f) return f;
     return D.pieks[hash(key + '|piek|' + s.sender) % D.pieks.length];
   }
@@ -372,13 +374,13 @@
     if (!s.piekDoneIdx) s.piekDoneIdx = {};
     if (s.piekDone[key] === true && !s.piekDoneIdx[key]) s.piekDoneIdx[key] = [idx]; // Übernahme aus älteren Versionen
     const done = (s.piekDoneIdx[key] || []).indexOf(idx) >= 0;
-    $('piekText').textContent = L.fmt(p.t); $('piekCat').textContent = D.piekCats[p.c] || '';
+    $('piekText').textContent = L.fmt(p.t); $('piekCat').textContent = (p.fam ? '🐛 ' : '') + (D.piekCats[p.c] || '');
     $('piekCard').classList.toggle('done', done);
     $('btnPiekDone').textContent = done ? 'Erledigt ✓ – stark!' : 'Erledigt ✓'; $('btnPiekDone').disabled = done;
     $('piekStreak').textContent = s.piekCount ? s.piekCount + (s.piekCount === 1 ? ' Flügelschlag' : ' Flügelschläge') + ' erledigt' : '';
     $('thanksLabel').textContent = 'Was hat ' + s.receiver + ' heute gut gemacht?';
     $('thanksCount').textContent = s.thanks.length ? s.thanks.length + ' notiert' : '';
-    if (window.LZP) { window.LZP.mountTips($('piekTips'), 'piek_' + p.c, 'Hilft dabei'); window.LZP.mountTips($('thanksTips'), 'thanks', 'Danke mit etwas Kleinem'); }
+    if (window.LZP) { window.LZP.mountTips($('piekTips'), p.fam ? [] : 'piek_' + p.c, 'Hilft dabei'); /* 3.54.0: Familien-Aufgaben vorerst ohne Werbelinks */ window.LZP.mountTips($('thanksTips'), 'thanks', 'Danke mit etwas Kleinem'); }
   }
   $('btnPiekDone').onclick = () => {
     const s = S(); const key = L.todayKey(); const idx = piekId(todaysPiek());
