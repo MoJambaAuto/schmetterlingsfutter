@@ -24,6 +24,14 @@
     /* Namen der Phasen, wie sie in den Einstellungen stehen */
     phases: { wunsch: 'Kinderwunsch', unterwegs: 'Baby unterwegs', baby: 'Baby', klein: 'Kleinkind', schule: 'Schulkind', teen: 'Teenager', fluegge: 'Flügge' },
 
+    /* Wetterbericht der Woche (3.56.0), nur mit Kind im Haus: ein zusätzlicher Punkt, und für drei vorhandene Punkte ein Einstieg, der zum Familienalltag passt */
+    areas: [{ id: 'schlaf', t: 'Schlaf und Kraft', e: '😴', q: 'Wer von uns braucht nächste Woche dringender eine ruhige Nacht – und wie machen wir sie möglich?' }],
+    areaQ: {
+      naehe: 'Welcher kleine Moment Nähe ging diese Woche trotz Trubel – und wie holen wir mehr davon?',
+      alltag: 'Was rund um Kinder und Haushalt war diese Woche ungleich verteilt?',
+      zeit: 'Welche halbe Stunde nur für uns zwei setzen wir nächste Woche fest – auch wenn es spät wird?'
+    },
+
     pieks: {
       wunsch: [
         P(F, 'Erzähl {r}, was du an euch zu zweit nie verlieren willst.'),

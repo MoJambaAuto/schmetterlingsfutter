@@ -90,7 +90,7 @@
   function schedule(ms) {
     clearTimeout(timer);
     timer = setTimeout(function tryFly() {
-      if (off() || shownThisVisit || dayCount() >= 3) return;
+      if (off() || shownThisVisit || dayCount() >= (window.LZFA && window.LZFA.calm && window.LZFA.calm() ? 1 : 3)) return; /* 3.56.0: Schonmodus der Raupenzeit – mit Baby höchstens einmal am Tag */
       if (busy()) { timer = setTimeout(tryFly, 6000); return; }
       fly(suggestion());
     }, ms);

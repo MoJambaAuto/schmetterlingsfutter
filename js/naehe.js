@@ -314,7 +314,8 @@
     d = d || new Date(); const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); const day = t.getUTCDay() || 7; t.setUTCDate(t.getUTCDate() + 4 - day);
     const y0 = new Date(Date.UTC(t.getUTCFullYear(), 0, 1)); return t.getUTCFullYear() + '-W' + String(Math.ceil(((t - y0) / 86400000 + 1) / 7)).padStart(2, '0');
   }
-  const areas = () => K.areas.filter((a) => !a.adult || S().intim);
+  /* 3.56.0: Raupenzeit – mit Kind im Haus kommt der Punkt „Schlaf“ dazu (familie.js) */
+  const areas = () => { const l = K.areas.filter((a) => !a.adult || S().intim); return window.LZFA && window.LZFA.areas ? window.LZFA.areas(l) : l; };
   const head = (title, right) => '<div class="match-head"><button class="icon-btn" data-close aria-label="Schließen">✕</button><div class="eyebrow" style="margin:0">' + esc(title) + '</div>' + (right || '<span></span>') + '</div>';
   let timer = null, wake = null;
   function closeOverlay() { if (timer) { clearInterval(timer); timer = null; } if (wake) { try { wake.release(); } catch (e) {} wake = null; } P.closeMatch(); renderKlartext(); }
@@ -383,7 +384,7 @@
   }
   P.on('checkin', (obj, created) => {
     const wk = String(obj.wk || ''); if (!/^\d{4}-W\d{2}$/.test(wk) || !obj.a || typeof obj.a !== 'object') return false;
-    const a = {}; K.areas.forEach((x) => { const v = Number(obj.a[x.id]); if (v >= 1 && v <= 5) a[x.id] = Math.round(v); });
+    const a = {}; K.areas.concat((D.fam && D.fam.areas) || []).forEach((x) => { const v = Number(obj.a[x.id]); if (v >= 1 && v <= 5) a[x.id] = Math.round(v); });
     const s = st(); s.checkins[wk] = Object.assign(s.checkins[wk] || {}, { theirs: a });
     s.inbox = s.inbox.filter((m) => !(m.t === 'checkin' && m.wk === wk));
     s.inbox.push({ id: uid('m'), t: 'checkin', wk, text: '🌦️ Wetterbericht der Woche – ' + you() + ' ist fertig', at: created || Date.now(), read: false });
