@@ -101,6 +101,7 @@
     if (paired() && online()) { try { await post('/pair/leave', {}); } catch (e) { /* schon weg */ } }
     pushLocalOff();
     P().partner = null; P().matches = {}; P().inbox = P().inbox.filter((m) => m.t !== 'match'); L.save(); keys = null;
+    if (window.LZFA && window.LZFA.pairChanged) { try { window.LZFA.pairChanged(); } catch (e) {} } /* 3.56.0: Raupenzeit – Geteiltes vom früheren Schatz sofort abräumen */
     if (!silent) { L.toast('Verbindung getrennt'); renderAll(); }
   }
   function pairLink() { const p = P().partner; return (location.hostname === 'mojambaauto.github.io' ? 'https://app.schmetterlingsfutter.de/' : location.origin + location.pathname) + '?pair=' + fmtCode(p.pair, p.secret); }
@@ -144,7 +145,7 @@
       if (news) { L.save(); renderAll(); }
       else if (r.joined !== undefined && !light) renderAll();
     } catch (e) {
-      if (e.status === 401) { /* Paar wurde vom Partner getrennt */ pushLocalOff(); P().partner = null; L.save(); renderAll(); L.toast(partnerName() + ' hat die Verbindung getrennt'); }
+      if (e.status === 401) { /* Paar wurde vom Partner getrennt */ pushLocalOff(); P().partner = null; L.save(); if (window.LZFA && window.LZFA.pairChanged) { try { window.LZFA.pairChanged(); } catch (e2) {} } renderAll(); L.toast(partnerName() + ' hat die Verbindung getrennt'); }
     } finally { pulling = false; }
   }
   async function handleIncoming(obj, created) {

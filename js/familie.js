@@ -14,6 +14,8 @@
      waren sich beide schon einmal einig, gilt die neueste Änderung. Eine leere Liste löscht beim Schatz nie etwas.
    - t: 'wish' oder 'expect' NUR, wenn „Mit meinem Schatz teilen“ eingeschaltet ist. Ausschalten sendet t: ''.
    - i: die Paar-Insel (Wochentag, Rhythmus). Die neueste Änderung gilt.
+   - n: laufende Nummer der Begrüßung (Ältere werden verworfen), q: 1 = „schick mir bitte deinen Stand“.
+   Eine Angabe, die nicht geteilt wird, löst keine Begrüßung aus und trägt keinen Zeitstempel.
    Ältere App-Versionen ignorieren das Feld. An den Vermittlungsdienst geht weiterhin nichts, woraus die Phase ablesbar
    wäre: Die Phasen-Decks laufen nur an einem Handy (deck.local), weil ein Spiel über zwei Handys dem Dienst den Namen
    des Decks nennt. „Anonym mithelfen“ zählt nichts mit Phasen-Deck-Namen (silent(), gefragt von stats.js).
@@ -201,15 +203,18 @@
     if (linked && !pid) return false; /* Verbindung besteht, der Schatz ist nur noch nicht beigetreten */
     if ((f.pid || '') === pid) return false;
     let cleared = false;
-    if (f.pid) { cleared = !!(f.partner || f.conflict); f.partner = null; f.partnerSeen = ''; f.sync = 0; f.conflict = null; f.sentSig = ''; }
+    /* auch die eigene Freigabe endet: sie galt dem früheren Schatz und geht nicht von selbst an eine neue Verbindung */
+    if (f.pid) { cleared = !!(f.partner || f.conflict || f.share); f.partner = null; f.partnerSeen = ''; f.sync = 0; f.conflict = null; f.sentSig = ''; f.pseq = 0; f.share = false; }
     f.pid = pid; L.save();
     return cleared; /* true = es stand etwas vom früheren Schatz da: Ansicht neu aufbauen */
   }
+  /* partner.js ruft das, sobald die Verbindung getrennt wird: Geteiltes vom früheren Schatz verschwindet sofort */
+  function pairChanged() { if (pairCheck()) apply(); else { render(); renderCard(); } }
   function payload() {
-    const f = fam(), out = { k: [], t: '', at: f.updatedAt || 0 };
+    const f = fam(), out = { k: [], t: '' }; /* kein Zeitstempel für Angaben, die nicht geteilt werden */
     if (f.hidden) return out;
     if (f.topic === 'kids') { out.k = f.kids.slice(); out.ka = f.ka || f.updatedAt || 0; if (f.res && Date.now() - f.res < 7 * 864e5) out.r = 1; }
-    if (f.share && (f.topic === 'wish' || f.topic === 'expect')) out.t = f.topic;
+    if (f.share && (f.topic === 'wish' || f.topic === 'expect')) { out.t = f.topic; out.at = f.updatedAt || 0; }
     if (f.island) out.i = [f.island.wd, f.island.every, f.island.at];
     else if (f.islandGone) out.i = [-1, '', f.islandGone];
     return out;
@@ -217,31 +222,42 @@
   /* Kennung des Gesendeten ohne die Zeitangabe `at`: nur wenn sich daran etwas ändert, geht eine neue Begrüßung raus */
   const sigOf = (pl) => pairId() + '|' + JSON.stringify([pl.k, pl.ka || 0, pl.t, pl.i || 0, pl.r || 0]);
   const emptySig = () => sigOf({ k: [], t: '' });
-  let sendT = null, wantT = false; const sentLog = [];
-  /* want = die andere App bitten, ihren Stand zu schicken (q: 1) – nach „Wieder einblenden“, sonst käme er erst mit der täglichen Begrüßung */
-  function sendFam(now, want) {
-    if (!on()) return; clearTimeout(sendT); if (want) wantT = true;
+  let sendT = null, wantT = false, forceT = false; const sentLog = [];
+  /* want  = die andere App bitten, ihren Stand zu schicken (q: 1) – nach „Wieder einblenden“, sonst käme er erst mit der täglichen Begrüßung
+     force = auch senden, wenn sich am eigenen Stand nichts geändert hat (Antwort an den Schatz, tägliche Auffrischung).
+     Ohne beides geht nur dann eine Begrüßung raus, wenn es etwas Neues mitzuteilen gibt: Eine Änderung, die nicht geteilt wird,
+     löst also gar keine Nachricht aus. Jede Begrüßung trägt eine laufende Nummer n, damit der Empfänger Älteres verwirft
+     (Nachrichten können sich unterwegs überholen: eine alte Freigabe darf eine Rücknahme nicht wieder aufheben). */
+  function sendFam(now, want, force) {
+    if (!on()) return; clearTimeout(sendT); if (want) wantT = true; if (force) forceT = true;
     sendT = setTimeout(async () => {
-      if (!on()) return; const pl = payload(), sig = sigOf(pl), f = fam(), ask = wantT; wantT = false;
-      /* Notbremse: höchstens sechs Begrüßungen je Minute. Was dann liegen bleibt, holt sendIfStale() im Minutentakt nach. */
-      const t0 = Date.now(); while (sentLog.length && t0 - sentLog[0] > 60000) sentLog.shift(); if (sentLog.length >= 6) return; sentLog.push(t0);
-      if (ask) pl.q = 1;
-      else if (sig === emptySig() && !f.sentSig) return; /* nie etwas mitgeteilt und nichts mitzuteilen */
-      try { await P().send({ t: 'hello', name: S().sender, pron: S().pron || '', fam: pl }); const g = fam(); g.sentAt = Date.now(); g.sentSig = sig; L.save(); } catch (e) { /* beim nächsten Öffnen */ }
+      if (!on()) return; const pl = payload(), sig = sigOf(pl), f = fam();
+      /* Notbremse: höchstens sechs gesendete Begrüßungen je Minute. Was dann liegen bleibt (auch want und force), holt sendIfStale() im Minutentakt nach. */
+      const t0 = Date.now(); while (sentLog.length && t0 - sentLog[0] > 60000) sentLog.shift(); if (sentLog.length >= 6) return;
+      const ask = wantT, must = forceT; wantT = false; forceT = false;
+      if (!ask) {
+        if (sig === emptySig() && !f.sentSig) return; /* nie etwas mitgeteilt und nichts mitzuteilen */
+        if (!must && sig === (f.sentSig || emptySig())) return; /* nichts Neues */
+      } else pl.q = 1;
+      f.seq = Math.max(t0, num(f.seq) + 1); pl.n = f.seq; L.save();
+      try { await P().send({ t: 'hello', name: S().sender, pron: S().pron || '', fam: pl }); sentLog.push(t0); const g = fam(); g.sentAt = Date.now(); g.sentSig = sig; L.save(); }
+      catch (e) { if (ask) wantT = true; if (must) forceT = true; /* beim nächsten Takt oder Öffnen */ }
     }, now ? 300 : 2000);
   }
   /* Einmal am Tag und nach jeder Änderung: so kommt der Stand auch nach einer verlorenen Nachricht oder neuen Verbindung an */
   function sendIfStale() {
     if (!on()) return; pairCheck();
     const f = fam(), sig = sigOf(payload());
-    if (sig !== (f.sentSig || emptySig()) || (sig !== emptySig() && Date.now() - (f.sentAt || 0) > 20 * 3600e3)) sendFam(false);
+    if (wantT || forceT || sig !== (f.sentSig || emptySig())) sendFam(false);
+    else if (sig !== emptySig() && Date.now() - (f.sentAt || 0) > 20 * 3600e3) sendFam(false, false, true);
   }
   /* Ankommende Angaben vom Schatz (partner.js ruft das bei jeder Begrüßung mit hello.fam auf) */
   function got(d) {
     if (!d || typeof d !== 'object' || Array.isArray(d)) return;
     const f = fam(); if (f.hidden) return; /* ausgeblendet: nichts annehmen, nichts zeigen */
-    pairCheck();
-    const now = Date.now(), news = []; let changed = false, reply = d.q === 1; /* q: der Schatz bittet um meinen Stand */
+    const now = Date.now(), news = []; let changed = pairCheck(), reply = d.q === 1; /* q: der Schatz bittet um meinen Stand */
+    /* laufende Nummer des Absenders: eine ältere oder doppelte Begrüßung zählt nicht mehr (Nachrichten können sich überholen) */
+    const sn = num(Number(d.n)); if (sn) { if (sn <= num(f.pseq)) return; f.pseq = sn; }
     const pk = cleanKids(d.k), pt = d.t === 'wish' || d.t === 'expect' ? d.t : '';
     /* Zeitangaben aus der Zukunft (falsch gehende Uhr) zählen höchstens als „jetzt“ */
     const pat = Math.min(num(Number(d.at)), now), pka = Math.min(num(Number(d.ka)) || pat, now);
@@ -254,7 +270,7 @@
     if (pk.length) {
       if (f.topic === 'kids') {
         if (sameKids(f.kids, pk)) { f.sync = now; if (pka > f.ka) f.ka = pka; if (f.conflict) { f.conflict = null; changed = true; } }
-        else if (f.sync || d.r) {
+        else if (f.sync || d.r === 1) {
           if (pka > f.ka) { f.kids = pk; f.ka = pka; f.sync = now; f.conflict = null; f.updatedAt = now; changed = true; reply = true; news.push('Kinder: ' + pk.map(yearLabel).join(', ')); }
           else if (pka < f.ka) reply = true; /* meins ist neuer: der Schatz übernimmt es, sobald meine Begrüßung ankommt */
           else { f.conflict = [f.kids.slice(), pk]; changed = true; } /* gleich alt und verschieden: nachfragen statt hin und her schicken */
@@ -277,7 +293,7 @@
     if (changed) apply(); else L.save();
     if (news.length) L.toast('🐛 Mit ' + pn() + ' abgeglichen – ' + news[0] + (news.length > 1 ? ' (+' + (news.length - 1) + ')' : ''));
     /* Übernommenes bestätigen, Neueres zurückmelden: so wissen beide Apps, dass sie sich einig sind */
-    if (reply) sendFam(true);
+    if (reply) sendFam(true, false, true);
   }
   function resolve(kids) {
     const f = fam(), now = Date.now(); f.kids = cleanKids(kids); f.ka = now; f.sync = now; f.res = now; f.conflict = null; f.updatedAt = now;
@@ -489,7 +505,7 @@
   document.head.appendChild(css);
 
   /* ---------- Start ---------- */
-  window.LZFA = { phase, phaseOf, piek, sheet, ask: () => sheet(true), hide, status, dataRow, render, renderCard, silent, calm, areas, payload, got, islandSheet, coupons: syncCoupons, decks: syncDecks, days: useDay };
+  window.LZFA = { phase, phaseOf, piek, sheet, ask: () => sheet(true), hide, status, dataRow, render, renderCard, silent, calm, areas, payload, got, pairChanged, islandSheet, coupons: syncCoupons, decks: syncDecks, days: useDay };
   mount(); fam(); useDay(); pairCheck();
   function refresh() {
     const d = syncDecks(), c = syncCoupons(); if (c) L.save(); render(); renderCard();
