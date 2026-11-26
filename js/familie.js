@@ -26,7 +26,9 @@
 
   /* ---------- Zustand ---------- */
   const okYear = (y) => y === OLDER || (Number.isInteger(y) && y >= 1900 && y <= year());
-  const cleanKids = (k) => (Array.isArray(k) ? k : []).map(Number).filter(okYear).slice(0, MAX_KIDS).sort((a, b) => a - b);
+  /* nur echte Zahlen oder Ziffernfolgen: Number(null), Number('') und Number(false) wären 0 und damit „älter“ */
+  const isYearish = (v) => typeof v === 'number' || (typeof v === 'string' && /^\d{1,4}$/.test(v));
+  const cleanKids = (k) => (Array.isArray(k) ? k : []).filter(isYearish).map(Number).filter(okYear).slice(0, MAX_KIDS).sort((a, b) => a - b);
   /* Liest S.family und bringt es in Form – auch nach dem Einspielen einer Sicherung oder mit Daten einer älteren Fassung */
   function fam() {
     const s = S(); let f = s.family;
@@ -206,12 +208,13 @@
   }
   const due = () => { const f = fam(); return !!S().onboarded && !f.hidden && f.topic === null && !f.askedAt && !f.partner && useDay() >= 3; };
   const busy = () => document.hidden || document.documentElement.getAttribute('data-view') !== 'home' ||
-    !!document.querySelector('.overlay:not(.hidden), .fly, #nwBar') || !!(window.LZU && window.LZU.busy && window.LZU.busy());
+    !!document.querySelector('#modal.open, .overlay:not(.hidden), .fly, #nwBar') || !!(window.LZU && window.LZU.busy && window.LZU.busy());
   let askedNow = false, tries = 0, timer = null, statsVisit = null;
+  const statsOpenAtLoad = S().statsOk === undefined; /* beim Laden gemerkt: wer die Mithelfen-Karte sofort beantwortet, bekommt die Kinder-Frage trotzdem nicht im selben Besuch */
   function tryAsk() {
     clearTimeout(timer); if (askedNow || !due()) return;
-    /* „Anonym mithelfen“ fragt ab dem dritten Öffnen mit einer Karte auf „Heute“. In den ersten beiden Besuchen mit dieser Karte wartet die Kinder-Frage. */
-    if (statsVisit === null) statsVisit = !!$('statsPromo') && (S().launches || 0) < 5;
+    /* „Anonym mithelfen“ fragt ab dem dritten Öffnen mit einer Karte auf „Heute“. In den ersten beiden Besuchen mit dieser Karte (drittes und viertes Öffnen) wartet die Kinder-Frage. */
+    if (statsVisit === null) { const la = S().launches || 0; statsVisit = statsOpenAtLoad && la >= 3 && la < 5; }
     if (statsVisit) return;
     if (busy()) { if (++tries < 30) timer = setTimeout(tryAsk, 6000); return; }
     askedNow = true; fam().askedAt = Date.now(); L.save(); sheet(true);
@@ -247,13 +250,18 @@
   /* ---------- Start ---------- */
   window.LZFA = { phase, phaseOf, piek, sheet, ask: () => sheet(true), hide, status, dataRow, render, silent, coupons: syncCoupons, decks: syncDecks, days: useDay };
   mount(); fam(); useDay();
-  { const d = syncDecks(), c = syncCoupons(); if (c) L.save(); render();
+  function refresh() {
+    const d = syncDecks(), c = syncCoupons(); if (c) L.save(); render();
     if (window.LZF && window.LZF.renderPiek) window.LZF.renderPiek();
-    if (d && window.LZP && window.LZP.renderDecks) window.LZP.renderDecks(); }
-  /* Jahreswechsel und Tageswechsel bei offener App: Phase, Decks und Gutscheine nachziehen */
+    if (d && window.LZP && window.LZP.renderDecks) window.LZP.renderDecks();
+  }
+  refresh();
+  /* Jahreswechsel und Tageswechsel: Phase, Decks und Gutscheine nachziehen – beim Zurückkehren und, bleibt die App offen, einmal je Minute geprüft */
+  let dayKey = L.todayKey();
+  setInterval(() => { if (L.todayKey() === dayKey) return; dayKey = L.todayKey(); refresh(); }, 60000);
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState !== 'visible') return;
-    const d = syncDecks(), c = syncCoupons(); if (c) L.save(); render(); if (d && window.LZP && window.LZP.renderDecks) window.LZP.renderDecks();
+    dayKey = L.todayKey(); refresh();
     tries = 0; clearTimeout(timer); timer = setTimeout(tryAsk, 5000);
   });
   timer = setTimeout(tryAsk, 9000);

@@ -167,11 +167,12 @@
       ['druck', '🌧️', 'Das Thema macht mir gerade Druck'],
       ['wirzwei', '❤️', 'Egal wie es kommt: Wir zwei bleiben das Wichtigste'],
       ['ruhen', '🌙', 'Ich möchte das Thema eine Weile ruhen lassen']
-    ], { quiet: true, prompt: 'Stimmt das für dich?', labels: { nein: '👎 Nein', vielleicht: '🤷 Teils', ja: '👍 Ja' }, yesLabel: 'Seht ihr beide so', openLabel: 'Seht ihr beide teilweise so', openTitle: 'Hier seid ihr euch halb einig',
+    ], { quiet: true, noShare: true, prompt: 'Stimmt das für dich?', labels: { nein: '👎 Nein', vielleicht: '🤷 Teils', ja: '👍 Ja' }, yesLabel: 'Seht ihr beide so', openLabel: 'Seht ihr beide teilweise so', openTitle: 'Hier seid ihr euch halb einig',
       hitText: 'Darin seid ihr euch einig. Alles andere bleibt geheim.', noneText: 'Kein gemeinsames Ja. Das sagt wenig: Vielleicht ist es einfach noch nicht dran.' }),
 
     /* Je Phase ein Deck. Läuft nur an einem Handy (local), damit die Phase das Gerät nicht verlässt.
-       quiet = Papillon schlägt das Deck nicht von sich aus vor (Kinderwunsch, Baby unterwegs: die Sprechblase könnte jemand mitlesen). */
+       quiet = Papillon schlägt das Deck nicht von sich aus vor (Kinderwunsch, Baby unterwegs: die Sprechblase könnte jemand mitlesen).
+       noShare = das Ergebnis hat keinen „Teilen“-Knopf (partner.js showResults), damit die Angabe nicht versehentlich nach draußen geht. */
     decks: {
       wunsch: deck('famwunsch', '🎈', 'Bevor wir zu dritt sind', 'Was wollt ihr zu zweit noch erleben? ' + SUB, [
         ['reise', '✈️', 'Eine Reise nur zu zweit'],
@@ -186,7 +187,7 @@
         ['abend', '🕯️', 'Jede Woche ein fester Abend nur für uns'],
         ['album', '📷', 'Ein Fotoalbum von uns zweien anfangen'],
         ['sonntag', '☕', 'Einen Sonntag komplett im Bett verbringen']
-      ], { local: true, quiet: true }),
+      ], { local: true, quiet: true, noShare: true }),
       unterwegs: deck('famunterwegs', '💞', 'So bleiben wir ein Paar', 'Was soll bei euch bleiben, auch wenn sich alles ändert? ' + SUB, [
         ['abend', '🕯️', 'Ein fester Abend in der Woche gehört uns'],
         ['kosename', '🐻', 'Wir nennen uns weiter beim Kosenamen'],
@@ -200,7 +201,7 @@
         ['danke', '🙏', 'Wir bedanken uns weiter für Kleinigkeiten'],
         ['wegfahren', '🧳', 'Wir fahren weiter zu zweit weg, auch wenn es nur eine Nacht ist'],
         ['naehe', '🫂', 'Zärtlichkeit bleibt wichtig, auch wenn wir müde sind']
-      ], { local: true, quiet: true }),
+      ], { local: true, quiet: true, noShare: true }),
       baby: deck('fambaby', '🏝️', 'Kleine Inseln im Babyalltag', 'Was würde euch gerade guttun? ' + SUB, [
         ['ausschlafen', '🛌', 'Abwechselnd ausschlafen am Wochenende'],
         ['sofa', '🛋️', 'Zehn Minuten Sofa, wenn das Baby schläft'],
