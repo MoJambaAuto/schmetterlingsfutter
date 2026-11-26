@@ -133,7 +133,7 @@
     L.openSheet('<h3>' + K.icon + ' ' + esc(K.title) + '</h3><p class="about" style="font-size:17px;margin-bottom:10px">' + esc(K.sub) + '.</p>' + runHtml +
       '<div class="field"><label>Wie spielt ihr?</label><div class="chips" id="g2Mode">' +
       '<button type="button" data-m="relay">📱📱 Zwei Handys</button><button type="button" data-m="pass">📱 An einem Handy</button></div><small class="g2-hint" id="g2ModeHint"></small><button type="button" class="pill-btn small hidden" id="g2Pair">💞 Jetzt verbinden</button></div>' +
-      '<div class="field"><label>Einsatz: Wer verliert, schenkt …</label><div class="chips" id="g2Prize"><button type="button" data-p="" class="on">Ohne Einsatz</button>' + shuffle(PRIZES).slice(0, 5).map((p) => '<button type="button" data-p="' + esc(p) + '">' + esc(p) + '</button>').join('') + '<button type="button" data-own>✏️ Eigener</button></div><input id="g2Own" class="hidden" maxlength="60" placeholder="z. B. Pizza ausgeben" autocomplete="off"></div>' +
+      '<div class="field"><label>Einsatz: Wer verliert, schenkt …</label><div class="chips" id="g2Prize"><button type="button" data-p="" class="on">Ohne Einsatz</button>' + (window.LZRE ? '<button type="button" data-p="' + esc(window.LZRE.AUSFLUG) + '">🧭 Gewinner bestimmt den nächsten Ausflug</button>' : '') + /* 3.55.0 */ shuffle(PRIZES).slice(0, 5).map((p) => '<button type="button" data-p="' + esc(p) + '">' + esc(p) + '</button>').join('') + '<button type="button" data-own>✏️ Eigener</button></div><input id="g2Own" class="hidden" maxlength="60" placeholder="z. B. Pizza ausgeben" autocomplete="off"></div>' +
       '<div class="row" style="margin-top:6px"><button class="pill-btn ghost" data-cancel>Abbrechen</button><button class="pill-btn primary" data-go>Los geht’s</button></div>', (sh) => {
       const go = sh.querySelector('[data-go]'), pair = sh.querySelector('#g2Pair');
       const setMode = (m) => {
@@ -204,13 +204,15 @@
       if (!$('g2Screen')) return;
       const w = g.winner; const draw = !w || w === 'draw';
       const wn = draw ? '' : nameOf(g, w); const iWon = !draw && g.mode === 'relay' && w === g.me; const iLost = !draw && g.mode === 'relay' && w !== g.me;
+      const trip = !!(window.LZRE && window.LZRE.isAusflug(g.prize)); /* 3.55.0: Einsatz „bestimmt den nächsten Ausflug“ – wer gewinnt, sucht aus */
       const box = document.createElement('div'); box.className = 'g2-end';
       box.innerHTML = '<div class="g2-end-card"><div class="g2-big">' + (draw ? '🤝' : '🏆') + '</div><h2>' + (draw ? 'Unentschieden!' : (g.mode === 'relay' ? (iWon ? 'Du gewinnst!' : esc(you()) + ' gewinnt!') : esc(wn) + ' gewinnt!')) + '</h2>' +
-        (g.prize && !draw ? '<p class="g2-prize">🎁 Einsatz: <b>' + esc(g.prize) + '</b></p>' + (iLost || g.mode === 'pass' ? '<button type="button" class="pill-btn primary" data-coupon>🎟️ Als Gutschein ' + (g.mode === 'pass' ? 'festhalten' : 'an ' + esc(you()) + ' schicken') + '</button>' : (iWon ? '<p class="about">Den schuldet dir ' + esc(you()) + ' jetzt. 😉</p>' : '')) : '') +
+        (trip && !draw ? '<p class="g2-prize">🧭 <b>' + esc(g.prize) + '</b></p>' + (iWon || g.mode === 'pass' ? '<button type="button" class="pill-btn primary" data-trip>🧭 Ausflug aussuchen</button>' : '<p class="about">' + esc(you()) + ' sucht jetzt den Ausflug aus.</p>') : g.prize && !draw ? '<p class="g2-prize">🎁 Einsatz: <b>' + esc(g.prize) + '</b></p>' + (iLost || g.mode === 'pass' ? '<button type="button" class="pill-btn primary" data-coupon>🎟️ Als Gutschein ' + (g.mode === 'pass' ? 'festhalten' : 'an ' + esc(you()) + ' schicken') + '</button>' : (iWon ? '<p class="about">Den schuldet dir ' + esc(you()) + ' jetzt. 😉</p>' : '')) : '') +
         (Math.random() < 0.4 ? '<p class="g2-nudge">📵 ' + esc(NUDGES[rnd(NUDGES.length)]) + '</p>' : '') +
         (g.kind === 'quiz' && window.LZWI ? window.LZWI.hint() : '') +
         '<div class="row" style="margin-top:12px"><button class="pill-btn ghost" data-close>Fertig</button><button class="pill-btn" data-again>Revanche</button></div></div>';
       $('g2Screen').appendChild(box); if (!draw) L.spawnHearts(14);
+      const tp = box.querySelector('[data-trip]'); if (tp) tp.onclick = () => window.LZRE.pick({ winner: g.mode === 'pass' ? wn : 'Du', game: KINDS[g.kind].title, send: true }, (t) => { tp.disabled = true; tp.textContent = '✓ ' + t; });
       const cp = box.querySelector('[data-coupon]'); if (cp) cp.onclick = async () => {
         const c = { icon: '🏆', title: g.prize, desc: 'Gewonnen bei ' + KINDS[g.kind].title };
         if (g.mode === 'relay') { await P().sendCoupon(c); }

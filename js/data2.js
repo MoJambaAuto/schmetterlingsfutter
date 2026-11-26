@@ -3,7 +3,7 @@
 (function () {
   'use strict';
   const D = window.LUZIFER_DATA;
-  D.version = '3.54.0';
+  D.version = '3.55.0';
   /* Grundton des Klavier-Samples fürs Liebeslied-Pad (audio/pad.wav), wird beim Einbau gemessen */
   D.padBase = 174.61;
 
@@ -596,6 +596,36 @@
     ["garten","🌷","Parks und Gärten",["Picknickkorb für zwei","Gartenführer Deutschland"]],
     ["traum","🌍","Von einer Weltreise träumen","Reise Tagebuch Paar"]
   ]);
+  /* 3.55.0: Traumziele – wohin zieht es euch beide? Karten ohne Marken und ohne Anbieter, ohne Werbelinks (tip leer).
+     fw = Flugweite: 1 vor der Haustür, 2 übers Wochenende, 3 großer Flug (js/reisen.js). Texte sind Vorschläge – Mo korrigiert. */
+  D.decks.push({ id: 'traumziele', icon: '🧭', title: 'Traumziele', sub: 'Wohin zieht es euch beide?', common: true, teaser: 'Hütte im Schnee, Insel im Winter, Picknick am Fluss …', opts: 3,
+    labels: { ja: '❤️ Da will ich hin', vielleicht: '✨ Warum nicht', nein: 'Nicht meins' }, yesLabel: 'Da wollt ihr beide hin', openTitle: 'Zum gemeinsamen Entdecken', openLabel: 'Beide offen dafür',
+    hitText: 'Eure Traumziele. Alles andere bleibt für sich.', noneText: 'In der nächsten Runde warten neue Ziele.', items: [
+      { id: "picknick-fluss", e: "🧺", t: "Picknick am Fluss", tip: '', fw: 1 },
+      { id: "huette-schnee", e: "🛖", t: "Hütte im Schnee", tip: '', fw: 2 },
+      { id: "insel-winter", e: "🏝️", t: "Insel im Winter", tip: '', fw: 3 },
+      { id: "sonnenaufgang-huegel", e: "🌅", t: "Sonnenaufgang auf dem nächsten Hügel", tip: '', fw: 1 },
+      { id: "stadt-dachterrasse", e: "🏙️", t: "Stadt mit Dachterrasse", tip: '', fw: 2 },
+      { id: "nordlichter", e: "🌌", t: "Nordlichter sehen", tip: '', fw: 3 },
+      { id: "nachtspaziergang", e: "🌙", t: "Nachtspaziergang unter Sternen", tip: '', fw: 1 },
+      { id: "nordsee-strandkorb", e: "🌊", t: "Strandkorb an der Nordsee", tip: '', fw: 2 },
+      { id: "radtour-eis", e: "🚲", t: "Radtour zur Eisdiele", tip: '', fw: 1 },
+      { id: "weinberge", e: "🍇", t: "Wochenende in den Weinbergen", tip: '', fw: 2 },
+      { id: "kuestenstrasse", e: "🚗", t: "Küstenstraße im Mietwagen", tip: '', fw: 3 },
+      { id: "see-abend", e: "🏞️", t: "Abends an den See", tip: '', fw: 1 },
+      { id: "therme", e: "🧖", t: "Therme und Sauna", tip: '', fw: 2 },
+      { id: "nachtzug", e: "🚆", t: "Mit dem Nachtzug in den Süden", tip: '', fw: 3 },
+      { id: "fremdes-viertel", e: "🏘️", t: "Ein Stadtviertel, das ihr nicht kennt", tip: '', fw: 1 },
+      { id: "baumhaus", e: "🌲", t: "Schlafen im Baumhaus", tip: '', fw: 2 },
+      { id: "aussichtsturm", e: "🗼", t: "Auf einen Aussichtsturm steigen", tip: '', fw: 1 },
+      { id: "burg", e: "🏰", t: "Nacht auf einer Burg", tip: '', fw: 2 },
+      { id: "bergsee", e: "🏔️", t: "Bergsee in den Alpen", tip: '', fw: 3 },
+      { id: "lagerfeuer", e: "🔥", t: "Lagerfeuer mit Stockbrot", tip: '', fw: 1 },
+      { id: "hausboot-we", e: "⛵", t: "Wochenende auf dem Hausboot", tip: '', fw: 2 },
+      { id: "altstadt-sueden", e: "🍋", t: "Altstadt am Mittelmeer", tip: '', fw: 3 },
+      { id: "wueste", e: "🏜️", t: "Sternenhimmel in der Wüste", tip: '', fw: 3 },
+      { id: "inselhuepfen", e: "⛴️", t: "Inselhüpfen mit der Fähre", tip: '', fw: 3 }
+    ] });
   cdeck("genuss", "🍝", "Essen und Genuss", [
     ["italien","🍝","Italienisch","Nudelmaschine"],
     ["asien","🍜","Asiatisch","Wok Set"],

@@ -33,7 +33,7 @@
   /* ---------- Reiseziele ---------- */
   const EDITIONS = [{
     id: 'fuerteventura-sued', dir: 'pfade/fuerteventura-sued/', file: 'fuerteventura-sued.json',
-    name: 'Fuerteventura · Süden', flag: '🇪🇸',
+    name: 'Fuerteventura · Süden', flag: '🇪🇸', flug: 'Papillons erster Fernflug',
     released: false, /* erst nach Mos Ja und übernommenen Textkorrekturen auf true */
     /* Lotsenpunkt → Station, Art (species im Paket), Platzhalter-Bild (Feld in img/falter.webp, bis es eigene Bilder gibt),
        Umkreis in Metern, und je Vorbedingung aus dem Paket (gleiche Reihenfolge) die Bestätigung oder null. */
@@ -184,8 +184,12 @@
     head('Liebespfade', draftChip(ed, p));
     const a = active();
     const hero = pics(ed, p, p.routes[0].stops[1] || p.routes[0].stops[0])[0]; /* anderes Bild als auf der ersten Routenkarte */
+    /* 3.55.0: Warum ist das hier? Papillon ist ein Wanderfalter – jedes Reiseziel ist einer seiner Flüge (Text und Beleg in js/reisen.js) */
+    const ws = window.LZRE && window.LZRE.STORY;
+    const story = ws ? '<div class="pf-story"><h2>' + esc(ed.flug || 'Papillons Flug') + '</h2><p>' + esc(ws.text) + '</p><a class="pf-src" href="' + esc(ws.source.url) + '" target="_blank" rel="noopener">Quelle: ' + esc(ws.source.title) + ' ↗</a></div>' : '';
     let h = '<div class="pf-hero">' + (hero ? '<img src="' + esc(hero.src) + '" alt="' + esc(hero.alt) + '">' : '') + '<div class="pf-hero-t"><h1>' + esc(ed.name) + '</h1><span data-off="' + ed.id + '">' + offHtml(ed) + '</span></div></div>';
     if (a && a.ed === ed.id) { const r = p.routes.find((x) => x.id === a.route); if (r) h += '<button type="button" class="pf-btn big" data-weiter>▶ Weiter: ' + esc(r.title) + '</button>'; }
+    h += story;
     h += '<div class="pf-list">' + p.routes.map((r, i) => {
       const run = runOf(ed.id, r.id), n = run ? doneN(run, r) : 0, pic = pics(ed, p, r.stops[0])[0];
       return '<button type="button" class="pf-route" data-r="' + i + '">' + (pic ? '<img src="' + esc(pic.src) + '" alt="" loading="lazy">' : '') +

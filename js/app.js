@@ -644,6 +644,7 @@
     gift: () => { if (window.LZP) window.LZP.searchSheet(); },
     book: () => { if (window.LZX && window.LZX.book) window.LZX.book(); },
     pfade: () => { if (window.LZPF) window.LZPF.open('weiter'); }, /* 3.52.0: Liebespfade – laufende Route fortsetzen */
+    play: () => showView('play'), erleben: () => { if (window.LZRE) window.LZRE.erleben(); }, /* 3.55.0: drei Sorten Futter auf „Heute“ */
     news: () => { if (window.LZU && window.LZU.newsSheet) window.LZU.newsSheet(); },
     hilfe: () => { if (window.LZWI && window.LZWI.hilfe) window.LZWI.hilfe(); },
     /* 3.50.0: Papillons Fund des Tages auf der Website */
