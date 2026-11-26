@@ -1,34 +1,41 @@
 /* Schmetterlingsfutter – Raupenzeit (LZFA). Paket 1 (3.54.0): die Frage und erste Inhalte. Paket 2 (3.56.0): Abgleich mit
-   dem Schatz, Schonmodus, Wochen-Check, Paar-Insel.
-   Eine einzige freiwillige Frage klärt, ob Kinder bei einem Paar ein Thema sind. Daraus ergibt sich eine von sieben
-   Phasen, und vorhandene Funktionen stellen sich darauf ein: Flügelschlag (jeden zweiten Tag eine Aufgabe für
+   dem Schatz, Schonmodus, Wochen-Check, Paar-Insel. 3.57.0: Kinder aus früheren Beziehungen (Kinder UND Kinderwunsch oder
+   „Baby unterwegs“ zugleich, Zusammenführen zweier Listen) und Paket 3 (Tipps je Phase, Zähler).
+   Eine einzige freiwillige Frage klärt, ob Kinder bei einem Paar ein Thema sind. Daraus ergeben sich bis zu zwei von
+   sieben Phasen, und vorhandene Funktionen stellen sich darauf ein: Flügelschlag (jeden zweiten Tag eine Aufgabe für
    Eltern-Paare), ein Gleichklang-Deck je Phase, Eltern-Gutscheine, ein Eltern-Punkt im Wetterbericht der Woche.
    Leitsatz: Es geht um euch zwei, nie um Erziehung.
 
-   Was gespeichert wird (S.family): die Antwort und bei Kindern nur die Geburtsjahre. Keine Namen, keine Fotos,
-   kein Geburtsdatum, kein Entbindungstermin.
+   Was gespeichert wird (S.family): die Antwort und bei Kindern nur die Geburtsjahre – auch die von Kindern aus früheren
+   Beziehungen. Keine Namen, keine Fotos, kein Geburtsdatum, kein Entbindungstermin, nicht wessen Kind es ist.
+   topic 'kids' kann zusätzlich also = 'wish' | 'expect' tragen (Patchwork: Kinder da, gemeinsamer Kinderwunsch).
 
-   Was das Gerät verlässt (seit 3.56.0, nur bei verbundenen Apps, Ende-zu-Ende verschlüsselt in der Begrüßung hello.fam):
+   Was das Gerät verlässt (nur bei verbundenen Apps, Ende-zu-Ende verschlüsselt in der Begrüßung hello.fam):
    - k: Geburtsjahre der Kinder. Sie sind gemeinsame Daten wie der Jahrestag: fehlt etwas, wird es übernommen; steht zum
-     ersten Mal Verschiedenes gegenüber, fragt die App neutral, was stimmt (ohne zu zeigen, wer was eingetragen hat);
-     waren sich beide schon einmal einig, gilt die neueste Änderung. Eine leere Liste löscht beim Schatz nie etwas.
+     ersten Mal Verschiedenes gegenüber, fragt die App neutral, was stimmt (ohne zu zeigen, wer was eingetragen hat, und
+     mit der Möglichkeit „alle zusammen“); waren sich beide schon einmal einig, gilt die neueste Änderung. Eine leere
+     Liste löscht beim Schatz nie etwas.
    - t: 'wish' oder 'expect' NUR, wenn „Mit meinem Schatz teilen“ eingeschaltet ist. Ausschalten sendet t: ''.
    - i: die Paar-Insel (Wochentag, Rhythmus). Die neueste Änderung gilt.
    - n: laufende Nummer der Begrüßung (Ältere werden verworfen), q: 1 = „schick mir bitte deinen Stand“.
    Eine Angabe, die nicht geteilt wird, löst keine Begrüßung aus und trägt keinen Zeitstempel.
-   Ältere App-Versionen ignorieren das Feld. An den Vermittlungsdienst geht weiterhin nichts, woraus die Phase ablesbar
-   wäre: Die Phasen-Decks laufen nur an einem Handy (deck.local), weil ein Spiel über zwei Handys dem Dienst den Namen
-   des Decks nennt. „Anonym mithelfen“ zählt nichts mit Phasen-Deck-Namen (silent(), gefragt von stats.js).
+   Ältere App-Versionen ignorieren das Feld. An den Vermittlungsdienst geht nichts, woraus die Phase ablesbar wäre: Die
+   Phasen-Decks laufen nur an einem Handy (deck.local), weil ein Spiel über zwei Handys dem Dienst den Namen des Decks
+   nennt. „Anonym mithelfen“ zählt keine Phasen-Deck-Namen (silent()), wohl aber – nur mit Zustimmung – einmal am Tag die
+   Phase (fam_phase:<phase>); Kinderwunsch und „Baby unterwegs“ nur, wenn die Zustimmung nach dieser Fassung gegeben wurde.
 
    Regeln der Frage: einmal, frühestens am dritten Nutzungstag, nie in der Einrichtung, nie über offenen Fenstern,
    nicht in dem Besuch, in dem „Anonym mithelfen“ fragt, und nicht mehr, sobald der Schatz etwas geteilt hat.
    „Thema ausblenden“ ist ein Tipp ohne Rückfrage: Die Angabe wird gelöscht, alles zum Thema verschwindet, die App
-   fragt nicht wieder, nimmt vom Schatz nichts mehr dazu an und zieht eine frühere Freigabe zurück. Kein automatischer
-   Wechsel von „Baby unterwegs“ zu „Baby“ und keine automatischen Glückwünsche – eine Schwangerschaft kann anders enden. */
+   fragt nicht wieder, nimmt vom Schatz nichts mehr dazu an und zieht eine frühere Freigabe zurück. Ein vom Schatz
+   geschenkter Eltern-Gutschein bleibt dabei liegen (Mo 26.11.2026: „Entscheide du das sinnvoll“ – er ist ein Geschenk und
+   lässt sich mit einem Tipp löschen). Kein automatischer Wechsel von „Baby unterwegs“ zu „Baby“ und keine automatischen
+   Glückwünsche – eine Schwangerschaft kann anders enden. */
 (function () {
   'use strict';
   const D = window.LUZIFER_DATA, L = window.LZ; if (!D || !L || !D.fam) return;
   const S = () => L.S, P = () => window.LZP, $ = (id) => document.getElementById(id), esc = L.esc;
+  const C = (k) => { if (window.LZS && window.LZS.count) window.LZS.count(k); };
   const TOPICS = ['none', 'wish', 'expect', 'kids', 'skip'];
   const PARENT = ['baby', 'klein', 'schule', 'teen']; /* Phasen mit Kind im Haus: Eltern-Gutscheine und Eltern-Punkt im Wetterbericht */
   const MAX_KIDS = 12, OLDER = 0; /* OLDER steht für „älter“: vor mehr als 25 Jahren geboren, ohne genaues Jahr */
@@ -38,6 +45,7 @@
   const on = () => !!(P() && P().paired() && P().joined());
   const pn = () => (P() && P().partnerName ? P().partnerName() : S().receiver);
   const num = (v) => (typeof v === 'number' && isFinite(v) && v > 0 ? v : 0);
+  const isWish = (t) => t === 'wish' || t === 'expect';
 
   /* ---------- Zustand ---------- */
   const okYear = (y) => y === OLDER || (Number.isInteger(y) && y >= 1900 && y <= year());
@@ -45,6 +53,13 @@
   const isYearish = (v) => typeof v === 'number' || (typeof v === 'string' && /^\d{1,4}$/.test(v));
   const cleanKids = (k) => (Array.isArray(k) ? k : []).filter(isYearish).map(Number).filter(okYear).slice(0, MAX_KIDS).sort((a, b) => a - b);
   const sameKids = (a, b) => a.length === b.length && a.every((y, i) => y === b[i]);
+  /* Zwei Listen zusammenführen (Patchwork: jede/r bringt Kinder mit). Steht ein Jahr in beiden, zählt es so oft wie in der längeren Liste. */
+  function mergeKids(a, b) {
+    const cnt = (l) => l.reduce((m, y) => { m[y] = (m[y] || 0) + 1; return m; }, {});
+    const ca = cnt(a), cb = cnt(b), out = [];
+    Object.keys(Object.assign({}, ca, cb)).forEach((y) => { for (let i = 0; i < Math.max(ca[y] || 0, cb[y] || 0); i++) out.push(Number(y)); });
+    return cleanKids(out);
+  }
   const cleanIsland = (i) => (i && typeof i === 'object' && Number.isInteger(i.wd) && i.wd >= 0 && i.wd <= 6 && (i.every === 'week' || i.every === 'month') ? { wd: i.wd, every: i.every, at: num(i.at) } : null);
   /* Liest S.family und bringt es in Form – auch nach dem Einspielen einer Sicherung oder mit Daten einer älteren Fassung */
   function fam() {
@@ -53,20 +68,22 @@
     if (TOPICS.indexOf(f.topic) < 0) f.topic = null;
     f.kids = f.topic === 'kids' ? cleanKids(f.kids) : [];
     if (f.topic === 'kids' && !f.kids.length) f.topic = null; /* „Kinder“ ohne Geburtsjahr gibt es nicht */
+    f.also = f.topic === 'kids' && isWish(f.also) ? f.also : ''; /* 3.57.0: Kinder da UND Kinderwunsch oder Baby unterwegs */
     f.share = f.share === true; f.hidden = f.hidden === true;
     if (!Array.isArray(f.cp)) f.cp = []; /* Eltern-Gutscheine, die schon ins Gutscheinbuch gelegt wurden */
-    /* vom Schatz geteilt: { topic: 'kids' | 'wish' | 'expect', kids, at } */
+    /* vom Schatz geteilt: { kids: [Jahre], t: '' | 'wish' | 'expect', at }. Bis 3.56.0 hieß das Feld topic. */
     const p = f.partner;
     if (!p || typeof p !== 'object' || Array.isArray(p)) f.partner = null;
     else {
-      const pk = cleanKids(p.kids);
-      const pt = p.topic === 'kids' ? (pk.length ? 'kids' : null) : (p.topic === 'wish' || p.topic === 'expect') ? p.topic : null;
-      f.partner = pt ? { topic: pt, kids: pt === 'kids' ? pk : [], at: num(p.at) } : null;
+      const pk = p.topic && p.topic !== 'kids' ? [] : cleanKids(p.kids);
+      const pt = isWish(p.t) ? p.t : isWish(p.topic) ? p.topic : '';
+      f.partner = pk.length || pt ? { kids: pk, t: pt, at: num(p.at) } : null;
     }
     f.island = cleanIsland(f.island);
     const c = f.conflict; /* zwei verschiedene Listen von Geburtsjahren, die noch niemand entschieden hat */
     f.conflict = Array.isArray(c) && c.length === 2 && f.topic === 'kids' && cleanKids(c[0]).length && cleanKids(c[1]).length ? [cleanKids(c[0]), cleanKids(c[1])] : null;
     f.ka = num(f.ka); f.sync = num(f.sync); f.res = num(f.res); f.islandGone = num(f.islandGone);
+    if (!num(f.v3)) f.v3 = Date.now(); /* seit wann dieses Gerät die Fassung mit Phasen-Zählung kennt (siehe countPhase) */
     return f;
   }
   function phaseOf(topic, kids) {
@@ -78,52 +95,60 @@
     const age = year() - youngest;
     return age <= 1 ? 'baby' : age <= 5 ? 'klein' : age <= 12 ? 'schule' : age <= 17 ? 'teen' : 'fluegge';
   }
-  /* '' = keine Phase, die App verhält sich wie ohne Raupenzeit. Ohne eigene Angabe zählt, was der Schatz geteilt hat. */
-  function phase() {
-    const f = fam(); if (f.hidden) return '';
-    if (f.topic === null) return f.partner ? phaseOf(f.partner.topic, f.partner.kids) : '';
-    return phaseOf(f.topic, f.kids);
+  /* Was ich selbst zu Kinderwunsch / Baby unterwegs angegeben habe – allein oder zusätzlich zu Kindern */
+  const wishOf = (f) => (isWish(f.topic) ? f.topic : f.topic === 'kids' ? f.also : '');
+  /* Alle Phasen, die gerade gelten: höchstens die der Kinder und dazu Kinderwunsch oder Baby unterwegs.
+     Ohne eigene Angabe zählt, was der Schatz geteilt hat; eine geteilte Angabe ergänzt auch die eigenen Kinder. */
+  function phases() {
+    const f = fam(); if (f.hidden) return [];
+    const p = f.partner, out = [];
+    const kp = phaseOf('kids', f.topic === 'kids' ? f.kids : f.topic === null && p ? p.kids : []); if (kp) out.push(kp);
+    const wp = phaseOf(wishOf(f) || ((f.topic === null || f.topic === 'kids') && p ? p.t : '')); if (wp) out.push(wp);
+    return out;
   }
+  const phase = () => phases()[0] || ''; /* '' = keine Phase, die App verhält sich wie ohne Raupenzeit */
+  const parentPhase = () => phases().find((p) => PARENT.indexOf(p) >= 0) || '';
   const yearLabel = (y) => (y === OLDER ? 'älter' : String(y));
   const kidsText = (k) => (k.length === 1 ? '1 Kind' : k.length + ' Kinder') + ' · ' + k.map(yearLabel).join(', ');
   const topicText = (t) => (t === 'wish' ? 'Kinderwunsch' : t === 'expect' ? 'Baby unterwegs' : '');
   function status() {
-    const f = fam();
+    const f = fam(), shared = f.share && on() ? ' · geteilt' : '';
     if (f.hidden) return 'Ausgeblendet';
-    if (f.topic === 'wish' || f.topic === 'expect') return topicText(f.topic) + (f.share && on() ? ' · geteilt' : '');
-    if (f.topic === 'kids') return kidsText(f.kids);
+    if (isWish(f.topic)) return topicText(f.topic) + shared;
+    if (f.topic === 'kids') return kidsText(f.kids) + (f.also ? ' · ' + topicText(f.also) + shared : '');
     if (f.topic === 'none') return 'Gerade kein Thema';
     if (f.topic === 'skip') return 'Keine Angabe';
-    if (f.partner) return 'Von ' + pn() + ': ' + (f.partner.topic === 'kids' ? kidsText(f.partner.kids) : topicText(f.partner.topic));
+    if (f.partner) return 'Von ' + pn() + ': ' + [f.partner.kids.length ? kidsText(f.partner.kids) : '', topicText(f.partner.t)].filter(Boolean).join(' · ');
     return 'Noch nicht beantwortet';
   }
 
-  /* ---------- Flügelschlag: jeden zweiten Tag eine Familien-Aufgabe, fest nach Datum (beide Handys sehen dieselbe) ---------- */
+  /* ---------- Flügelschlag: jeden zweiten Tag eine Familien-Aufgabe, fest nach Datum (beide Handys sehen dieselbe).
+     Gelten zwei Phasen, wechseln sie sich ab; mit einer Phase bleibt die Reihenfolge wie bisher. ---------- */
   const dayNo = (key) => { const p = String(key).split('-').map(Number); return Math.round(Date.UTC(p[0], p[1] - 1, p[2]) / 864e5); };
   function piek(key) {
-    const ph = phase(); const list = ph && D.fam.pieks[ph]; if (!list || !list.length) return null;
+    const ps = phases().filter((p) => D.fam.pieks[p] && D.fam.pieks[p].length); if (!ps.length) return null;
     const n = dayNo(key || L.todayKey()); if (!isFinite(n) || n % 2) return null;
-    const i = (n / 2) % list.length;
-    return { id: 'fam:' + ph + ':' + i, c: list[i].c, t: list[i].t, fam: true };
+    const idx = n / 2, ph = ps[idx % ps.length], list = D.fam.pieks[ph], i = Math.floor(idx / ps.length) % list.length;
+    return { id: 'fam:' + ph + ':' + i, c: list[i].c, t: list[i].t, fam: true, ph };
   }
   /* Schonmodus (3.56.0): mit Baby meldet sich Papillon höchstens einmal am Tag (anreiz.js fragt hier nach) */
-  const calm = () => phase() === 'baby';
+  const calm = () => phases().indexOf('baby') >= 0;
   /* Wetterbericht der Woche (3.56.0, naehe.js): mit Kind im Haus kommt der Punkt „Schlaf“ dazu, und die Gesprächs-Einstiege
      zu Nähe, Aufgabenteilung und Zeit zu zweit passen zum Familienalltag */
   function areas(list) {
-    if (PARENT.indexOf(phase()) < 0) return list;
+    if (!parentPhase()) return list;
     const q = D.fam.areaQ || {};
     return (D.fam.areas || []).concat(list.map((a) => (q[a.id] ? Object.assign({}, a, { q: q[a.id] }) : a)));
   }
+  /* Geschenkideen zu Muttertag und Vatertag (features.js giftSheet): mit Kind im Haus ein Satz dazu */
+  const giftNote = (o) => (o && (o.id === 'muttertag' || o.id === 'vatertag') && parentPhase() ? '<p class="about" style="font-size:17px;margin:0 0 10px">Das Geschenk kommt vom Kind. Besorgen musst du es. 😉</p>' : '');
 
-  /* ---------- Decks: das Deck der Phase und „Kinder: ja, nein, wann?“ stehen nur in der Liste, wenn sie passen ---------- */
+  /* ---------- Decks: die Decks der Phasen und „Kinder: ja, nein, wann?“ stehen nur in der Liste, wenn sie passen ---------- */
   const PHASE_DECKS = Object.keys(D.fam.decks).map((k) => D.fam.decks[k].id);
   const ALL_DECKS = PHASE_DECKS.concat([D.fam.deckAll.id]);
+  const wantDecks = () => { const w = phases().map((p) => D.fam.decks[p]).filter(Boolean); if (!fam().hidden) w.push(D.fam.deckAll); return w; };
   function syncDecks() {
-    const f = fam(), ph = phase(), want = [];
-    if (ph && D.fam.decks[ph]) want.push(D.fam.decks[ph]);
-    if (!f.hidden) want.push(D.fam.deckAll);
-    const have = D.decks.filter((d) => d.fam);
+    const want = wantDecks(), have = D.decks.filter((d) => d.fam);
     if (have.length === want.length && have.every((d, i) => d === want[i])) return false;
     for (let i = D.decks.length - 1; i >= 0; i--) if (D.decks[i].fam) D.decks.splice(i, 1);
     let at = D.decks.findIndex((d) => d.id === 'dates'); at = at < 0 ? D.decks.length : at + 1;
@@ -142,8 +167,8 @@
   const isFamCoupon = (c) => c && typeof c.id === 'string' && c.id.indexOf('fam_') === 0;
   function syncCoupons() {
     const s = S(), f = fam(); if (!Array.isArray(s.coupons)) return false;
-    const ph = phase();
-    const want = PARENT.indexOf(ph) >= 0 ? D.fam.coupons.filter((c) => c.ph.indexOf(ph) >= 0) : [];
+    const ph = parentPhase();
+    const want = ph ? D.fam.coupons.filter((c) => c.ph.indexOf(ph) >= 0) : [];
     const ids = want.map((c) => 'fam_' + c.id);
     let changed = false;
     const rest = s.coupons.filter((c) => !isFamCoupon(c) || ids.indexOf(c.id) >= 0);
@@ -160,38 +185,47 @@
 
   /* ---------- Alles auf den Stand der Angabe bringen ---------- */
   function apply() {
-    const f = fam(), ph = phase();
-    const keep = []; if (ph && D.fam.decks[ph]) keep.push(D.fam.decks[ph].id); if (!f.hidden) keep.push(D.fam.deckAll.id);
+    const keep = wantDecks().map((d) => d.id);
     purge(ALL_DECKS.filter((id) => keep.indexOf(id) < 0));
     const d = syncDecks(); syncCoupons(); L.save(); render(); renderCard();
     if (window.LZF && window.LZF.renderPiek) window.LZF.renderPiek();
     if (window.LZP) { if (d && window.LZP.renderDecks) window.LZP.renderDecks(); if (window.LZP.renderPost && document.documentElement.getAttribute('data-view') === 'post') window.LZP.renderPost(); }
   }
+  /* Kommen Kinder dazu, während schon Kinderwunsch oder Baby unterwegs angegeben war: Die Angabe bleibt als „außerdem“
+     stehen (Kinder aus früheren Beziehungen), außer es ist ein Kind von höchstens einem Jahr dabei – dann ist das Baby da. */
+  const keepAlso = (prev, kids) => (isWish(prev) && phaseOf('kids', kids) !== 'baby' ? prev : '');
   function setTopic(topic, kids) {
-    const f = fam(), now = Date.now(), list = topic === 'kids' ? cleanKids(kids) : [];
+    const f = fam(), now = Date.now(), list = topic === 'kids' ? cleanKids(kids) : [], before = wishOf(f);
     if (topic === 'kids') {
       if (f.topic !== 'kids' || !sameKids(f.kids, list) || !f.ka) f.ka = now;
       if (f.conflict) { f.conflict = null; f.res = now; } /* selbst entschieden: der Schatz übernimmt es ohne neue Rückfrage */
-    } else { f.ka = 0; f.sync = 0; f.res = 0; f.conflict = null; }
-    /* Die Freigabe gilt nur für die Angabe, für die sie eingeschaltet wurde: Wer von „Kinderwunsch“ auf „Baby unterwegs“ wechselt, teilt das nicht von selbst */
-    if (topic !== f.topic) f.share = false;
+      f.also = keepAlso(before, list);
+    } else { f.ka = 0; f.sync = 0; f.res = 0; f.conflict = null; f.also = ''; }
     f.topic = topic; f.kids = list;
-    if (topic !== 'wish' && topic !== 'expect') f.share = false;
+    /* Die Freigabe gilt nur für die Angabe, für die sie eingeschaltet wurde: Wer von „Kinderwunsch“ auf „Baby unterwegs“ wechselt, teilt das nicht von selbst */
+    if (wishOf(f) !== before || !wishOf(f)) f.share = false;
     f.hidden = false; f.updatedAt = now; if (!f.askedAt) f.askedAt = now;
-    apply(); sendFam(true);
+    C('fam_set'); apply(); sendFam(true);
+  }
+  /* Zusätzlich zu Kindern: Kinderwunsch oder Baby unterwegs ('' = keins von beiden) */
+  function setAlso(v) {
+    const f = fam(); if (f.topic !== 'kids') return;
+    const next = isWish(v) ? v : ''; if (next === f.also) return;
+    f.also = next; f.share = false; f.updatedAt = Date.now();
+    C('fam_set'); apply(); sendFam(true);
   }
   /* „Thema ausblenden“: ein Tipp, keine Rückfrage. Die Angabe wird gelöscht, nichts zum Thema bleibt sichtbar,
      eine frühere Freigabe an den Schatz wird zurückgezogen (payload() ist dann leer). Die Paar-Insel beim Schatz bleibt. */
   function hide() {
     const f = fam(), now = Date.now();
-    f.topic = null; f.kids = []; f.share = false; f.hidden = true; f.partner = null; f.partnerSeen = ''; f.conflict = null;
+    f.topic = null; f.kids = []; f.also = ''; f.share = false; f.hidden = true; f.partner = null; f.partnerSeen = ''; f.conflict = null;
     f.ka = 0; f.sync = 0; f.res = 0; f.island = null; f.islandGone = 0; f.islandDone = '';
     f.updatedAt = now; if (!f.askedAt) f.askedAt = now;
-    apply(); sendFam(true); L.closeSheet(); L.toast('Ausgeblendet. Die App zeigt nichts mehr zum Thema.');
+    C('fam_hide'); apply(); sendFam(true); L.closeSheet(); L.toast('Ausgeblendet. Die App zeigt nichts mehr zum Thema.');
   }
   function unhide() { const f = fam(); f.hidden = false; f.updatedAt = Date.now(); apply(); sendFam(true, true); }
   function setShare(v) {
-    const f = fam(); f.share = !!v && (f.topic === 'wish' || f.topic === 'expect'); f.updatedAt = Date.now();
+    const f = fam(); f.share = !!v && !!wishOf(f); f.updatedAt = Date.now();
     L.save(); render(); sendFam(true);
   }
 
@@ -214,7 +248,7 @@
     const f = fam(), out = { k: [], t: '' }; /* kein Zeitstempel für Angaben, die nicht geteilt werden */
     if (f.hidden) return out;
     if (f.topic === 'kids') { out.k = f.kids.slice(); out.ka = f.ka || f.updatedAt || 0; if (f.res && Date.now() - f.res < 7 * 864e5) out.r = 1; }
-    if (f.share && (f.topic === 'wish' || f.topic === 'expect')) { out.t = f.topic; out.at = f.updatedAt || 0; }
+    if (f.share && wishOf(f)) { out.t = wishOf(f); out.at = f.updatedAt || 0; }
     if (f.island) out.i = [f.island.wd, f.island.every, f.island.at];
     else if (f.islandGone) out.i = [-1, '', f.islandGone];
     return out;
@@ -258,14 +292,14 @@
     const now = Date.now(), news = []; let changed = pairCheck(), reply = d.q === 1; /* q: der Schatz bittet um meinen Stand */
     /* laufende Nummer des Absenders: eine ältere oder doppelte Begrüßung zählt nicht mehr (Nachrichten können sich überholen) */
     const sn = num(Number(d.n)); if (sn) { if (sn <= num(f.pseq)) return; f.pseq = sn; }
-    const pk = cleanKids(d.k), pt = d.t === 'wish' || d.t === 'expect' ? d.t : '';
+    const pk = cleanKids(d.k), pt = isWish(d.t) ? d.t : '';
     /* Zeitangaben aus der Zukunft (falsch gehende Uhr) zählen höchstens als „jetzt“ */
     const pat = Math.min(num(Number(d.at)), now), pka = Math.min(num(Number(d.ka)) || pat, now);
     /* 1) Was der Schatz von sich aus teilt. Nimmt er es zurück (t: ''), verschwindet es hier wieder. */
-    const before = f.partner ? f.partner.topic : null;
-    f.partner = pk.length ? { topic: 'kids', kids: pk, at: pka } : pt ? { topic: pt, kids: [], at: pat } : null;
-    const after = f.partner ? f.partner.topic : null;
-    if (after !== before) { changed = true; if (after !== 'wish' && after !== 'expect') f.partnerSeen = ''; }
+    const beforeT = f.partner ? f.partner.t : '', beforeK = f.partner ? f.partner.kids : [];
+    f.partner = pk.length || pt ? { kids: pk, t: pt, at: pt ? pat : pka } : null;
+    if (pt !== beforeT) { changed = true; if (!pt) f.partnerSeen = ''; }
+    if (!sameKids(pk, beforeK)) changed = true;
     /* 2) Geburtsjahre sind gemeinsame Daten */
     if (pk.length) {
       if (f.topic === 'kids') {
@@ -276,8 +310,10 @@
           else { f.conflict = [f.kids.slice(), pk]; changed = true; } /* gleich alt und verschieden: nachfragen statt hin und her schicken */
         } else { f.conflict = [f.kids.slice(), pk]; changed = true; }
       } else if (f.topic !== 'skip' && (f.topic === null || pka > (f.updatedAt || 0))) {
-        /* fehlt bei mir, oder meine Antwort ist älter als die Angabe des Schatzes: übernehmen. „Lieber nicht sagen“ bleibt. */
-        f.topic = 'kids'; f.kids = pk; f.ka = pka; f.sync = now; f.share = false; f.updatedAt = now; if (!f.askedAt) f.askedAt = now;
+        /* fehlt bei mir, oder meine Antwort ist älter als die Angabe des Schatzes: übernehmen. „Lieber nicht sagen“ bleibt.
+           Ein eigener Kinderwunsch bleibt dabei als „außerdem“ stehen (samt Freigabe) – außer das Baby ist offenbar da. */
+        const mine = wishOf(f); f.also = keepAlso(mine, pk); if (f.also !== mine) f.share = false;
+        f.topic = 'kids'; f.kids = pk; f.ka = pka; f.sync = now; f.updatedAt = now; if (!f.askedAt) f.askedAt = now;
         changed = true; reply = true; news.push('Kinder: ' + pk.map(yearLabel).join(', '));
       }
     }
@@ -339,7 +375,7 @@
   /* ---------- Karte auf „Heute“: nur wenn etwas zu klären oder heute dran ist ---------- */
   function renderCard() {
     let el = $('famPromo'); const f = fam();
-    const shared = f.partner && (f.partner.topic === 'wish' || f.partner.topic === 'expect') ? f.partner.topic : '';
+    const shared = f.partner ? f.partner.t : '';
     const mode = f.hidden ? '' : f.conflict ? 'conflict' : shared && f.partnerSeen !== shared ? 'shared' : islandToday() && f.islandDone !== L.todayKey() ? 'island' : '';
     if (!mode) { if (el) el.remove(); return; }
     if (!el) { const anchor = $('partnerCard'); if (!anchor) return; el = document.createElement('div'); el.id = 'famPromo'; el.className = 'card promo'; anchor.parentNode.insertBefore(el, anchor.nextSibling); }
@@ -348,11 +384,16 @@
     const text = (t) => '<p class="about" style="font-size:17px;margin:6px 0 0">' + t + '</p>';
     const row = (b) => '<div class="row wrap" style="margin-top:12px;justify-content:flex-start">' + b + '</div>';
     if (mode === 'conflict') {
-      /* neutral: sortiert, damit nicht erkennbar ist, wer was eingetragen hat */
+      /* neutral: sortiert, damit nicht erkennbar ist, wer was eingetragen hat. „Alle zusammen“ führt beide Listen zusammen
+         (jede/r hat eigene Kinder eingetragen) und erscheint nur, wenn das etwas anderes ergibt als die beiden Listen. */
       const opts = f.conflict.slice().sort((a, b) => a.join().localeCompare(b.join()));
+      const all = mergeKids(opts[0], opts[1]), both = !sameKids(all, opts[0]) && !sameKids(all, opts[1]);
       el.innerHTML = '<div class="promo-title">🐛 Kinder: welche Geburtsjahre stimmen?</div>' + text('In euren beiden Apps stehen zwei verschiedene Angaben. Tippt die richtige an, dann gilt sie bei euch beiden.') +
-        row(opts.map((k, i) => '<button type="button" class="pill-btn" data-pick="' + i + '">' + esc(k.map(yearLabel).join(', ')) + '</button>').join('') + '<button type="button" class="pill-btn ghost" data-own>Anders eintragen</button>');
+        row(opts.map((k, i) => '<button type="button" class="pill-btn" data-pick="' + i + '">' + esc(k.map(yearLabel).join(', ')) + '</button>').join('') +
+          (both ? '<button type="button" class="pill-btn" data-all>Alle zusammen: ' + esc(all.map(yearLabel).join(', ')) + '</button>' : '') +
+          '<button type="button" class="pill-btn ghost" data-own>Anders eintragen</button>');
       el.querySelectorAll('[data-pick]').forEach((b) => { b.onclick = () => resolve(opts[+b.dataset.pick]); });
+      const ab = el.querySelector('[data-all]'); if (ab) ab.onclick = () => resolve(all);
       el.querySelector('[data-own]').onclick = () => kidsSheet(f.kids, false);
     } else if (mode === 'shared') {
       el.innerHTML = '<div class="promo-title">💞 ' + esc(pn()) + ' teilt mit dir: ' + topicText(shared) + '</div>' + text('Nur ihr zwei seht das. Die App hat dazu jetzt Flügelschläge und Fragen für euch.') +
@@ -374,11 +415,12 @@
   /* Die eine Erklärzeile: was mit der Angabe passiert – je nachdem, ob die Apps verbunden sind und was gewählt ist */
   function noteLine(f) {
     if (!on()) return '🔒 Bleibt auf deinem Handy.';
-    if (f.topic === 'kids') return '🔄 Die Geburtsjahre stehen auch bei ' + esc(pn()) + '.';
-    if (f.topic === 'wish' || f.topic === 'expect') return f.share ? '💞 Geteilt mit ' + esc(pn()) + '.' : '🔒 Bleibt auf deinem Handy, bis du es teilst.';
+    const w = wishOf(f), wl = w ? (f.share ? ' 💞 ' + topicText(w) + ': geteilt mit ' + esc(pn()) + '.' : ' 🔒 ' + topicText(w) + ' bleibt auf deinem Handy, bis du es teilst.') : '';
+    if (f.topic === 'kids') return '🔄 Die Geburtsjahre stehen auch bei ' + esc(pn()) + '.' + wl;
+    if (w) return f.share ? '💞 Geteilt mit ' + esc(pn()) + '.' : '🔒 Bleibt auf deinem Handy, bis du es teilst.';
     return '🔒 Bleibt auf deinem Handy. Nur Geburtsjahre von Kindern stehen auch bei ' + esc(pn()) + '.';
   }
-  /* auto = Papillon fragt von selbst: nur die fünf Tasten. Sonst (Einstellungen, „Unsere Daten“) auch Teilen, Paar-Insel und „Thema ausblenden“. */
+  /* auto = Papillon fragt von selbst: nur die fünf Tasten. Sonst (Einstellungen, „Unsere Daten“) auch „Außerdem“, Teilen, Paar-Insel und „Thema ausblenden“. */
   function sheet(auto) {
     const f = fam();
     if (f.hidden && !auto) {
@@ -389,12 +431,14 @@
       });
       return;
     }
-    const own = f.topic === 'wish' || f.topic === 'expect';
-    const shared = f.partner && (f.partner.topic === 'wish' || f.partner.topic === 'expect') ? f.partner.topic : '';
+    const w = wishOf(f), shared = f.partner ? f.partner.t : '';
     L.openSheet('<h3>🐛 Sind Kinder bei euch ein Thema?</h3><div class="fa-opts">' +
       OPTS.map((o) => '<button type="button" class="fa-opt' + (f.topic === o[0] ? ' on' : '') + '" data-t="' + o[0] + '"' + (f.topic === o[0] ? ' aria-pressed="true"' : '') + '><span>' + esc(o[1]) + '</span>' + (f.topic === o[0] ? '<i aria-hidden="true">✓</i>' : '') + '</button>').join('') +
       '</div>' +
-      (!auto && own && on() ? '<div class="switch fa-share"><div>Mit ' + esc(pn()) + ' teilen<small>Dein Schatz sieht dann: ' + topicText(f.topic) + '</small></div><button type="button" class="toggle" id="togFamShare" role="switch" aria-checked="' + (f.share ? 'true' : 'false') + '" aria-label="Mit meinem Schatz teilen"></button></div>' : '') +
+      /* Kinder da – und außerdem? (Kinder aus früheren Beziehungen und ein gemeinsamer Wunsch schließen sich nicht aus) */
+      (!auto && f.topic === 'kids' ? '<div class="fa-also" role="group" aria-label="Außerdem"><span>Außerdem:</span>' +
+        [['wish', 'Wir wünschen uns noch eins'], ['expect', 'Baby unterwegs']].map((o) => '<button type="button" class="fa-year' + (f.also === o[0] ? ' on' : '') + '" data-also="' + o[0] + '" aria-pressed="' + (f.also === o[0]) + '">' + o[1] + '</button>').join('') + '</div>' : '') +
+      (!auto && w && on() ? '<div class="switch fa-share"><div>Mit ' + esc(pn()) + ' teilen<small>Dein Schatz sieht dann: ' + topicText(w) + '</small></div><button type="button" class="toggle" id="togFamShare" role="switch" aria-checked="' + (f.share ? 'true' : 'false') + '" aria-label="Mit meinem Schatz teilen"></button></div>' : '') +
       '<p class="fa-note" id="faNote">' + noteLine(f) + '</p>' +
       (!auto && shared ? '<p class="fa-note">💞 ' + esc(pn()) + ' teilt mit dir: ' + topicText(shared) + '</p>' : '') +
       (auto ? '' : '<div class="fa-opts"><button type="button" class="fa-opt fa-isl" data-island><span>🏝️ Paar-Insel' + (f.island ? ': ' + esc(islandText(f.island)) : ' festlegen') + '</span><i aria-hidden="true">›</i></button></div>' +
@@ -402,6 +446,7 @@
       const c = sh.querySelector('[data-cancel]'); if (c) c.onclick = L.closeSheet;
       const h = sh.querySelector('[data-hide]'); if (h) h.onclick = hide;
       const isl = sh.querySelector('[data-island]'); if (isl) isl.onclick = islandSheet;
+      sh.querySelectorAll('[data-also]').forEach((b) => { b.onclick = () => { L.haptic(8); setAlso(fam().also === b.dataset.also ? '' : b.dataset.also); sheet(); }; });
       const tg = sh.querySelector('#togFamShare');
       if (tg) tg.onclick = () => {
         const v = !fam().share; setShare(v); tg.setAttribute('aria-checked', v ? 'true' : 'false'); L.haptic(8);
@@ -414,7 +459,7 @@
           if (t === 'kids') { kidsSheet(f.topic === 'kids' ? f.kids : [], auto); return; }
           setTopic(t);
           /* Kinderwunsch oder Baby unterwegs bei verbundenen Apps: Fenster bleibt offen, damit der Teilen-Schalter zu sehen ist */
-          if ((t === 'wish' || t === 'expect') && on()) sheet(); else L.closeSheet();
+          if (isWish(t) && on()) sheet(); else L.closeSheet();
           L.toast(t === 'none' ? 'Alles klar. Ändern kannst du das unter ⚙️ → Kinder.' : t === 'skip' ? 'Alles klar. Papillon fragt nicht noch einmal.' : SET_TOAST);
         };
       });
@@ -426,7 +471,7 @@
     const y0 = year(); let grid = '';
     for (let y = y0; y >= y0 - 25; y--) grid += '<button type="button" class="fa-year" data-y="' + y + '">' + y + '</button>';
     grid += '<button type="button" class="fa-year" data-y="' + OLDER + '">älter</button>';
-    L.openSheet('<h3>🐛 Wann sind eure Kinder geboren?</h3><p class="fa-note">Für jedes Kind einmal das Jahr antippen.' + (on() ? ' Die Jahre stehen dann auch bei ' + esc(pn()) + '.' : '') + '</p>' +
+    L.openSheet('<h3>🐛 Wann sind eure Kinder geboren?</h3><p class="fa-note">Für jedes Kind einmal das Jahr antippen – auch für Kinder aus früheren Beziehungen.' + (on() ? ' Die Jahre stehen dann auch bei ' + esc(pn()) + '.' : '') + '</p>' +
       '<div class="fa-kids" id="faKids" aria-live="polite"></div><div class="fa-years">' + grid + '</div>' +
       '<div class="row"><button type="button" class="pill-btn ghost" data-back>Zurück</button><button type="button" class="pill-btn primary" data-ok>Fertig</button></div>', (sh) => {
       const box = sh.querySelector('#faKids'), ok = sh.querySelector('[data-ok]');
@@ -442,7 +487,8 @@
         };
       });
       sh.querySelector('[data-back]').onclick = () => sheet(auto);
-      ok.onclick = () => { if (!kids.length) return; setTopic('kids', kids); L.closeSheet(); L.toast(SET_TOAST); };
+      /* danach das Fenster mit „Außerdem“ zeigen: Kinder und ein Kinderwunsch schließen sich nicht aus */
+      ok.onclick = () => { if (!kids.length) return; setTopic('kids', kids); sheet(); L.toast(SET_TOAST); };
       draw();
     });
   }
@@ -466,7 +512,7 @@
     if (statsVisit === null) { const la = S().launches || 0; statsVisit = statsOpenAtLoad && la >= 3 && la < 5; }
     if (statsVisit) return;
     if (busy()) { if (++tries < 30) timer = setTimeout(tryAsk, 6000); return; }
-    askedNow = true; fam().askedAt = Date.now(); L.save(); sheet(true);
+    askedNow = true; fam().askedAt = Date.now(); L.save(); C('fam_ask'); sheet(true);
   }
 
   /* ---------- Einstellungen und „Unsere Daten“ ---------- */
@@ -485,8 +531,20 @@
       '<div class="field"><label>🏝️ Paar-Insel</label><button type="button" class="pill-btn small fa-data" data-island>' + (f.island ? esc(islandText(f.island)) : 'Festlegen') + ' ›</button></div>';
   };
 
-  /* „Anonym mithelfen“: Zähler, aus denen die Phase hervorginge, bleiben aus (stats.js fragt hier nach) */
+  /* ---------- „Anonym mithelfen“ (nur mit Zustimmung, stats.js) ---------- */
+  /* Zähler, die den Namen eines Phasen-Decks tragen, bleiben aus (stats.js fragt hier nach) */
   const silent = (k) => { const x = String(k); return PHASE_DECKS.some((id) => x.indexOf(id) >= 0); };
+  /* 3.57.0 (Mo 26.11.2026, Entscheidung 3): einmal am Tag die Phase zählen – nur die Phase, keine Geburtsjahre, ohne Kennung.
+     Kinderwunsch und „Baby unterwegs“ nur, wenn die Zustimmung gegeben wurde, nachdem diese Fassung auf dem Gerät war
+     (die frühere Zustimmung kannte diesen Punkt noch nicht). */
+  function countPhase() {
+    if (!window.LZS || !window.LZS.ok || !window.LZS.ok()) return;
+    const f = fam(), k = L.todayKey(); if (f.phaseDay === k) return;
+    /* Kinderwunsch / Baby unterwegs nur aus der eigenen Angabe zählen, nie aus dem, was der Schatz geteilt hat */
+    const fresh2 = num(Number(S().statsAsked)) >= f.v3 && !!wishOf(f);
+    phases().forEach((p) => { if (p !== 'wunsch' && p !== 'unterwegs' || fresh2) C('fam_phase:' + p); });
+    f.phaseDay = k; L.save();
+  }
 
   const css = document.createElement('style');
   css.textContent = '.fa-opts{display:flex;flex-direction:column;gap:10px;margin:2px 0 12px}' +
@@ -500,12 +558,13 @@
     '.fa-year.on{background:var(--accent-dark);border-color:var(--accent-dark);color:#fff}' +
     '.fa-days{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin:0 0 12px}' +
     '.fa-two{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 12px}.fa-two .fa-opt{justify-content:center;text-align:center;padding:10px 8px;font-size:18px}' +
+    '.fa-also{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 12px}.fa-also span{font-size:17px;color:var(--text-soft);width:100%}.fa-also .fa-year{flex:1 1 150px;padding:8px 10px;font-size:17px;line-height:1.25}' +
     '.fa-share{margin:0 0 10px;border-bottom:0}.fa-isl{min-height:50px;font-size:18px}' +
     '.fa-data{max-width:100%;text-align:left;white-space:normal}';
   document.head.appendChild(css);
 
   /* ---------- Start ---------- */
-  window.LZFA = { phase, phaseOf, piek, sheet, ask: () => sheet(true), hide, status, dataRow, render, renderCard, silent, calm, areas, payload, got, pairChanged, islandSheet, coupons: syncCoupons, decks: syncDecks, days: useDay };
+  window.LZFA = { phase, phases, phaseOf, piek, sheet, ask: () => sheet(true), hide, status, dataRow, render, renderCard, silent, calm, areas, giftNote, payload, got, pairChanged, islandSheet, coupons: syncCoupons, decks: syncDecks, days: useDay };
   mount(); fam(); useDay(); pairCheck();
   function refresh() {
     const d = syncDecks(), c = syncCoupons(); if (c) L.save(); render(); renderCard();
@@ -517,12 +576,12 @@
      bleibt die App offen, einmal je Minute geprüft. Im selben Takt geht der Stand an den Schatz, falls er noch aussteht
      (zum Beispiel kurz nach dem Verbinden der Apps). */
   let dayKey = L.todayKey();
-  setInterval(() => { if (pairCheck()) apply(); if (L.todayKey() !== dayKey) { dayKey = L.todayKey(); refresh(); } sendIfStale(); }, 60000);
+  setInterval(() => { if (pairCheck()) apply(); if (L.todayKey() !== dayKey) { dayKey = L.todayKey(); refresh(); } sendIfStale(); countPhase(); }, 60000);
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState !== 'visible') return;
-    if (pairCheck()) apply(); dayKey = L.todayKey(); refresh(); sendIfStale();
+    if (pairCheck()) apply(); dayKey = L.todayKey(); refresh(); sendIfStale(); countPhase();
     tries = 0; clearTimeout(timer); timer = setTimeout(tryAsk, 5000);
   });
-  setTimeout(sendIfStale, 3000);
+  setTimeout(() => { sendIfStale(); countPhase(); }, 3000); /* stats.js lädt später: erst dann zählen */
   timer = setTimeout(tryAsk, 9000);
 })();

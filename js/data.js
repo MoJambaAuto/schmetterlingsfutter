@@ -11,6 +11,7 @@ window.LUZIFER_DATA = {
 
   /* ---- Amazon-Partnerkennung von MoJamba (PartnerNet → Tracking-ID). Leer = Suchlinks ohne Kennung. ---- */
   affiliateTag: 'schmetterlingsfutter-21',
+  affiliateTagFam: 'sf-raupenzeit-21', /* 3.57.0: eigene Kennung für die Familien-Tipps der Raupenzeit (im PartnerNet angelegt am 26.11.2026) */
   /* Kennung auch an Vorschlägen im 18+-Bereich anhängen? Aus = dort normale Suchlinks ohne Kennung. */
   affiliateAdult: false,
   /* ---- Awin (Publisher-ID von MoJamba) und Shop für Vorschläge im 18+-Bereich (3.38.0: Orion, Awin-Programm 11661, zugelassen 12.11.2026) ---- */
@@ -165,6 +166,7 @@ window.LUZIFER_DATA = {
   occasions: [
     { id: "valentin", title: "Valentinstag", month: 2, day: 14, icon: "💘" },
     { id: "muttertag", title: "Muttertag", special: "muttertag", icon: "🌷" },
+    { id: "vatertag", title: "Vatertag", special: "vatertag", icon: "👔" },
     { id: "kuss", title: "Tag des Kusses", month: 7, day: 6, icon: "💋" },
     { id: "nikolaus", title: "Nikolaus", month: 12, day: 6, icon: "🎅" },
     { id: "weihnachten", title: "Weihnachten", month: 12, day: 24, icon: "🎄" },

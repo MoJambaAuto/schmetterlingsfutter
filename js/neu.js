@@ -12,6 +12,7 @@
 
   /* Was ist neu – kurz, in Alltagssprache. Neueste zuerst. */
   D.news = [
+    { v: '3.57.0', items: ['🐛 Raupenzeit für Patchwork: Kinder aus früheren Beziehungen zählen mit – und zusätzlich lässt sich „Wir wünschen uns noch eins“ oder „Baby unterwegs“ angeben (⚙️ → Kinder)', '🛒 Unter den Raupenzeit-Aufgaben stehen jetzt zwei passende Tipps für euch als Paar', '👔 Vatertag steht bei den Anlässen'] },
     { v: '3.56.0', items: ['🏝️ Neu: die Paar-Insel – legt einen festen Tag nur für euch zwei fest (Wir → Unsere Daten), die App erinnert daran', '🐛 Raupenzeit: Die Geburtsjahre eurer Kinder stehen jetzt in beiden Apps. Kinderwunsch oder „Baby unterwegs“ sieht dein Schatz nur, wenn du es teilst.'] },
     { v: '3.55.0', items: ['🧭 Neu: Gemeinsam erleben – die dritte Sorte Futter neben Gesten und Spielen (auf „Heute“)', '🎴 Neues Spiel in „Gemeinsam“: Traumziele – wohin zieht es euch beide?', '🏆 Neuer Einsatz bei Spielen zu zweit: Wer gewinnt, bestimmt euren nächsten Ausflug'] },
     { v: '3.54.0', items: ['🐛 Neu: Raupenzeit. Sag der App, ob Kinder bei euch ein Thema sind (⚙️ Einstellungen → Kinder) – dann gibt es Flügelschläge, Gutscheine und Fragen, die in euren Alltag passen. Bleibt auf deinem Handy.'] },

@@ -28,6 +28,10 @@
     const today = L.atMidnight(new Date());
     const special = (o, year) => {
       if (o.special === 'muttertag') { const d = new Date(year, 4, 1); const first = d.getDay(); const second = 1 + ((7 - first) % 7) + 7; return new Date(year, 4, second); }
+      if (o.special === 'vatertag') { /* 3.57.0: Christi Himmelfahrt = Ostersonntag + 39 Tage (Osterformel nach Gauß/Butcher) */
+        const a = year % 19, b = Math.floor(year / 100), c = year % 100, d2 = Math.floor(b / 4), e = b % 4, g = Math.floor((b - Math.floor((b + 8) / 25) + 1) / 3), h = (19 * a + b - d2 - g + 15) % 30, i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451);
+        return new Date(year, Math.floor((h + l - 7 * m + 114) / 31) - 1, ((h + l - 7 * m + 114) % 31) + 1 + 39);
+      }
       return new Date(year, o.month - 1, o.day);
     };
     list.forEach((o) => {
@@ -107,7 +111,7 @@
     const ideas = (key ? D.gifts[key] : []).concat(D.gifts.default);
     const wishes = S().wishes.filter((w) => !w.done && (w.cat || 'wunsch') === 'wunsch');
     const W = window.LZW; const mine = W ? W.ideas(4) : [];
-    let html = '<h3>🎁 Geschenkideen – ' + L.esc(o.title) + '</h3>' + (W ? W.profileHtml() : '') + (window.LZP ? window.LZP.searchFormHtml('Eigene Idee suchen …') : '');
+    let html = '<h3>🎁 Geschenkideen – ' + L.esc(o.title) + '</h3>' + (window.LZFA && window.LZFA.giftNote ? window.LZFA.giftNote(o) : '') + (W ? W.profileHtml() : '') + (window.LZP ? window.LZP.searchFormHtml('Eigene Idee suchen …') : '');
     if (mine.length) {
       html += '<div class="eyebrow">Passend zu ' + L.esc(S().receiver) + '</div>';
       mine.forEach((g) => { html += '<button class="gift-item" data-q="' + L.esc(g.q) + '"><span class="g-ico">' + g.icon + '</span><span class="g-t">' + L.esc(g.title) + (g.like ? '<span class="g-s">' + L.esc(g.like) + '</span>' : '') + '</span><span>↗</span></button>'; });
@@ -380,7 +384,7 @@
     $('piekStreak').textContent = s.piekCount ? s.piekCount + (s.piekCount === 1 ? ' Flügelschlag' : ' Flügelschläge') + ' erledigt' : '';
     $('thanksLabel').textContent = 'Was hat ' + s.receiver + ' heute gut gemacht?';
     $('thanksCount').textContent = s.thanks.length ? s.thanks.length + ' notiert' : '';
-    if (window.LZP) { window.LZP.mountTips($('piekTips'), p.fam ? [] : 'piek_' + p.c, 'Hilft dabei'); /* 3.54.0: Familien-Aufgaben vorerst ohne Werbelinks */ window.LZP.mountTips($('thanksTips'), 'thanks', 'Danke mit etwas Kleinem'); }
+    if (window.LZP) { window.LZP.mountTips($('piekTips'), p.fam ? 'fam_' + p.ph : 'piek_' + p.c, p.fam ? 'Passt in eure Raupenzeit' : 'Hilft dabei'); /* 3.57.0: Familien-Aufgaben mit Tipps je Phase */ window.LZP.mountTips($('thanksTips'), 'thanks', 'Danke mit etwas Kleinem'); }
   }
   $('btnPiekDone').onclick = () => {
     const s = S(); const key = L.todayKey(); const idx = piekId(todaysPiek());

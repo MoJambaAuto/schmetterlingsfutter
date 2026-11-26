@@ -294,4 +294,25 @@
       { id: 'elternabend', icon: '📋', title: 'Ich übernehme den Elternabend', desc: 'Ich gehe hin, schreibe mit und erzähle dir nur das Wichtige.', ph: ['schule', 'teen'] }
     ]
   };
+
+  /* ---- 3.57.0, Paket 3: Tipps je Phase (Werbelinks zur Amazon-Suche). Jeder Tipp nennt den Nutzen für das Paar.
+     Regeln: bei Kinderwunsch keine Babyprodukte und nichts zu Fruchtbarkeit; keine Preise, keine Verfügbarkeit;
+     höchstens zwei Tipps je Bildschirm (LZP.tips(key, 2)); fam: true = Suchbegriff unverändert, eigene Kennung. ---- */
+  const T = (icon, title, q) => ({ icon, title, q, fam: true });
+  const famTips = {
+    wunsch: [T('📖', 'Buch: Paar bleiben, Eltern werden', 'Buch Paar bleiben Eltern werden'), T('💬', 'Gesprächskarten für Paare', 'Gesprächskarten Paare'), T('🧳', 'Reiseführer: Wochenende zu zweit', 'Reiseführer Wochenendtrips zu zweit'), T('📔', 'Tagebuch für zwei', 'Paar Tagebuch zum Ausfüllen'), T('🎲', 'Spiel für zwei', 'Spiel für 2 Personen'), T('🗺️', 'Rubbelkarte für eure Reisen', 'Weltkarte zum Rubbeln')],
+    unterwegs: [T('📛', 'Vornamenbuch zum gemeinsamen Blättern', 'Vornamenbuch'), T('📔', 'Schwangerschaftstagebuch für zwei', 'Schwangerschaftstagebuch Paar'), T('📻', 'Babyphone: später euer Abend auf dem Sofa', 'Babyphone'), T('🎽', 'Babytrage: Hände frei für euch', 'Babytrage'), T('📘', 'Buch für werdende Väter', 'Buch werdende Väter'), T('🛒', 'Kinderwagen gemeinsam aussuchen', 'Kinderwagen')],
+    baby: [T('📻', 'Babyphone: euer Abend auf dem Sofa', 'Babyphone'), T('🧣', 'Tragetuch: Spaziergang Hand in Hand', 'Tragetuch Baby'), T('☕', 'Thermobecher: endlich warmer Kaffee', 'Thermobecher'), T('📷', 'Fotobuch: euer erstes Jahr', 'Fotobuch erstes Jahr Baby'), T('🖐️', 'Abdruck-Set für Hand und Fuß', 'Baby Abdruck Set Hand Fuß'), T('🎧', 'Kopfhörer für die Serie nebenbei', 'Kopfhörer Bluetooth')],
+    klein: [T('📦', 'Hörspielbox: eine halbe Stunde für euch', 'Hörspielbox Kinder'), T('📚', 'Vorlesebuch für kurze Abende', 'Vorlesebuch Gute Nacht Geschichten'), T('🎲', 'Spiel für zwei', 'Spiel für 2 Personen'), T('🕯️', 'Verabredungs-Box für zu Hause', 'Date Night Box Paare'), T('🧺', 'Picknickdecke für den Balkon', 'Picknickdecke'), T('💬', 'Gesprächskarten für Paare', 'Gesprächskarten Paare')],
+    schule: [T('🗓️', 'Familienplaner: weniger Logistik', 'Familienplaner Wandkalender'), T('🎲', 'Familienspiel für alle', 'Familienspiel'), T('🍳', 'Kochbuch: schnelle Familienküche', 'Kochbuch schnelle Familienküche'), T('🕯️', 'Verabredungs-Box für euch zwei', 'Date Night Box Paare'), T('🎟️', 'Gutscheinheft für Paare', 'Gutscheinheft Paare'), T('🧩', 'Puzzle für ruhige Abende', 'Puzzle 1000 Teile Erwachsene')],
+    teen: [T('🎲', 'Spiel für zwei', 'Spiel für 2 Personen'), T('🥾', 'Wanderführer für eure Gegend', 'Wanderführer'), T('🎧', 'Kopfhörer: Ruhe im Wohnzimmer', 'Kopfhörer Bluetooth'), T('🍳', 'Kochbuch für zwei', 'Kochbuch für zwei'), T('🧳', 'Reiseführer: Wochenende zu zweit', 'Reiseführer Wochenendtrips zu zweit'), T('💬', 'Gesprächskarten für Paare', 'Gesprächskarten Paare')],
+    fluegge: [T('🧳', 'Reiseführer für die große Reise', 'Reiseführer'), T('💃', 'Tanzen lernen zu zweit', 'Paartanz lernen Buch'), T('🎨', 'Ein neues Hobby zu zweit', 'Malen Set Erwachsene'), T('🥾', 'Wanderführer', 'Wanderführer'), T('📷', 'Fotobuch: eure Jahre', 'Fotobuch'), T('🍳', 'Kochbuch für zwei', 'Kochbuch für zwei')]
+  };
+  D.tips = D.tips || {};
+  Object.keys(famTips).forEach((p) => { D.tips['fam_' + p] = famTips[p]; D.tips['match_' + D.fam.decks[p].id] = famTips[p]; });
+
+  /* Geschenkideen zu Muttertag und Vatertag (Anlässe → 🎁). Mit Kind im Haus setzt familie.js einen Satz darüber. */
+  D.gifts = D.gifts || {};
+  if (!D.gifts.muttertag) D.gifts.muttertag = [{ icon: '💐', title: 'Blumen, die lange halten', q: 'Blumenstrauß Muttertag' }, { icon: '🥐', title: 'Frühstück ans Bett', q: 'Frühstückstablett Bett' }, { icon: '🛁', title: 'Wellness für zu Hause', q: 'Wellness Set Geschenk' }, { icon: '📷', title: 'Fotogeschenk', q: 'Fotogeschenk personalisiert' }];
+  if (!D.gifts.vatertag) D.gifts.vatertag = [{ icon: '🍖', title: 'Grillzubehör', q: 'Grillzubehör Geschenk' }, { icon: '🥐', title: 'Frühstück ans Bett', q: 'Frühstückstablett Bett' }, { icon: '🎧', title: 'Kopfhörer', q: 'Kopfhörer Bluetooth' }, { icon: '📷', title: 'Fotogeschenk', q: 'Fotogeschenk personalisiert' }];
 })();

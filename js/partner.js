@@ -327,15 +327,17 @@
      (Amazon-Programmrichtlinien: Seiten mit sexuellen Inhalten gelten als ungeeignet – Entscheidung liegt bei Mo). */
   const ADULT_KEYS = /^(intim_|match_vorlieben)/;
   function awinUrl(mid, url, ref) { return 'https://www.awin1.com/cread.php?awinmid=' + mid + '&awinaffid=' + encodeURIComponent(D.awinAffId || '') + (ref ? '&clickref=' + encodeURIComponent(ref) : '') + '&ued=' + encodeURIComponent(url); }
-  function amazonUrl(q, adult, raw) {
+  function amazonUrl(q, adult, raw, opt) {
+    /* 3.57.0: opt.plain = Suchbegriff unverändert und ohne Preisfilter (Familien-Tipps der Raupenzeit: ein Kinderwagen „bis 25 €“ ergäbe Unsinn), opt.tag = eigene Kennung */
+    const plain = !!(opt && opt.plain);
     /* 3.38.0: Vorschläge im 18+-Bereich gehen zum Erotik-Partner (Awin), nicht zu Amazon – dort sind sexuelle Inhalte nicht erlaubt */
     if (adult && D.adultShop && D.awinAffId) return awinUrl(D.adultShop.mid, D.adultShop.search + encodeURIComponent(q), 'sf-zweisamkeit');
-    const tag = (adult && !D.affiliateAdult) ? '' : (D.affiliateTag || '').trim();
+    const tag = (adult && !D.affiliateAdult) ? '' : ((opt && opt.tag) || D.affiliateTag || '').trim();
     /* 3.26.0: Suchbegriff passend zur Person (nicht bei eigener Suche) und Budget als Preisfilter */
-    const W = window.LZW; if (W && !raw && !adult) q = W.query(q);
+    const W = window.LZW; if (W && !raw && !adult && !plain) q = W.query(q);
     /* 3.50.0 (AE-09): in der Play-App über die Website, Budget als Höchstbetrag in Cent */
-    if (L.inTwa && L.inTwa()) { const m = ((W ? W.priceParam() : '').match(/p_36%3A-(\d+)/) || [])[1]; return L.webGift(q, +m || 0, !tag); }
-    return 'https://www.amazon.de/s?k=' + encodeURIComponent(q) + (W ? W.priceParam() : '') + (tag ? '&tag=' + encodeURIComponent(tag) : '');
+    if (L.inTwa && L.inTwa()) { const m = plain ? 0 : ((W ? W.priceParam() : '').match(/p_36%3A-(\d+)/) || [])[1]; return L.webGift(q, +m || 0, !tag); }
+    return 'https://www.amazon.de/s?k=' + encodeURIComponent(q) + (W && !plain ? W.priceParam() : '') + (tag ? '&tag=' + encodeURIComponent(tag) : '');
   }
   function tips(key, n) {
     const ad = ADULT_KEYS.test(key);
@@ -362,10 +364,12 @@
   function tipsHtml(items, title) {
     if (!items.length) return '';
     return '<div class="tips"><span class="tips-label">' + L.esc(title || 'Passend dazu') + ' <i class="ad-note">Werbelinks</i></span>' +
-      items.map((t) => '<button type="button" class="tip" data-q="' + L.esc(t.q) + '"' + (t.adult ? ' data-adult="1"' : '') + '>' + (t.icon || '🛒') + ' ' + L.esc(t.title) + ' <span>↗</span></button>').join('') + '</div>';
+      items.map((t) => '<button type="button" class="tip" data-q="' + L.esc(t.q) + '"' + (t.adult ? ' data-adult="1"' : '') + (t.fam ? ' data-fam="1"' : '') + '>' + (t.icon || '🛒') + ' ' + L.esc(t.title) + ' <span>↗</span></button>').join('') + '</div>';
   }
   function bindTips(root) {
-    root.querySelectorAll('.tip[data-q]').forEach((b) => { b.onclick = (e) => { e.stopPropagation(); window.open(amazonUrl(b.dataset.q, b.dataset.adult === '1'), '_blank', 'noopener'); }; });
+    root.querySelectorAll('.tip[data-q]').forEach((b) => { b.onclick = (e) => { e.stopPropagation(); const fam = b.dataset.fam === '1'; /* 3.57.0: Familien-Tipps – Suchbegriff unverändert, eigene Kennung, eigener Zähler */
+      if (fam && window.LZS) window.LZS.count('fam_tip_click');
+      window.open(amazonUrl(b.dataset.q, b.dataset.adult === '1', false, fam ? { plain: true, tag: D.affiliateTagFam } : null), '_blank', 'noopener'); }; });
   }
   /* Eigene Suche (3.19.0): für Anlässe und Ideen, die die App nicht kennt. Öffnet die Amazon-Suche im Browser (Werbelink). */
   function searchFormHtml(ph, val) {
