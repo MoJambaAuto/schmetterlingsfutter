@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: github-pages
-      url: ${{ steps.d.outputs.page_url }}
+      url: ${{ steps.d.outputs.page_url || steps.d2.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
       # 3.51.0: Prüfschritt – bei Tippfehlern im Code oder uneinheitlicher Versionsnummer geht nichts live
@@ -32,5 +32,14 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
+      # 26.11.2026 (Claude): GitHub findet das eben hochgeladene Paket manchmal nicht sofort
+      # („No artifacts named github-pages“, 4 von 30 Läufen). Dann 30 s warten und einmal neu versuchen,
+      # statt dass die neue Version erst nach einem Handstart live geht.
       - id: d
+        uses: actions/deploy-pages@v4
+        continue-on-error: true
+      - if: steps.d.outcome == 'failure'
+        run: sleep 30
+      - id: d2
+        if: steps.d.outcome == 'failure'
         uses: actions/deploy-pages@v4
