@@ -58,7 +58,7 @@
     const cnt = (l) => l.reduce((m, y) => { m[y] = (m[y] || 0) + 1; return m; }, {});
     const ca = cnt(a), cb = cnt(b), out = [];
     Object.keys(Object.assign({}, ca, cb)).forEach((y) => { for (let i = 0; i < Math.max(ca[y] || 0, cb[y] || 0); i++) out.push(Number(y)); });
-    return cleanKids(out);
+    return out.filter(okYear).sort((x, z) => x - z); /* bewusst ungekürzt: der Aufrufer bietet die Liste nur an, wenn sie höchstens MAX_KIDS lang ist */
   }
   const cleanIsland = (i) => (i && typeof i === 'object' && Number.isInteger(i.wd) && i.wd >= 0 && i.wd <= 6 && (i.every === 'week' || i.every === 'month') ? { wd: i.wd, every: i.every, at: num(i.at) } : null);
   /* Liest S.family und bringt es in Form – auch nach dem Einspielen einer Sicherung oder mit Daten einer älteren Fassung */
@@ -309,10 +309,12 @@
           else if (pka < f.ka) reply = true; /* meins ist neuer: der Schatz übernimmt es, sobald meine Begrüßung ankommt */
           else { f.conflict = [f.kids.slice(), pk]; changed = true; } /* gleich alt und verschieden: nachfragen statt hin und her schicken */
         } else { f.conflict = [f.kids.slice(), pk]; changed = true; }
-      } else if (f.topic !== 'skip' && (f.topic === null || pka > (f.updatedAt || 0))) {
+      } else if (f.topic !== 'skip' && (f.topic === null || isWish(f.topic) || pka > (f.updatedAt || 0))) {
         /* fehlt bei mir, oder meine Antwort ist älter als die Angabe des Schatzes: übernehmen. „Lieber nicht sagen“ bleibt.
-           Ein eigener Kinderwunsch bleibt dabei als „außerdem“ stehen (samt Freigabe) – außer das Baby ist offenbar da. */
-        const mine = wishOf(f); f.also = keepAlso(mine, pk); if (f.also !== mine) f.share = false;
+           Bei eigenem Kinderwunsch oder „Baby unterwegs“ wird immer übernommen (Kinder aus einer früheren Beziehung des Schatzes):
+           die eigene Angabe bleibt als „außerdem“ stehen (samt Freigabe). Nur wenn die Kinder-Angabe neuer ist als meine
+           Antwort und ein Kind bis ein Jahr enthält, ist das Baby offenbar da – dann fällt sie weg. */
+        const mine = wishOf(f); f.also = pka > (f.updatedAt || 0) ? keepAlso(mine, pk) : mine; if (f.also !== mine) f.share = false;
         f.topic = 'kids'; f.kids = pk; f.ka = pka; f.sync = now; f.updatedAt = now; if (!f.askedAt) f.askedAt = now;
         changed = true; reply = true; news.push('Kinder: ' + pk.map(yearLabel).join(', '));
       }
@@ -387,7 +389,7 @@
       /* neutral: sortiert, damit nicht erkennbar ist, wer was eingetragen hat. „Alle zusammen“ führt beide Listen zusammen
          (jede/r hat eigene Kinder eingetragen) und erscheint nur, wenn das etwas anderes ergibt als die beiden Listen. */
       const opts = f.conflict.slice().sort((a, b) => a.join().localeCompare(b.join()));
-      const all = mergeKids(opts[0], opts[1]), both = !sameKids(all, opts[0]) && !sameKids(all, opts[1]);
+      const all = mergeKids(opts[0], opts[1]), both = all.length <= MAX_KIDS && !sameKids(all, opts[0]) && !sameKids(all, opts[1]);
       el.innerHTML = '<div class="promo-title">🐛 Kinder: welche Geburtsjahre stimmen?</div>' + text('In euren beiden Apps stehen zwei verschiedene Angaben. Tippt die richtige an, dann gilt sie bei euch beiden.') +
         row(opts.map((k, i) => '<button type="button" class="pill-btn" data-pick="' + i + '">' + esc(k.map(yearLabel).join(', ')) + '</button>').join('') +
           (both ? '<button type="button" class="pill-btn" data-all>Alle zusammen: ' + esc(all.map(yearLabel).join(', ')) + '</button>' : '') +
@@ -539,11 +541,14 @@
      (die frühere Zustimmung kannte diesen Punkt noch nicht). */
   function countPhase() {
     if (!window.LZS || !window.LZS.ok || !window.LZS.ok()) return;
-    const f = fam(), k = L.todayKey(); if (f.phaseDay === k) return;
+    const f = fam(), k = L.todayKey();
+    /* je Tag und Phase höchstens einmal: kommt am selben Tag eine Phase oder die Zustimmung dazu, wird sie noch gezählt */
+    let pd = f.phaseDay; if (!pd || typeof pd !== 'object' || pd.d !== k || !Array.isArray(pd.p)) pd = f.phaseDay = { d: k, p: [] };
     /* Kinderwunsch / Baby unterwegs nur aus der eigenen Angabe zählen, nie aus dem, was der Schatz geteilt hat */
     const fresh2 = num(Number(S().statsAsked)) >= f.v3 && !!wishOf(f);
-    phases().forEach((p) => { if (p !== 'wunsch' && p !== 'unterwegs' || fresh2) C('fam_phase:' + p); });
-    f.phaseDay = k; L.save();
+    let hit = false;
+    phases().forEach((p) => { if (pd.p.indexOf(p) >= 0) return; if (p !== 'wunsch' && p !== 'unterwegs' || fresh2) { C('fam_phase:' + p); pd.p.push(p); hit = true; } });
+    if (hit) L.save();
   }
 
   const css = document.createElement('style');
