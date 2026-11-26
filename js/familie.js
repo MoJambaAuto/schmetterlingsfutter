@@ -193,13 +193,15 @@
   }
   /* Kommen Kinder dazu, während schon Kinderwunsch oder Baby unterwegs angegeben war: Die Angabe bleibt als „außerdem“
      stehen (Kinder aus früheren Beziehungen), außer es ist ein Kind von höchstens einem Jahr dabei – dann ist das Baby da. */
-  const keepAlso = (prev, kids) => (isWish(prev) && phaseOf('kids', kids) !== 'baby' ? prev : '');
+  /* Kommt ein Kind bis ein Jahr NEU in die Liste, ist das Baby offenbar da: „außerdem“ fällt weg.
+     Stand schon vorher ein Baby drin (old), bleibt eine ausdrücklich gesetzte Angabe stehen. */
+  const keepAlso = (prev, kids, old) => (isWish(prev) && (phaseOf('kids', kids) !== 'baby' || (!!old && phaseOf('kids', old) === 'baby')) ? prev : '');
   function setTopic(topic, kids) {
     const f = fam(), now = Date.now(), list = topic === 'kids' ? cleanKids(kids) : [], before = wishOf(f);
     if (topic === 'kids') {
       if (f.topic !== 'kids' || !sameKids(f.kids, list) || !f.ka) f.ka = now;
       if (f.conflict) { f.conflict = null; f.res = now; } /* selbst entschieden: der Schatz übernimmt es ohne neue Rückfrage */
-      f.also = keepAlso(before, list);
+      f.also = keepAlso(before, list, f.topic === 'kids' ? f.kids : null);
     } else { f.ka = 0; f.sync = 0; f.res = 0; f.conflict = null; f.also = ''; }
     f.topic = topic; f.kids = list;
     /* Die Freigabe gilt nur für die Angabe, für die sie eingeschaltet wurde: Wer von „Kinderwunsch“ auf „Baby unterwegs“ wechselt, teilt das nicht von selbst */
@@ -305,7 +307,10 @@
       if (f.topic === 'kids') {
         if (sameKids(f.kids, pk)) { f.sync = now; if (pka > f.ka) f.ka = pka; if (f.conflict) { f.conflict = null; changed = true; } }
         else if (f.sync || d.r === 1) {
-          if (pka > f.ka) { f.kids = pk; f.ka = pka; f.sync = now; f.conflict = null; f.updatedAt = now; changed = true; reply = true; news.push('Kinder: ' + pk.map(yearLabel).join(', ')); }
+          if (pka > f.ka) {
+            /* auch hier: bringt die neuere Liste ein Baby mit, fällt „außerdem“ weg und die Freigabe endet (die Antwort unten nimmt sie beim Schatz zurück) */
+            const al = keepAlso(f.also, pk, f.kids); if (al !== f.also) { f.also = al; f.share = false; }
+            f.kids = pk; f.ka = pka; f.sync = now; f.conflict = null; f.updatedAt = now; changed = true; reply = true; news.push('Kinder: ' + pk.map(yearLabel).join(', ')); }
           else if (pka < f.ka) reply = true; /* meins ist neuer: der Schatz übernimmt es, sobald meine Begrüßung ankommt */
           else { f.conflict = [f.kids.slice(), pk]; changed = true; } /* gleich alt und verschieden: nachfragen statt hin und her schicken */
         } else { f.conflict = [f.kids.slice(), pk]; changed = true; }
@@ -334,7 +339,9 @@
     if (reply) sendFam(true, false, true);
   }
   function resolve(kids) {
-    const f = fam(), now = Date.now(); f.kids = cleanKids(kids); f.ka = now; f.sync = now; f.res = now; f.conflict = null; f.updatedAt = now;
+    const f = fam(), now = Date.now(), list = cleanKids(kids), al = keepAlso(f.also, list, f.kids);
+    if (al !== f.also) { f.also = al; f.share = false; }
+    f.kids = list; f.ka = now; f.sync = now; f.res = now; f.conflict = null; f.updatedAt = now;
     apply(); sendFam(true); L.toast('✓ ' + kidsText(f.kids) + ' gilt jetzt bei euch beiden');
   }
 
