@@ -12,6 +12,7 @@
 
   /* Was ist neu – kurz, in Alltagssprache. Neueste zuerst. */
   D.news = [
+    { v: '3.58.2', items: ['✏️ „Eigene Botschaft“: Der Hinweis mit den Klammern über dem Textfeld ist weg'] },
     { v: '3.58.1', items: ['🎁 Neu in den Empfehlungen: Blume Ideal (Blumen) und monDesire (persönliche Geschenke) – als Werbung gekennzeichnet'] },
     { v: '3.58.0', items: ['🎫 Neu: das Reiselos – seltenes Glück im Spiel, und wer es hat, bestimmt euer nächstes Ziel (höchstens eines im Monat)', '🧭 „Gemeinsam erleben“ ist jetzt nach Flugweiten geordnet: vor der Haustür, übers Wochenende, großer Flug', '🎁 Geschenk-Radar: „Erlebnis statt Ding“ – eine Idee aus euren Traumzielen'] },
     { v: '3.57.0', items: ['🐛 Raupenzeit für Patchwork: Kinder aus früheren Beziehungen zählen mit – und zusätzlich lässt sich „Wir wünschen uns noch eins“ oder „Baby unterwegs“ angeben (⚙️ → Kinder)', '🛒 Unter den Raupenzeit-Aufgaben stehen jetzt zwei passende Tipps für euch als Paar', '👔 Vatertag steht bei den Anlässen'] },

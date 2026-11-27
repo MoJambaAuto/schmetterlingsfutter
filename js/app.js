@@ -321,7 +321,7 @@
     });
   }
   function writeOwn(afterSave) {
-    promptSheet('Eigene Botschaft', [{ key: 't', label: 'Dein Text (Platzhalter {r} = ' + S.receiver + ')', multiline: true, max: 280, placeholder: 'z. B. Weißt du noch, unser erster Abend am See …' }], 'Speichern', (v) => {
+    promptSheet('Eigene Botschaft', [{ key: 't', label: 'Dein Text' /* 3.58.2: Klammerhinweis zu {r} entfernt – {r} wird weiter durch den Namen ersetzt */, multiline: true, max: 280, placeholder: 'z. B. Weißt du noch, unser erster Abend am See …' }], 'Speichern', (v) => {
       if (!v.t) { toast('Bitte Text eingeben'); return false; }
       S.ownMessages.push(v.t); save(); refillQueue(); toast('Gespeichert – erscheint jetzt in der Rotation ❤');
       if (afterSave) afterSave(v.t);
