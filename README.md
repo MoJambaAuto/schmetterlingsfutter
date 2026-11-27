@@ -7,6 +7,14 @@ Dieses Repository ist die veröffentlichte Fassung (GitHub Pages, Branch `main`,
 Konzept, Store-Texte, Veröffentlichungsplan und Store-Grafiken liegen im privaten Vault-Repo
 `MoJambaAuto/mojamba-vault` unter `Apps/schmetterlingsfutter/`.
 
+## Zwei Repos – jede Änderung geht in beide
+
+Diese App liegt in zwei Repos mit gleichem Inhalt: `MoJambaAuto/schmetterlingsfutter-app` (app.schmetterlingsfutter.de)
+und `MoJambaAuto/schmetterlingsfutter` (alte Adresse, Play-App). Wer hier etwas ändert, lädt es in **beide** hoch –
+auch Dateien, die nur in einem der beiden wirken (zum Beispiel `.github/workflows/`). Vor jedem Hochladen prüfen,
+dass beide Repos denselben Inhalt haben. Ein Unterschied wird erst aufgeklärt und dann behoben, nie übergangen
+und nie durch Zurücksetzen einer Datei „repariert“.
+
 ## Aufbau
 
 | Pfad | Inhalt |

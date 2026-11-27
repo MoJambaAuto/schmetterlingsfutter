@@ -1,6 +1,8 @@
 # Veröffentlicht die App unter app.schmetterlingsfutter.de (Repo MoJambaAuto/schmetterlingsfutter-app).
 # Im Ursprungs-Repo MoJambaAuto/schmetterlingsfutter läuft weiter GitHub Pages ohne eigene Domain
 # (mojambaauto.github.io/schmetterlingsfutter, für die Play-App) – dort wird dieser Job übersprungen.
+# WICHTIG: Diese Datei liegt in BEIDEN Repos. Jede Änderung in beide hochladen, auch wenn der Job nur im
+# App-Repo läuft – sonst sind die Repos nicht mehr inhaltsgleich (so geschehen am 26.11.2026, siehe README.md).
 name: Neue Adresse (app.schmetterlingsfutter.de)
 on:
   push:
