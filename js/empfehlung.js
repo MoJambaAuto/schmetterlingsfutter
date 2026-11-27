@@ -16,6 +16,7 @@
   const CATS = [
     ['erlebnis', '🎈 Erlebnisse zu zweit'],
     ['blumen', '💐 Blumen & kleine Grüße'],
+    ['geschenke', '🎁 Persönliche Geschenke'],
     ['tickets', '🎟️ Konzerte, Theater & Events'],
     ['buecher', '📚 Bücher & Lesestoff'],
     ['zuzweit', '🔥 Für Zwei (ab 18)'],
@@ -27,14 +28,17 @@
     { id: 'jochen-schweizer', cat: 'erlebnis', icon: '🎈', name: 'Jochen Schweizer', text: 'Erlebnisse und Gutscheine für zwei – vom Dinner bis zum Ballonflug', url: '' },
     { id: 'js-arena', cat: 'erlebnis', icon: '🪂', name: 'Jochen Schweizer Arena', text: 'Indoor-Fallschirmspringen, Surfen und Erlebnis-Gutscheine – in Taufkirchen bei München', url: 'https://t.adcell.com/p/click?promoId=612128&slotId=121138&param0=https%3A%2F%2Fwww.jochen-schweizer-arena.de%2F', addedAt: '2026-11-13' },
     { id: 'mydays', cat: 'erlebnis', icon: '✨', name: 'mydays', text: 'Erlebnisgeschenke und Kurzurlaube für Paare', url: '' },
+    { id: 'blume-ideal', cat: 'blumen', icon: '🌹', name: 'Blume Ideal', text: 'Blumensträuße vom Floristen, mit Wunschtermin und 7 Tage Frischegarantie', url: 'https://t.adcell.com/p/click?promoId=148661&slotId=121138', addedAt: '2026-11-27' },
+    { id: 'mondesire', cat: 'geschenke', icon: '🖼️', name: 'monDesire', text: 'Persönliche Poster, Acrylglasbilder und Deko mit euren Fotos', url: 'https://t.adcell.com/p/click?promoId=367504&slotId=121138', addedAt: '2026-11-27' },
     { id: 'fleurop', cat: 'blumen', icon: '💐', name: 'Fleurop', text: 'Blumen am selben Tag nach Hause liefern lassen', url: '' },
     { id: 'bloomy-days', cat: 'blumen', icon: '🌷', name: 'Bloomy Days', text: 'Frische Blumen im Abo oder als Überraschung', url: '' },
     { id: 'eventim', cat: 'tickets', icon: '🎤', name: 'Eventim', text: 'Tickets für Konzerte, Comedy und Shows', url: '' },
     { id: 'reservix', cat: 'tickets', icon: '🎭', name: 'Reservix', text: 'Tickets für Veranstaltungen in eurer Nähe', url: '' },
     { id: 'thalia', cat: 'buecher', icon: '📚', name: 'Thalia', text: 'Bücher zum Verschenken oder gemeinsam Lesen', url: '' },
     { id: 'amorelie', cat: 'zuzweit', icon: '🔥', name: 'Amorelie', text: 'Spielzeug und Ideen für mehr Nähe', url: '', adult: true },
+    { id: 'augenweide', cat: 'zuzweit', icon: '👀', name: 'Augenweide', text: 'Erotik-Community nur für Paare', url: 'https://t.adcell.com/p/click?promoId=51750&slotId=121138', adult: true, addedAt: '2026-11-27' },
     { id: 'orion', cat: 'zuzweit', icon: '💋', name: 'Orion', text: 'Dessous, Liebesspielzeug und Massageöle – diskret verpackt', url: 'https://www.awin1.com/cread.php?awinmid=11661&awinaffid=3152437&clickref=sf-empfehlung&ued=https%3A%2F%2Fwww.orion.de%2F', adult: true, addedAt: '2026-11-13' },
-    { id: 'zweisamkeit', cat: 'neu', icon: '💞', name: 'Zweisamkeit', text: 'Partnersuche für Menschen, die es ernst meinen', url: '', only: 'single' },
+    { id: 'zweisamkeit', cat: 'neu', icon: '💞', name: 'Zweisamkeit', text: 'Partnersuche für Menschen, die es ernst meinen', url: 'https://t.adcell.com/p/click?promoId=267994&slotId=121138', addedAt: '2026-11-27', only: 'single' },
     { id: 'spaete-liebe', cat: 'neu', icon: '🍂', name: 'Späte Liebe', text: 'Partnersuche ab 50', url: '', only: 'single' }
   ];
   const paired = () => !!(P() && P().paired && P().paired());
