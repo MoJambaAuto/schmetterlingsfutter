@@ -396,6 +396,7 @@
     el.querySelectorAll('.d3[data-d]:not([disabled])').forEach((b) => b.onclick = () => { const i = Number(b.dataset.d); st.held[i] = !st.held[i]; L.haptic(6); L.save(); render(); liveSend(g, 'hold'); });
     el.querySelectorAll('[data-c]').forEach((b) => b.onclick = () => {
       st.card[cur][b.dataset.c] = catScore(b.dataset.c, st.dice); st.rolls = 0; st.held = [false, false, false, false, false];
+      if (b.dataset.c === 'sw' && st.card[cur].sw === 50 && window.LZRE) window.LZRE.los({ who: nameOf(g, cur), why: 'Schwarm in der Würfelwiese' }); /* 3.58.0: Reiselos */
       const full = (p) => CATS.every(([k]) => st.card[p][k] != null);
       if (full('a') && full('b')) { g.turn = 'done'; const A = total(st.card.a).all, B = total(st.card.b).all; g.winner = A === B ? 'draw' : A > B ? 'a' : 'b'; }
       else g.turn = other(cur);
@@ -554,7 +555,7 @@
     const doMove = (m) => {
       const hit = m.to !== 'off' && oppAt(st, cur, m.to) === 1;
       const ns = apply(st, cur, m); Object.assign(st, ns); g.sel = null; L.haptic(hit ? 30 : 8);
-      if (st.off[cur] >= 15) { g.turn = 'done'; g.winner = cur; st.left = []; commit(g); return; }
+      if (st.off[cur] >= 15) { g.turn = 'done'; g.winner = cur; st.left = []; if (st.off[other(cur)] === 0 && window.LZRE) window.LZRE.los({ who: nameOf(g, cur), why: 'Hoher Sieg im Wanderzug' }); /* 3.58.0: Reiselos */ commit(g); return; }
       if (!st.left.length || !legal(st, cur).length) { if (!st.left.length) return endTurn(); }
       g.updated = Date.now(); L.save(); render(); liveSend(g, hit ? 'hit' : 'move'); if (hit) L.toast('💥 Geschlagen – zurück in die Mitte!');
     };

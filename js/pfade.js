@@ -361,7 +361,7 @@
     const sp = p._sp[lo.cfg.species] || { commonNameDe: 'Lotsenfalter' };
     const name = sp.commonNameDe || 'Lotsenfalter';
     const won = (gps) => {
-      st().lotsen[lo.cand.id] = { at: Date.now(), sp: lo.cfg.species, gps: gps ? 1 : 0 }; L.save(); C('pfad_lotse:' + (gps ? 'ort' : 'hand'));
+      st().lotsen[lo.cand.id] = { at: Date.now(), sp: lo.cfg.species, gps: gps ? 1 : 0, n: name, ort: lo.cand.title, bild: lo.cfg.bild }; /* 3.58.0: Name, Ort, Bild fürs Schmetterlingsbuch */ L.save(); C('pfad_lotse:' + (gps ? 'ort' : 'hand'));
       L.spawnHearts && L.spawnHearts(14);
       L.openSheet('<div class="bfly-party"><div class="fx-hero">' + fimg(lo.cfg.bild, 'big') + '</div><h3>Gefangen!</h3><p class="fx-name">' + esc(name) + '</p>' +
         (sp.scientificName ? '<p class="about" style="font-size:17px;font-style:italic;margin:2px 0 8px">' + esc(sp.scientificName) + '</p>' : '') +

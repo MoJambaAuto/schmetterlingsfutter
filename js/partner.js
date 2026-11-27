@@ -159,6 +159,7 @@
       if (obj.dates && window.LZD) { try { window.LZD.got(obj.dates); } catch (e) {} }
       if (Array.isArray(obj.likes) && window.LZW) { try { window.LZW.got(obj.likes); } catch (e) {} }
       if (obj.pfad && window.LZPF) { try { window.LZPF.got(obj.pfad); } catch (e) {} } /* 3.52.0: Liebespfade – Stand der gemeinsamen Route */
+      if (obj.reise && window.LZRE) { try { window.LZRE.got(obj.reise); } catch (e) {} } /* 3.58.0: Reiselos – höchstens eines je Monat und Paar */
       if (obj.fam && window.LZFA && window.LZFA.got) { try { window.LZFA.got(obj.fam); } catch (e) {} } /* 3.56.0: Raupenzeit – Geburtsjahre, geteilte Angabe, Paar-Insel */
       if (first) { try { await send(Object.assign({ t: 'hello', name: S().sender, pron: S().pron || '', reply: true }, window.LZD ? { dates: window.LZD.payload() } : {})); } catch (e) {} L.toast('💞 Verbunden mit ' + (name || 'deinem Schatz')); L.spawnHearts(14); }
       if (Array.isArray(obj.seen)) gotSeen(obj.seen, created);
@@ -1032,10 +1033,11 @@
     let html = '<div class="row between"><div class="eyebrow" style="margin:0">🎁 Geschenk-Radar</div><span class="tag">' + (o.days === 0 ? 'heute' : 'in ' + o.days + (o.days === 1 ? ' Tag' : ' Tagen')) + '</span></div>' +
       '<div style="font-size:18px;margin:6px 0 2px">' + o.icon + ' ' + L.esc(o.title) + (o.days <= 14 ? ' – jetzt wird es Zeit.' : ' – entspannt vorplanen.') + '</div>' + (W ? W.profileHtml() : '');
     const items = wishes.slice(0, 1).map((w) => ({ icon: '⭐', title: w.text, q: w.text })).concat(ideas.map((x) => ({ icon: x.icon, title: x.title, q: x.q })));
+    if (window.LZRE) html += window.LZRE.radarHtml(o); /* 3.58.0: Erlebnis statt Ding – eine Idee aus den gemeinsamen Traumzielen, ohne Link */
     html += tipsHtml(items, wishes.length ? 'Aus der Love Map und passende Ideen' : 'Ideen');
     html += '<div class="row wrap" style="margin-top:8px;justify-content:flex-start"><button class="pill-btn small ghost" data-all>Alle Ideen für ' + L.esc(o.title) + '</button><button class="pill-btn small ghost" data-wish>+ Wunsch notieren</button></div>';
     html += searchFormHtml('Etwas anderes suchen …');
-    g.innerHTML = html; bindTips(g); bindSearch(g); if (W) W.bindProfile(g);
+    g.innerHTML = html; bindTips(g); bindSearch(g); if (W) W.bindProfile(g); if (window.LZRE) window.LZRE.radarBind(g, o);
     g.querySelector('[data-all]').onclick = () => window.LZF.giftSheet(o);
     g.querySelector('[data-wish]').onclick = () => $('btnAddWish').click();
   }

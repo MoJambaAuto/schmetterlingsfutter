@@ -248,7 +248,7 @@
       grid += '<button type="button" class="fx-cell' + (got ? '' : ' locked') + (n === have + 1 && !caught && !vis ? ' next' : '') + '" data-n="' + n + '"' + (got ? '' : ' aria-label="Noch nicht entdeckt"') + '>' + falterImg(f, got ? '' : 'shadow') + '<span>' + (got ? esc(f.name) : n === have + 1 ? 'Als Nächstes' : '?') + '</span>' + (caught ? '<em class="fx-wild">🕸️ ' + caught + '×</em>' : vis ? '<em class="fx-wild">✨ ' + vis + '×</em>' : '') + '</button>';
     }
     L.openSheet('<h3>📖 Euer Schmetterlingsbuch</h3><p class="about" style="font-size:16px;margin-bottom:10px">' + have + ' geschlüpft' + (wild ? ' · 🕸️ ' + wild + ' draußen gefangen' : '') + ' · Generation ' + q.gen + ' wächst gerade heran. Jeder neue Falter ist seltener als der vorige.</p>' +
-      '<div class="fx-grid">' + grid + '</div>' +
+      '<div class="fx-grid">' + grid + '</div>' + (window.LZRE ? window.LZRE.buchHtml() : '') + /* 3.58.0: Lotsenfalter der Liebespfade */
       (have >= LADDER.length ? '' : '<p class="about" style="font-size:15px;color:var(--text-muted);margin-top:8px">Nach allen neun Arten kommen Prachtformen – schillernd, mit Sternenglanz und in Regenbogenfarben.</p>') +
       '<p class="wi-hintp"><button type="button" class="wi-link" data-hilfe>🌱 Echten Faltern helfen</button></p>' +
       '<div class="row wrap" style="margin-top:12px">' + (window.LZJ ? '<button class="pill-btn primary" data-jagd>💞 Falterspaziergang</button>' : '') + '<button class="pill-btn ghost" data-cancel>Schließen</button></div>', (sh) => {

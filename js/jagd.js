@@ -126,6 +126,7 @@
   function recordCatch(s) {
     const rec = { i: s.i, hab: s.hab || 'walk', at: Date.now() }; st().caught.push(rec); L.save(); C('jagd_catch:' + s.i);
     if (X() && X().feed) X().feed('jagd', 1);
+    if (s.i >= 6 && window.LZRE) window.LZRE.los({ who: 'Du', why: 'Seltener Falter beim Spaziergang' }); /* 3.58.0: Reiselos */
     const w = st().walk; if (w && w.n < w.goal) { w.n++; w.list.push(s.i); w.waiting = null; w.prev = Date.now(); w.next = Date.now() + gap(); w.m = 0; L.save(); }
     return { rec, walkDone: !!(w && w.n >= w.goal) };
   }
