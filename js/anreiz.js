@@ -27,6 +27,8 @@
     }
     /* 3.39.0: Empfehlungen – neue Partner zuerst, sonst selten (Regeln in empfehlung.js) */
     if (window.LZE && window.LZE.recoSuggestion) { const rs = window.LZE.recoSuggestion(); if (rs) return rs; }
+    /* 3.61.0: Amazon-Start – selten, als Werbung gekennzeichnet (js/amazonstart.js) */
+    if (window.LZA && window.LZA.flySuggestion) { const as = window.LZA.flySuggestion(); if (as) return as; }
     /* Noch nicht verbunden: daran erinnert Papillon zuerst (jedes zweite Mal) */
     if (p && !(p.paired() && p.joined()) && p.RELAY && Math.random() < 0.5) return { key: 'pair', text: 'Verbindet eure Handys – dann landet alles direkt bei ' + name + ' 💞', go: 'Verbinden', run: () => p.pairSheet() };
     const pool = [];
@@ -73,7 +75,7 @@
     if (sug.kind === 'reco') { const d = document.createElement('span'); d.className = 'fly-drop'; d.setAttribute('aria-hidden', 'true'); d.textContent = '🎁'; el.querySelector('.fly-b').appendChild(d); }
     document.body.appendChild(el);
     const go = () => { window.LZS && window.LZS.count('fly_go:' + sug.key); leave(true); try { sug.run(); } catch (e) {} };
-    el.querySelector('[data-go]').onclick = go; el.querySelector('.fly-b').onclick = go;
+    el.querySelector('[data-go]').onclick = go; if (!sug.ad) el.querySelector('.fly-b').onclick = go; /* 3.61.0: Werbe-Hinweise nur über den Knopf klickbar (Play: keine versehentlichen Klicks) */
     el.querySelector('[data-no]').onclick = () => { window.LZS && window.LZS.count('fly_no:' + sug.key); if (sug.later) { try { sug.later(); } catch (e) {} } leave(false); };
     if (sug.shown) { try { sug.shown(); } catch (e) {} }
     const b = el.querySelector('.fly-b');

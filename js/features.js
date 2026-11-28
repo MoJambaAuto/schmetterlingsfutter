@@ -168,6 +168,7 @@
     $('btnToggleDoneWishes').textContent = (s.showDoneWishes ? 'Erfüllte ausblenden' : 'Erfüllte anzeigen') + (done.length ? ' (' + done.length + ')' : '');
     let show = s.showDoneWishes ? all : open; if (f !== 'alle') show = show.filter((w) => (w.cat || 'wunsch') === f);
     if (!show.length) l.innerHTML = '<div class="empty">Noch nichts notiert. Beim nächsten „Das wäre schön …“ oder „Ich mag …“ hier eintragen.</div>';
+    let anyAmz = false;
     show.slice().reverse().forEach((w) => {
       const c = catOf(w.cat || 'wunsch');
       const d = document.createElement('button'); d.type = 'button'; d.className = 'wish' + (w.done ? ' done' : '');
@@ -175,7 +176,10 @@
         '<div class="w-meta">' + c.label + ' · aufgeschnappt am ' + L.fmtDate(new Date(w.date)) + (w.done ? ' · erledigt am ' + L.fmtDate(new Date(w.done)) : '') + '</div></div>';
       d.onclick = () => wishSheet(w);
       l.appendChild(d);
+      /* 3.61.0: Wunsch → Amazon direkt in der Liste (Werbelink, Hinweis unter der Liste) */
+      if (!w.done && (w.cat || 'wunsch') === 'wunsch') { anyAmz = true; const r = document.createElement('div'); r.className = 'row wrap'; r.style.cssText = 'justify-content:flex-start;margin:-4px 0 10px 8px'; r.innerHTML = '<button type="button" class="pill-btn small ghost">🛒 Bei Amazon suchen ↗</button>'; r.firstChild.onclick = () => { if (window.LZS) window.LZS.count('wish_amz'); window.open(amazonUrl(w.text), '_blank', 'noopener'); }; l.appendChild(r); }
     });
+    if (anyAmz) { const n = document.createElement('p'); n.className = 'about'; n.style.cssText = 'font-size:16px;color:var(--text-muted);margin:4px 0 8px'; n.innerHTML = '<span class="ad-note">Werbelinks</span> Als Amazon-Partner verdiene ich an qualifizierten Verkäufen.'; l.appendChild(n); }
     if (window.LZP) window.LZP.mountTips($('wishTips'), 'lovemap', 'Die Love Map füllen');
   }
   function wishSheet(w) {

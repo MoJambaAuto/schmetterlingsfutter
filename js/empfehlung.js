@@ -68,11 +68,11 @@
     const mark = (ids) => () => { const s = recoState(); s.lastNoticeAt = Date.now(); ids.forEach((id) => { if (s.announcedIds.indexOf(id) < 0) s.announcedIds.push(id); }); L.save(); };
     const later = () => { const s = recoState(); s.snoozeUntil = Date.now() + 3 * DAY; L.save(); C('reco_later'); };
     if (fresh.length) {
-      return { kind: 'reco', key: 'reco_new', go: 'Ansehen', shown: mark(fresh.map((e) => e.id)), later, run: sheet,
+      return { kind: 'reco', ad: true, key: 'reco_new', go: 'Ansehen', shown: mark(fresh.map((e) => e.id)), later, run: sheet,
         text: fresh.length === 1 ? 'Psst … ich hab euch was mitgebracht: ' + fresh[0].name + ' · Werbung' : 'Psst … ich hab ' + fresh.length + ' neue Fundstücke für euch · Werbung' };
     }
     if (now - r.lastNoticeAt < 7 * DAY || Math.random() > 0.3) return null;
-    return { kind: 'reco', key: 'reco_regular', go: 'Ansehen', shown: mark([]), later, run: sheet, text: 'Ich kenne noch eine schöne Idee für euch · Werbung' };
+    return { kind: 'reco', ad: true, key: 'reco_regular', go: 'Ansehen', shown: mark([]), later, run: sheet, text: 'Ich kenne noch eine schöne Idee für euch · Werbung' };
   }
 
   function sheet() {
