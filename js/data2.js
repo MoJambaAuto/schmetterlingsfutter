@@ -3,7 +3,7 @@
 (function () {
   'use strict';
   const D = window.LUZIFER_DATA;
-  D.version = '3.58.2';
+  D.version = '3.59.0';
   /* Grundton des Klavier-Samples fürs Liebeslied-Pad (audio/pad.wav), wird beim Einbau gemessen */
   D.padBase = 174.61;
 
@@ -722,4 +722,44 @@
   /* Karten: weitere Suchbegriffe je Karte, die App wechselt wöchentlich */
   const moreCardTips = {"bock":{"spazieren":["Regenschirm groß Paar","Partnerhandschuhe"],"kochen":["Schürze Paar Set","Gewürze Geschenkset"],"serie":["Popcornmaschine","Sofatablett"],"spiele":["Kartenspiel für 2","Kooperatives Spiel 2 Personen"],"sport":["Trinkflasche Sport","Fitnessbänder Set"],"freunde":["Kartenspiel Party","Snackschalen Set"],"kuscheln":["Kuscheldecke XXL Paar","Wärmflasche Plüsch"],"natur":["Picknickkorb für 2","Fernglas kompakt"],"kino":["Popcorn Becher Set","Mini Beamer"],"wellness":["Badekugeln Set","Duftkerzen Set"],"musik":["Ohrstöpsel Konzert","Bluetooth Lautsprecher klein"],"bar":["Weingläser Set 2","Cocktailbuch"],"kreativ":["Aquarell Set Anfänger","Bastelset Erwachsene"],"fruehstueck":["Waffeleisen Herz","Eierbecher Set 2"],"lesen":["Lesezeichen Set","Lesekissen"],"massage":["Massagekerze","Hot Stone Massage Set"],"tanzen":["Paartanz lernen Buch","Discokugel LED klein"],"puzzle":["Puzzlematte","Rätselbuch Erwachsene"],"sauna":["Sauna Aufguss Set","Bademantel Paar Set"],"grillen":["Grillbesteck Set","Feuerschale klein"],"backen":["Ausstechformen Set","Backmatte Silikon"],"fotos":["Sofortbildkamera","Bilderrahmen Collage Paar"],"ausschlafen":["Verdunklungsvorhang","Frühstückstablett Bett"],"fruehsex":["Massageöl Paar","LED Kerzen Timer"]}};
   D.decks.forEach((deck) => { const m = moreCardTips[deck.id]; if (!m) return; deck.items.forEach((it) => { if (it.tip && m[it.id]) it.tip = [].concat(it.tip, m[it.id]); }); });
+  /* 3.59.0: Geprüfte Amazon-Produktnummern (ASIN) – Suchbegriff → Produktseite. Jede Nummer am 28.11.2026 auf amazon.de geprüft (Seite lädt, Titel passt, „In den Einkaufswagen“ möglich).
+     Ohne Eintrag bleibt der Vorschlag eine Amazon-Suche. Nie raten: neue Nummer erst an der Produktseite prüfen. */
+  D.asin = {
+    "Lippenpflege Set Geschenk": 'B0GQ44B2L4',
+    "Schokolade Herz Geschenk": 'B095DR16SB',
+    "Schokofrüchte Geschenk": 'B096RFYWLH',
+    "Tasse Kussmund": 'B0DCSNZLX9',
+    "Infinity Rose Geschenk": 'B0D129W8B5',
+    "Kuscheldecke XXL Paar": 'B07DC4ZS8W',
+    "Duftkerze Geschenk": 'B0F3FXYVLP',
+    "Wärmflasche Plüsch": 'B09FJSR5QF',
+    "Trinkschokolade Geschenkset": 'B087X1X8VD',
+    "Tassen Set Paar": 'B0CYCHS46D',
+    "Frühstückstablett Bett": 'B00KYMJLJK',
+    "Frühstück Geschenkset Marmelade Honig": 'B0H75NG9NG',
+    "Pancake Form Herz": 'B0055K771U',
+    "Teekanne mit Stövchen": 'B07S18CF82',
+    "Lichtwecker Sonnenaufgang": 'B0C5M5C8NG',
+    "Sternenhimmel Projektor Schlafzimmer": 'B0DCYV6CD2',
+    "Schlafmaske Seide": 'B07QHB51XB',
+    "LED Kerzen Timer": 'B01J5EEEQW',
+    "Kissenspray Lavendel": 'B0B9HG8LS9',
+    "Gute Nacht Geschichten Erwachsene": '3442315883',
+    "Bettwäsche Flanell 200x200": 'B0C338RZ6M',
+    "Liebesbriefe Set Geschenk Partner": 'B0DSBQ62HC',
+    "Paar Tagebuch Fragen": '3868837329',
+    "Briefpapier Set mit Umschlägen": 'B0GZP6YHQH',
+    "Postkarten Liebe Set": 'B075LP7YB3',
+    "Lightbox Buchstaben": 'B07BPBKJPT',
+    "Kühlschrankmagnete Wörter deutsch": 'B08HNH7BX4',
+    "Gründe warum ich dich liebe Glas": 'B0HMHVLBYN',
+    "Was ich an dir liebe Buch zum Ausfüllen": '3742323741',
+    "Erinnerungsbox Fotos": 'B0B6BPJP2D',
+    "Briefe öffnen wenn Buch": '3968950232',
+    "Bilderrahmen Collage Paar": 'B07BY4L1WG',
+    "Gutscheinbuch für Paare": 'B0DM9JWV7J',
+    "Spiel für Paare Fragen": 'B0CYTH3Y2S',
+    "Date Würfel Paare": 'B0GRWP3XPX',
+    "lustiges Geschenk Paar": 'B0DLSZFGZ4'
+  };
 })();

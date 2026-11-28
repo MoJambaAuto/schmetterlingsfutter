@@ -334,11 +334,14 @@
     /* 3.38.0: Vorschläge im 18+-Bereich gehen zum Erotik-Partner (Awin), nicht zu Amazon – dort sind sexuelle Inhalte nicht erlaubt */
     if (adult && D.adultShop && D.awinAffId) return awinUrl(D.adultShop.mid, D.adultShop.search + encodeURIComponent(q), 'sf-zweisamkeit');
     const tag = (adult && !D.affiliateAdult) ? '' : ((opt && opt.tag) || D.affiliateTag || '').trim();
+    /* 3.59.0: Vorschläge mit geprüfter Produktnummer (D.asin) öffnen direkt die Produktseite; eigene Suche (raw) und alles ohne Eintrag bleibt Suche */
+    const asin = (!adult && !raw && D.asin && D.asin[q]) || '';
+    if (asin && /^[A-Z0-9]{10}$/.test(asin) && !(L.inTwa && L.inTwa())) return 'https://www.amazon.de/dp/' + asin + (tag ? '?tag=' + encodeURIComponent(tag) : '');
     /* 3.26.0: Suchbegriff passend zur Person (nicht bei eigener Suche) und Budget als Preisfilter */
     const W = window.LZW; if (W && !raw && !adult && !plain) q = W.query(q);
     /* 3.50.0 (AE-09): in der Play-App über die Website, Budget als Höchstbetrag in Cent */
     /* 3.57.1: Familien-Tipps geben der Website mit, dass die Kennung der Raupenzeit gilt */
-    if (L.inTwa && L.inTwa()) { const m = plain ? 0 : ((W ? W.priceParam() : '').match(/p_36%3A-(\d+)/) || [])[1]; return L.webGift(q, +m || 0, !tag, !!(opt && opt.tag) && tag === (D.affiliateTagFam || '').trim()); }
+    if (L.inTwa && L.inTwa()) { const m = plain ? 0 : ((W ? W.priceParam() : '').match(/p_36%3A-(\d+)/) || [])[1]; return L.webGift(q, +m || 0, !tag, !!(opt && opt.tag) && tag === (D.affiliateTagFam || '').trim(), asin); }
     return 'https://www.amazon.de/s?k=' + encodeURIComponent(q) + (W && !plain ? W.priceParam() : '') + (tag ? '&tag=' + encodeURIComponent(tag) : '');
   }
   function tips(key, n) {
