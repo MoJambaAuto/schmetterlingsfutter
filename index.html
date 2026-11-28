@@ -124,6 +124,8 @@
 
       <!-- 3.50.0: Papillons Fund des Tages (Website) -->
       <div class="tiles one"><button type="button" class="tile" data-go="funde"><span class="tile-i">🔍</span><span class="tile-t">Papillons Fund des Tages</span></button></div>
+      <!-- 3.60.0: Fund jeden Tag aufs Handy – WhatsApp- und Telegram-Kanal (Mo 28.11.2026) -->
+      <div class="tiles" id="kanalTiles"><button type="button" class="tile" data-go="wa"><span class="tile-i">💬</span><span class="tile-t">WhatsApp-Kanal</span></button><button type="button" class="tile" data-go="tg"><span class="tile-i">✈️</span><span class="tile-t">Telegram-Kanal</span></button></div>
 <div class="card soft hidden" id="giftRadar"></div>
       <!-- 3.55.0: drei Sorten Futter, gleichrangig – kleine Gesten, gemeinsam spielen, gemeinsam erleben -->
       <div class="row between quick-head"><div class="eyebrow">Futter für euch zwei</div></div>
@@ -401,6 +403,18 @@
           <a href="#" class="pill-btn small" id="btnOnboardingAgain">Einrichtung neu starten</a>
         </div>
         <div class="row set-btns"><button class="pill-btn small ghost danger" id="btnReset">Alles löschen</button></div>
+      </div>
+
+      <!-- 3.60.0: Papillon folgen – alle Kanäle an einer Stelle (Mo 28.11.2026) -->
+      <div class="card set-card" id="folgenCard">
+        <div class="eyebrow">Papillon folgen</div>
+        <div class="row wrap set-btns">
+          <button type="button" class="pill-btn small" data-go="wa">💬 WhatsApp</button>
+          <button type="button" class="pill-btn small" data-go="tg">✈️ Telegram</button>
+          <button type="button" class="pill-btn small" data-go="tiktok">🎵 TikTok</button>
+          <button type="button" class="pill-btn small" data-go="fb">👍 Facebook</button>
+          <button type="button" class="pill-btn small" data-go="web">🌐 Website</button>
+        </div>
       </div>
 
       <details class="card about" id="aboutCard">

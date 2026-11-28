@@ -93,6 +93,8 @@
     ['Wir', '⭐', 'Favoriten', 'favorit favoriten merken gespeichert lieblingsbotschaft', '', view('wishes', 'fav')],
     ['Wir', '🔍', 'Selbst suchen: Geschenk, Anlass, Idee', 'suchen suche amazon kaufen geschenk idee eigene shop produkt anlass bestellen', '', () => { if (P()) P().searchSheet(); }],
     ['Wir', '🔍', 'Papillons Fund des Tages: jeden Tag ein kurioses Geschenk', 'fund funde fund des tages kurios kurioses lustig witzig geschenk wichteln wichtelgeschenk papillon täglich whatsapp kanal', '', () => { window.open('https://schmetterlingsfutter.de/funde/', '_blank', 'noopener'); }],
+    /* 3.60.0: Papillon folgen */
+    ['Wir', '💬', 'Papillon folgen: WhatsApp, Telegram, TikTok, Facebook', 'folgen kanal kanäle whatsapp telegram tiktok facebook instagram social abonnieren website', '', spot('settings', 'folgenCard')],
     ['Einstellungen', '✏️', 'Namen und Symbole ändern', 'name namen aendern symbol emoji anrede', '', spot('settings', 'setSender')],
     ['Einstellungen', '🎨', 'Farbwelt', 'farbe farben design aussehen dunkel hell', '', spot('settings', 'themeGrid')],
     ['Einstellungen', '💾', 'Daten sichern', 'sichern sicherung export import wiederherstellen neues handy uebertragen loeschen', '', spot('settings', 'btnExport')],

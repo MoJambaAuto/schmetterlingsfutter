@@ -649,6 +649,12 @@
     hilfe: () => { if (window.LZWI && window.LZWI.hilfe) window.LZWI.hilfe(); },
     /* 3.50.0: Papillons Fund des Tages auf der Website */
     funde: () => { if (window.LZS) window.LZS.count('funde_open'); window.open('https://schmetterlingsfutter.de/funde/', '_blank', 'noopener'); },
+    /* 3.60.0: Kanäle und Profile (Mo 28.11.2026: „Alles sollte auf alles querverweisen“) */
+    wa: () => window.open('https://whatsapp.com/channel/0029Vb9gGpbId7nS5nRT380l', '_blank', 'noopener'),
+    tg: () => window.open('https://t.me/papillonsfund', '_blank', 'noopener'),
+    tiktok: () => window.open('https://www.tiktok.com/@schmetterlingsfutter', '_blank', 'noopener'),
+    fb: () => window.open('https://www.facebook.com/profile.php?id=61597109454624', '_blank', 'noopener'),
+    web: () => window.open('https://schmetterlingsfutter.de/', '_blank', 'noopener'),
     setdate: () => { $('btnSetDate').click(); },
     send: () => showView('send'),
     post: () => showView('post'),

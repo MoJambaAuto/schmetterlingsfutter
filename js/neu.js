@@ -12,6 +12,7 @@
 
   /* Was ist neu – kurz, in Alltagssprache. Neueste zuerst. */
   D.news = [
+    { v: '3.60.0', items: ['💬 Papillons Fund jeden Tag aufs Handy: WhatsApp- und Telegram-Kanal direkt auf „Heute“', '⚙️ In den Einstellungen: Papillon folgen – alle Kanäle an einer Stelle'] },
     { v: '3.59.0', items: ['🛒 Viele Geschenk-Vorschläge öffnen jetzt direkt das Produkt bei Amazon statt einer Suchliste'] },
     { v: '3.58.2', items: ['✏️ „Eigene Botschaft“: Der Hinweis mit den Klammern über dem Textfeld ist weg'] },
     { v: '3.58.1', items: ['🎁 Neu in den Empfehlungen: Blume Ideal (Blumen) und monDesire (persönliche Geschenke) – als Werbung gekennzeichnet'] },
