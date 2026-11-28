@@ -775,8 +775,9 @@
   }
   /* q = Suchbegriff, cent = Höchstbetrag (Preisfilter), noTag = Stelle verlinkt heute ohne Partnerkennung,
      fam (3.57.1) = Familien-Tipp der Raupenzeit: die Website setzt dann die eigene Kennung dafür (k=fam; eine ältere Website-Fassung übergeht das) */
-  function webGift(q, cent, noTag, fam) {
-    return 'https://schmetterlingsfutter.de/geschenk/?q=' + encodeURIComponent(q) + (cent > 0 ? '&m=' + Math.round(cent) : '') + (noTag ? '&a=1' : '') + (fam && !noTag ? '&k=fam' : '');
+  function webGift(q, cent, noTag, fam, asin) {
+    /* 3.59.0: asin = geprüfte Produktnummer, die Website öffnet dann die Produktseite (ältere Website-Fassung übergeht d und zeigt die Suche) */
+    return 'https://schmetterlingsfutter.de/geschenk/?q=' + encodeURIComponent(q) + (cent > 0 ? '&m=' + Math.round(cent) : '') + (noTag ? '&a=1' : '') + (fam && !noTag ? '&k=fam' : '') + (asin && /^[A-Z0-9]{10}$/.test(asin) ? '&d=' + asin : '');
   }
   inTwa();
   window.LZ = {
